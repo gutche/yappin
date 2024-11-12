@@ -1,0 +1,20 @@
+{
+	"name": "backend",
+	"version": "0.1.0",
+	"description": "yappin server",
+	"type": "module",
+	"main": "index.js",
+	"scripts": {
+		"start": "nodemon index.js"
+	},
+	"author": "Gledrian Gutierrez",
+	"license": "ISC",
+	"dependencies": {
+		"express": "^4.21.1",
+		"http": "^0.0.1-security",
+		"socket.io": "^4.8.1"
+	},
+	"devDependencies": {
+		"nodemon": "^3.1.7"
+	}
+}
