@@ -1,40 +1,41 @@
 <script setup>
-const socket = io.connect("http://localhost:3000");
+import Login from "./components/Login.vue";
+import Chat from "./components/Chat.vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import socket from "./socket";
+
+const isLoggedIn = ref(false);
+
+const onUsernameSelection = (username) => {
+	isLoggedIn.value = true;
+	socket.auth = { username };
+	socket.connect();
+};
+
+onMounted(() => {
+	socket.on("connect_error", (err) => {
+		if (err.message === "invalid username") isLoggedIn.value = false;
+	});
+});
+
+onBeforeUnmount(() => {
+	socket.off("connect_error");
+});
 </script>
-
 <template>
-	<header>
-		<div class="wrapper"></div>
-	</header>
-
-	<main></main>
+	<div id="app">
+		<Login v-if="!isLoggedIn" @input="onUsernameSelection" />
+		<Chat v-else />
+	</div>
 </template>
 
 <style scoped>
-header {
-	line-height: 1.5;
+body {
+	margin: 0;
 }
 
-.logo {
-	display: block;
-	margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-	header {
-		display: flex;
-		place-items: center;
-		padding-right: calc(var(--section-gap) / 2);
-	}
-
-	.logo {
-		margin: 0 2rem 0 0;
-	}
-
-	header .wrapper {
-		display: flex;
-		place-items: flex-start;
-		flex-wrap: wrap;
-	}
+#app {
+	font-family: Lato, Arial, sans-serif;
+	font-size: 14px;
 }
 </style>
