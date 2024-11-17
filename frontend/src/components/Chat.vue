@@ -27,15 +27,13 @@ const onSelectUser = (user) => {
 
 onMounted(() => {
 	socket.on("connect", () => {
-		usersConnected.value.forEach((user) => {
-			if (user.self) user.connected = true;
-		});
+		const currentUser = usersConnected.value.find((user) => user.self);
+		if (currentUser) currentUser.connected = true;
 	});
 
 	socket.on("disconnect", () => {
-		usersConnected.value.forEach((user) => {
-			if (user.self) user.connected = false;
-		});
+		const currentUser = usersConnected.value.find((user) => user.self);
+		if (currentUser) currentUser.connected = false;
 	});
 
 	const initReactiveProperties = (user) => {
@@ -59,24 +57,31 @@ onMounted(() => {
 		});
 	});
 
-	socket.on("user connected", (user) => {
-		initReactiveProperties(user);
-		usersConnected.value.push(user);
+	socket.on("user connected", (connectedUser) => {
+		const existingUser = usersConnected.value.find(
+			(user) => user.userID === connectedUser.userID
+		);
+		if (existingUser) {
+			existingUser.connected = true;
+			return;
+		}
+		initReactiveProperties(connectedUser);
+		usersConnected.value.push(connectedUser);
 	});
 
-	socket.on("private message", ({ content, from }) => {
-		usersConnected.value.forEach((user) => {
-			if (user.userID === from) {
-				user.messages.push({
-					content,
-					fromSelf: false,
-				});
+	socket.on("private message", ({ content, from, to }) => {
+		const fromSelf = socket.userID === from;
 
-				if (user !== selectedUser.value) {
-					user.hasNewMessages = true;
-				}
-			}
+		const targetUser = usersConnected.value.find(
+			(user) => user.userID === (fromSelf ? to : from)
+		);
+
+		targetUser.messages.push({
+			content,
+			fromSelf,
 		});
+
+		if (targetUser !== selectedUser.value) targetUser.hasNewMessages = true;
 	});
 
 	socket.on("user disconnected", (id) => {
