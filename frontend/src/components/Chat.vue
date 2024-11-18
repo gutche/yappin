@@ -5,7 +5,7 @@ import socket from "../socket";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 
 const selectedUser = ref(null);
-const usersConnected = ref([]);
+const connectedUsers = ref([]);
 
 const onMessage = (content) => {
 	if (selectedUser) {
@@ -27,29 +27,40 @@ const onSelectUser = (user) => {
 
 onMounted(() => {
 	socket.on("connect", () => {
-		const currentUser = usersConnected.value.find((user) => user.self);
+		const currentUser = connectedUsers.value.find((user) => user.self);
 		if (currentUser) currentUser.connected = true;
 	});
 
 	socket.on("disconnect", () => {
-		const currentUser = usersConnected.value.find((user) => user.self);
+		const currentUser = connectedUsers.value.find((user) => user.self);
 		if (currentUser) currentUser.connected = false;
 	});
 
 	const initReactiveProperties = (user) => {
-		user.connected = true;
-		user.messages = [];
 		user.hasNewMessages = false;
 	};
 
 	socket.on("users", (users) => {
+		// init properties of every user
 		users.forEach((user) => {
+			user.messages.forEach((message) => {
+				message.fromSelf = message.from === socket.userID;
+			});
+			const existingUser = connectedUsers.value.find(
+				(u) => u.userID === user.userID
+			);
+			if (existingUser) {
+				existingUser.connected = user.connected;
+				existingUser.messages = user.messages;
+				return;
+			}
 			user.self = user.userID === socket.id;
 			initReactiveProperties(user);
+			connectedUsers.value.push(user);
 		});
 
 		// put the current user first, and sort by username
-		usersConnected.value = users.sort((a, b) => {
+		connectedUsers.value = users.sort((a, b) => {
 			if (a.self) return -1;
 			if (b.self) return 1;
 			if (a.username < b.username) return -1;
@@ -57,36 +68,34 @@ onMounted(() => {
 		});
 	});
 
-	socket.on("user connected", (connectedUser) => {
-		const existingUser = usersConnected.value.find(
-			(user) => user.userID === connectedUser.userID
+	socket.on("user connected", (user) => {
+		const existingUser = connectedUsers.value.find(
+			(u) => u.userID === user.userID
 		);
 		if (existingUser) {
 			existingUser.connected = true;
 			return;
 		}
-		initReactiveProperties(connectedUser);
-		usersConnected.value.push(connectedUser);
+		initReactiveProperties(user);
+		connectedUsers.value.push(user);
+	});
+
+	socket.on("user disconnected", (id) => {
+		const user = connectedUsers.value.find((user) => user.userID === id);
+		if (user) user.connected = false;
 	});
 
 	socket.on("private message", ({ content, from, to }) => {
 		const fromSelf = socket.userID === from;
-
-		const targetUser = usersConnected.value.find(
+		console.log(connectedUsers);
+		const targetUser = connectedUsers.value.find(
 			(user) => user.userID === (fromSelf ? to : from)
 		);
-
 		targetUser.messages.push({
 			content,
 			fromSelf,
 		});
-
 		if (targetUser !== selectedUser.value) targetUser.hasNewMessages = true;
-	});
-
-	socket.on("user disconnected", (id) => {
-		const user = usersConnected.value.find((user) => user.userID === id);
-		if (user) user.connected = false;
 	});
 });
 
@@ -102,7 +111,7 @@ onBeforeUnmount(() => {
 <template>
 	<div class="left-panel">
 		<User
-			v-for="user in usersConnected"
+			v-for="user in connectedUsers"
 			:key="user.userID"
 			:user="user"
 			:selected="selectedUser === user"

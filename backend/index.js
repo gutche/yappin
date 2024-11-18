@@ -3,6 +3,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import crypto from "crypto";
 import { InMemorySessionStore } from "./sessionStore.js";
+import { InMemoryMessageStore } from "./messageStore.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -14,6 +15,7 @@ const io = new Server(httpServer, {
 
 const randomID = () => crypto.randomBytes(8).toString("hex");
 const sessionStore = new InMemorySessionStore();
+const messageStore = new InMemoryMessageStore();
 
 io.use((socket, next) => {
 	const sessionID = socket.handshake.auth.sessionID;
@@ -56,34 +58,49 @@ io.on("connection", (socket) => {
 
 	// fetch existing users
 	const users = [];
+	const messagesPerUser = new Map();
+	messageStore.findMessagesForUser(socket.userID).forEach((message) => {
+		const { from, to } = message;
+		const otherUser = socket.userID === from ? to : from;
+		if (messagesPerUser.has(otherUser)) {
+			messagesPerUser.get(otherUser).push(message);
+		} else {
+			messagesPerUser.set(otherUser, [message]);
+		}
+	});
 	sessionStore.findAllSessions().forEach((session) => {
 		users.push({
 			userID: session.userID,
 			username: session.username,
 			connected: session.connected,
+			messages: messagesPerUser.get(session.userID) || [],
 		});
 	});
 	socket.emit("users", users);
 
 	// notify existing users
 	socket.broadcast.emit("user connected", {
-		userID: socket.id,
+		userID: socket.userID,
 		username: socket.username,
 		connected: true,
+		messages: [],
 	});
 
 	// forward the private message to the right recipient
 	socket.on("private message", ({ content, to }) => {
-		socket.to(to).emit("private message", {
+		const message = {
 			content,
-			from: socket.id,
-		});
+			from: socket.userID,
+			to,
+		};
+		socket.to(to).to(socket.userID).emit("private message", message);
+		messageStore.saveMessage(message);
 	});
 
 	// notify users upon disconnection
 	socket.on("disconnect", async () => {
 		const matchingSockets = await io.in(socket.userID).fetchSockets();
-		const isDisconnected = matchingSockets === 0;
+		const isDisconnected = matchingSockets.length === 0;
 		if (isDisconnected) {
 			// notify other users
 			socket.broadcast.emit("user disconnected", socket.userID);
