@@ -26,7 +26,7 @@ if (cluster.isPrimary) {
 		console.log(`server listening at http://localhost:${PORT}`)
 	);
 } else {
-	import("./index.js").then((module) => {
+	import("./index.js").then(() => {
 		console.log(`Worker ${process.pid} started`);
 	});
 }

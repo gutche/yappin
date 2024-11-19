@@ -54,7 +54,7 @@ onMounted(() => {
 				existingUser.messages = user.messages;
 				return;
 			}
-			user.self = user.userID === socket.id;
+			user.self = user.userID === socket.userID;
 			initReactiveProperties(user);
 			connectedUsers.value.push(user);
 		});
