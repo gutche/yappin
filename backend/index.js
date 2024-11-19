@@ -2,8 +2,14 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import crypto from "crypto";
-import { InMemorySessionStore } from "./sessionStore.js";
-import { InMemoryMessageStore } from "./messageStore.js";
+import { RedisSessionStore } from "./sessionStore.js";
+import { RedisMessageStore } from "./messageStore.js";
+import Redis from "ioredis";
+import { createClient } from "redis";
+import { setupWorker } from "@socket.io/sticky";
+import { createAdapter } from "@socket.io/redis-adapter";
+
+const redisClient = new Redis();
 
 const app = express();
 const httpServer = createServer(app);
@@ -12,16 +18,20 @@ const io = new Server(httpServer, {
 		origin: "http://localhost:5173",
 	},
 });
+const pubClient = createClient({ url: "redis://localhost:6379" });
+const subClient = pubClient.duplicate();
+await Promise.all([pubClient.connect(), subClient.connect()]);
+io.adapter(createAdapter(pubClient, subClient));
 
 const randomID = () => crypto.randomBytes(8).toString("hex");
-const sessionStore = new InMemorySessionStore();
-const messageStore = new InMemoryMessageStore();
+const sessionStore = new RedisSessionStore(redisClient);
+const messageStore = new RedisMessageStore(redisClient);
 
-io.use((socket, next) => {
+io.use(async (socket, next) => {
 	const sessionID = socket.handshake.auth.sessionID;
 
 	if (sessionID) {
-		const session = sessionStore.findSession(sessionID);
+		const session = await sessionStore.findSession(sessionID);
 		if (session) {
 			socket.sessionID = sessionID;
 			socket.userID = session.userID;
@@ -39,7 +49,7 @@ io.use((socket, next) => {
 	next();
 });
 
-io.on("connection", (socket) => {
+io.on("connection", async (socket) => {
 	// persist session
 	sessionStore.saveSession(socket.sessionID, {
 		userID: socket.userID,
@@ -58,8 +68,12 @@ io.on("connection", (socket) => {
 
 	// fetch existing users
 	const users = [];
+	const [messages, sessions] = await Promise.all([
+		messageStore.findMessagesForUser(socket.userID),
+		sessionStore.findAllSessions(),
+	]);
 	const messagesPerUser = new Map();
-	messageStore.findMessagesForUser(socket.userID).forEach((message) => {
+	messages.forEach((message) => {
 		const { from, to } = message;
 		const otherUser = socket.userID === from ? to : from;
 		if (messagesPerUser.has(otherUser)) {
@@ -68,7 +82,8 @@ io.on("connection", (socket) => {
 			messagesPerUser.set(otherUser, [message]);
 		}
 	});
-	sessionStore.findAllSessions().forEach((session) => {
+
+	sessions.forEach((session) => {
 		users.push({
 			userID: session.userID,
 			username: session.username,
@@ -115,6 +130,4 @@ io.on("connection", (socket) => {
 	});
 });
 
-httpServer.listen(3000, () => {
-	console.log("Server listening on port 3000");
-});
+setupWorker(io);
