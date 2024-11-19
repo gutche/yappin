@@ -2,7 +2,7 @@
 
 Yappin is a modern messaging app built with the **Vue framework** for the frontend and **Express** for the backend. It enables real-time chat capabilities using **Socket.IO** for bidirectional and low-latency communication.
 
-The backend leverages **Node.js clustering** for load balancing and uses **Redis** as an adapter to propagate events across workers and cache recent messages
+The backend leverages **Node.js clustering** for load balancing and uses **Redis** as an adapter to propagate events across workers and cache recent messages.
 
 ---
 
@@ -54,28 +54,41 @@ Ensure you have the following installed on your system:
 
 1. Run the Docker daemon.
 
-2. Start the local redis client by running these commands in a terminal:
+2. Install dependencies for the backend:
 
     ```bash
     cd backend
+    npm install
+    ```
+
+3. Start the local Redis client by running these commands in the same terminal:
+
+    ```bash
     docker-compose up
     ```
 
-3. **Open another terminal** and start the server:
+4. **Open another terminal** and start the backend server:
 
     ```bash
     cd backend
     npm run start
     ```
 
-4. **In another terminal,** start the frontend:
+5. **In another terminal**, install dependencies for the frontend:
 
     ```bash
     cd frontend
+    npm install
+    ```
+
+6. Then start the frontend with:
+
+    ```bash
     npm run dev
     ```
 
-5. Open your browser and navigate to:
+7. Open your browser and navigate to:
+
     ```
     http://localhost:5173
     ```
