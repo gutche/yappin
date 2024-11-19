@@ -14,6 +14,14 @@ The backend leverages **Node.js clustering** for load balancing and uses **Redis
 
 ---
 
+## Screenshot
+
+Here’s a preview of how Yappin looks:
+
+![Yappin screenshot](screenshots/yappin.png)
+
+---
+
 ## What's Next
 
 -   **User authentication**: Secure login with JWT or OAuth.
@@ -45,23 +53,29 @@ Ensure you have the following installed on your system:
 ### Steps
 
 1. Run the Docker daemon.
-2. Start the server by running these commands in a terminal:
+
+2. Start the local redis client by running these commands in a terminal:
 
     ```bash
     cd backend
     docker-compose up
+    ```
+
+3. **Open another terminal** and start the server:
+
+    ```bash
+    cd backend
     npm run start
     ```
 
-3. Start the frontend with the following commands:
+4. **In another terminal,** start the frontend:
 
     ```bash
     cd frontend
     npm run dev
     ```
 
-4. Open your browser and navigate to:
-
+5. Open your browser and navigate to:
     ```
     http://localhost:5173
     ```
