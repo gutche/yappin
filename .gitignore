@@ -29,3 +29,5 @@ frontend/.vscode/*
 *.sw?
 
 *.tsbuildinfo
+
+.env

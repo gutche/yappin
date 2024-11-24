@@ -8,6 +8,10 @@ import Redis from "ioredis";
 import { createClient } from "redis";
 import { setupWorker } from "@socket.io/sticky";
 import { createAdapter } from "@socket.io/redis-adapter";
+import passport from "passport";
+import LocalStrategy from "passport-local";
+import pg from "pg";
+import "dotenv/config";
 
 const redisClient = new Redis();
 
@@ -26,6 +30,9 @@ io.adapter(createAdapter(pubClient, subClient));
 const randomID = () => crypto.randomBytes(8).toString("hex");
 const sessionStore = new RedisSessionStore(redisClient);
 const messageStore = new RedisMessageStore(redisClient);
+
+const db = new pg.Client();
+await db.connect();
 
 io.use(async (socket, next) => {
 	const sessionID = socket.handshake.auth.sessionID;
@@ -48,6 +55,49 @@ io.use(async (socket, next) => {
 	socket.username = username;
 	next();
 });
+
+passport.use(
+	new LocalStrategy(function verify(username, password, cb) {
+		db.get(
+			"SELECT * FROM users WHERE username = ?",
+			[username],
+			function (err, user) {
+				if (err) {
+					return cb(err);
+				}
+				if (!user) {
+					return cb(null, false, {
+						message: "Incorrect username or password.",
+					});
+				}
+
+				crypto.pbkdf2(
+					password,
+					user.salt,
+					310000,
+					32,
+					"sha256",
+					function (err, hashedPassword) {
+						if (err) {
+							return cb(err);
+						}
+						if (
+							!crypto.timingSafeEqual(
+								user.hashed_password,
+								hashedPassword
+							)
+						) {
+							return cb(null, false, {
+								message: "Incorrect username or password.",
+							});
+						}
+						return cb(null, user);
+					}
+				);
+			}
+		);
+	})
+);
 
 io.on("connection", async (socket) => {
 	// persist session
