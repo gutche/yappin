@@ -10,8 +10,7 @@ import { setupWorker } from "@socket.io/sticky";
 import { createAdapter } from "@socket.io/redis-adapter";
 import passport from "passport";
 import LocalStrategy from "passport-local";
-import pg from "pg";
-import "dotenv/config";
+import db from "./database.js";
 
 const redisClient = new Redis();
 
@@ -30,9 +29,6 @@ io.adapter(createAdapter(pubClient, subClient));
 const randomID = () => crypto.randomBytes(8).toString("hex");
 const sessionStore = new RedisSessionStore(redisClient);
 const messageStore = new RedisMessageStore(redisClient);
-
-const db = new pg.Client();
-await db.connect();
 
 io.use(async (socket, next) => {
 	const sessionID = socket.handshake.auth.sessionID;
@@ -58,7 +54,7 @@ io.use(async (socket, next) => {
 
 passport.use(
 	new LocalStrategy(function verify(username, password, cb) {
-		db.get(
+		db.query(
 			"SELECT * FROM users WHERE username = ?",
 			[username],
 			function (err, user) {
