@@ -1,8 +1,7 @@
 <script setup>
-import Login from "./components/Login.vue";
-import Chat from "./components/Chat.vue";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import socket from "./socket";
+import { RouterView } from "vue-router";
 
 const isLoggedIn = ref(false);
 
@@ -41,8 +40,7 @@ onBeforeUnmount(() => {
 </script>
 <template>
 	<div id="app">
-		<Login v-if="!isLoggedIn" @input="onUsernameSelection" />
-		<Chat v-else />
+		<RouterView></RouterView>
 	</div>
 </template>
 

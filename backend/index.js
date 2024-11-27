@@ -52,6 +52,20 @@ io.use(async (socket, next) => {
 	next();
 });
 
+const isAuthenticated = () => {};
+
+app.get("/register", isAuthenticated, (req, res) => {
+	res.redirect("/");
+});
+
+app.get("/login", isAuthenticated, (req, res) => {
+	res.redirect("/");
+});
+
+app.get("/login", isAuthenticated, (req, res) => {
+	res.redirect("/");
+});
+
 passport.use(
 	new LocalStrategy(function verify(username, password, cb) {
 		db.query(

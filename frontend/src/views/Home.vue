@@ -1,6 +1,6 @@
 <script setup>
-import MessagePanel from "./MessagePanel.vue";
-import User from "./User.vue";
+import MessagePanel from "../components/MessagePanel.vue";
+import User from "../components/User.vue";
 import socket from "../socket";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 
