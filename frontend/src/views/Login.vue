@@ -13,51 +13,53 @@ const isValid = computed(() => {
 });
 </script>
 <template>
-	<form action="" method="post">
-		<div class="container">
-			<label for="uname"><b>Username</b></label>
-			<input
-				type="text"
-				placeholder="Enter Username"
-				name="uname"
-				required />
+	<div class="form-container">
+		<form action="" method="post">
+			<div class="img-container">
+				<img
+					src="https://as1.ftcdn.net/v2/jpg/03/16/12/52/1000_F_316125289_3GTL3Yd9JVQz3Nw50uAEEkOpX6GvK0LE.jpg"
+					alt="Login logo" />
+			</div>
+			<div class="container">
+				<label for="uname"><b>Username</b></label>
+				<input
+					type="text"
+					placeholder="Enter Username"
+					name="uname"
+					required />
 
-			<label for="psw"><b>Password</b></label>
-			<input
-				type="password"
-				placeholder="Enter Password"
-				name="psw"
-				required />
+				<label for="psw"><b>Password</b></label>
+				<input
+					type="password"
+					placeholder="Enter Password"
+					name="psw"
+					required />
 
-			<button type="submit">Login</button>
-			<label>
-				<input type="checkbox" checked="checked" name="remember" />
-				Remember me
-			</label>
-		</div>
+				<button type="submit">Login</button>
+				<label>
+					<input type="checkbox" checked="checked" name="remember" />
+					Remember me
+				</label>
+			</div>
 
-		<div class="container" style="background-color: #f1f1f1">
-			<button type="button" class="cancelbtn">Cancel</button>
-			<span class="psw"><a href="#">Forgot password?</a></span>
-		</div>
-	</form>
-	<!-- <div class="select-username">
-		<form @submit.prevent="onSubmit">
-			<input v-model="username" placeholder="username" />
-			<input v-model="password" placeholder="password" />
-			<button :disabled="!isValid">Send</button>
+			<div class="container" style="background-color: #f1f1f1">
+				<button type="button" class="cancelbtn">Cancel</button>
+				<span class="psw"><a href="#">Forgot password?</a></span>
+			</div>
 		</form>
-	</div> -->
+	</div>
 </template>
 <style scoped>
-.select-username {
-	width: 300px;
-	margin: 200px auto 0;
+.img-container {
+	display: flex;
+	justify-content: center;
+	margin: 20px;
 }
 
-form {
-	border: 3px solid #f1f1f1;
-	margin: 50px;
+img {
+	height: 80px;
+	width: 80px;
+	border-radius: 50%;
 }
 
 input[type="text"],
@@ -65,7 +67,6 @@ input[type="password"] {
 	width: 100%;
 	padding: 12px 20px;
 	margin: 8px 0;
-	display: inline-block;
 	border: 1px solid #ccc;
 	box-sizing: border-box;
 }
@@ -84,24 +85,21 @@ button:hover {
 	opacity: 0.8;
 }
 
-/* Extra style for the cancel button (red) */
 .cancelbtn {
 	width: auto;
 	padding: 10px 18px;
 	background-color: #f44336;
 }
-/* Add padding to containers */
+
 .container {
 	padding: 16px;
 }
 
-/* The "Forgot password" text */
 span.psw {
 	float: right;
 	padding-top: 16px;
 }
 
-/* Change styles for span and cancel button on extra small screens */
 @media screen and (max-width: 300px) {
 	span.psw {
 		display: block;

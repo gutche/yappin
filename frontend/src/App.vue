@@ -44,13 +44,4 @@ onBeforeUnmount(() => {
 	</div>
 </template>
 
-<style scoped>
-body {
-	margin: 0;
-}
-
-#app {
-	font-family: Lato, Arial, sans-serif;
-	font-size: 14px;
-}
-</style>
+<style scoped></style>
