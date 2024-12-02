@@ -12,7 +12,6 @@ export const authenticateUser = (email, password, done) => {
 					message: "Incorrect username or password.",
 				});
 			}
-
 			const user = results.rows[0];
 			const isPasswordValid = await bcrypt.compare(
 				password,
@@ -24,7 +23,6 @@ export const authenticateUser = (email, password, done) => {
 					message: "Incorrect username or password.",
 				});
 			}
-
 			return done(null, user);
 		}
 	);

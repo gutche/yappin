@@ -20,10 +20,10 @@ const submitForm = async () => {
 				rememberUser: rememberUser.value,
 			}),
 		});
+
 		if (response.status === 404) {
 			serverError.value = "Email or password is incorrect!";
 		}
-
 		if (response.ok) router.push("/");
 	} catch (error) {
 		console.error(error);

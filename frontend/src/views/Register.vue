@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import router from "../router/index";
+import { useAuthStore } from "@/stores/auth";
 
 const email = ref("");
 const password = ref("");
@@ -37,7 +38,6 @@ const sendForm = async () => {
 				password: password.value,
 			}),
 		});
-		console.log(response);
 		if (response.status === 409) {
 			const data = await response.json();
 			serverError.value = data.error;

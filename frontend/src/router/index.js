@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Logout from "../views/Logout.vue";
+import { useAuthStore } from "@/stores/auth";
 
 const routes = [
 	{
@@ -29,7 +29,7 @@ const routes = [
 	{
 		path: "/logout",
 		name: "Logout",
-		component: Logout,
+		component: () => import("@/views/Logout.vue"),
 	},
 ];
 
@@ -38,41 +38,20 @@ const router = createRouter({
 	routes,
 });
 
-async function getSession() {
-	try {
-		const response = await fetch("/auth/session-status", {
-			method: "GET",
-			credentials: "include", // Include session cookies
-		});
-
-		if (response.ok) {
-			return true; // User is authenticated
-		} else {
-			return false; // User is not authenticated
-		}
-	} catch (err) {
-		console.error("Failed to check session:", err);
-		return false; // Treat errors as unauthenticated
-	}
-}
-
 router.beforeEach(async (to, from, next) => {
-	if (to.meta.requiresAuth) {
-		const isAuthenticated = await getSession();
-		if (isAuthenticated) {
-			next(); // User is authenticated; allow navigation
-		} else {
-			next("/login"); // Not authenticated; redirect to login
-		}
-	} else if (to.meta.guestOnly) {
-		const isAuthenticated = await getSession();
-		if (isAuthenticated) {
-			next("/"); // If authenticated, redirect to home or protected route
-		} else {
-			next(); // Not authenticated; allow navigation
-		}
+	const authStore = useAuthStore();
+
+	// Fetch session status only once or when not set
+	if (authStore.isAuthenticated === null) {
+		await authStore.fetchSession();
+	}
+
+	if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+		next("/login"); // Redirect unauthenticated users
+	} else if (to.meta.guestOnly && authStore.isAuthenticated) {
+		next("/"); // Redirect authenticated users from guest-only pages
 	} else {
-		next(); // Route doesn't require auth; proceed
+		next(); // Allow navigation
 	}
 });
 
