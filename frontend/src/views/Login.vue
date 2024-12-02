@@ -17,6 +17,7 @@ const submitForm = async () => {
 			body: JSON.stringify({
 				email: email.value,
 				password: password.value,
+				rememberUser: rememberUser.value,
 			}),
 		});
 		if (response.status === 404) {

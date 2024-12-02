@@ -29,7 +29,10 @@ app.use(
 		secret: secretKey,
 		resave: false,
 		saveUninitialized: false,
-		cookie: { secure: false },
+		cookie: {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+		},
 	})
 );
 app.use(passport.initialize());
@@ -141,7 +144,7 @@ app.post("/register", isNotAuthenticated, async (req, res, next) => {
 	}
 });
 
-app.post("/login", (req, res, next) => {
+app.post("/login", isNotAuthenticated, (req, res, next) => {
 	passport.authenticate("local", (err, user, info) => {
 		if (err) {
 			console.error("Authentication error:", err);
@@ -155,6 +158,14 @@ app.post("/login", (req, res, next) => {
 			if (err) {
 				console.error("Login error:", err);
 				return res.status(500).json({ error: "Internal server error" });
+			}
+
+			if (req.body.rememberUser) {
+				// Set cookie to last for 7 days
+				req.session.cookie.maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+			} else {
+				// Set session cookie to expire on browser close
+				req.session.cookie.expires = false;
 			}
 
 			return res.json({
