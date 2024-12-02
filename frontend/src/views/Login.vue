@@ -1,31 +1,50 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref } from "vue";
+import router from "../router";
 
-const emit = defineEmits(["input"]);
-const username = ref("");
+const email = ref("");
+const password = ref("");
+const rememberUser = ref(false);
+const serverError = ref("");
 
-const onSubmit = () => {
-	emit("input", username.value);
+const submitForm = async () => {
+	try {
+		const response = await fetch("http://localhost:3000/login", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				email: email.value,
+				password: password.value,
+			}),
+		});
+		if (response.status === 404) {
+			serverError.value = "Email or password is incorrect!";
+		}
+
+		if (response.ok) router.push("/");
+	} catch (error) {
+		console.error(error);
+		serverError.value = error.message;
+	}
 };
-
-const isValid = computed(() => {
-	return username.value.length > 2;
-});
 </script>
 <template>
 	<div class="form-container">
-		<form action="" method="post">
+		<form @submit.prevent="submitForm">
 			<div class="img-container">
 				<img
 					src="https://as1.ftcdn.net/v2/jpg/03/16/12/52/1000_F_316125289_3GTL3Yd9JVQz3Nw50uAEEkOpX6GvK0LE.jpg"
 					alt="Login logo" />
 			</div>
 			<div class="container">
-				<label for="uname"><b>Username</b></label>
+				<label for="email"><b>Email</b></label>
 				<input
 					type="text"
-					placeholder="Enter Username"
-					name="uname"
+					placeholder="Enter Email"
+					name="email"
+					v-model="email"
 					required />
 
 				<label for="psw"><b>Password</b></label>
@@ -33,17 +52,26 @@ const isValid = computed(() => {
 					type="password"
 					placeholder="Enter Password"
 					name="psw"
+					v-model="password"
 					required />
-
+				<p v-if="serverError" style="color: red">{{ serverError }}</p>
 				<button type="submit">Login</button>
 				<label>
-					<input type="checkbox" checked="checked" name="remember" />
+					<input
+						type="checkbox"
+						checked="checked"
+						name="remember"
+						v-model="rememberUser" />
 					Remember me
 				</label>
 			</div>
 
 			<div class="container" style="background-color: #f1f1f1">
-				<button type="button" class="cancelbtn">Cancel</button>
+				<RouterLink to="/register"
+					><button type="button" class="cancelbtn">
+						Create an account
+					</button></RouterLink
+				>
 				<span class="psw"><a href="#">Forgot password?</a></span>
 			</div>
 		</form>
@@ -88,7 +116,6 @@ button:hover {
 .cancelbtn {
 	width: auto;
 	padding: 10px 18px;
-	background-color: #f44336;
 }
 
 .container {

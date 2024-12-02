@@ -1,24 +1,56 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import crypto from "crypto";
 import { RedisSessionStore } from "./sessionStore.js";
 import { RedisMessageStore } from "./messageStore.js";
 import Redis from "ioredis";
 import { createClient } from "redis";
 import { setupWorker } from "@socket.io/sticky";
 import { createAdapter } from "@socket.io/redis-adapter";
-import passport from "passport";
-import LocalStrategy from "passport-local";
 import db from "./database.js";
+import cors from "cors";
+import session from "express-session";
+import flash from "express-flash";
+import passport from "passport";
+import { initPassportConfig } from "./passport-config.js";
+import { authenticateUser, getUserById } from "./auth.js";
+import bcrypt from "bcrypt";
+import crypto from "crypto";
 
 const redisClient = new Redis();
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+const secretKey = crypto.randomBytes(32).toString("hex");
+
+app.use(
+	session({
+		secret: secretKey,
+		resave: false,
+		saveUninitialized: false,
+		cookie: { secure: false },
+	})
+);
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+
+initPassportConfig(passport, authenticateUser, getUserById);
+
+app.use(
+	cors({
+		origin: "http://localhost:5173",
+		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+		credentials: true,
+	})
+);
+
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
 	cors: {
 		origin: "http://localhost:5173",
+		methods: ["GET", "POST"],
 	},
 });
 const pubClient = createClient({ url: "redis://localhost:6379" });
@@ -52,62 +84,86 @@ io.use(async (socket, next) => {
 	next();
 });
 
-const isAuthenticated = () => {};
+const isNotAuthenticated = (req, res, next) => {
+	if (!req.isAuthenticated()) {
+		return next();
+	}
+	res.status(403).json({ message: "You must logout before proceeding" });
+};
 
-app.get("/register", isAuthenticated, (req, res) => {
-	res.redirect("/");
+app.delete("/logout", function (req, res, next) {
+	req.logout(function (err) {
+		if (err) {
+			return next(err);
+		}
+		res.status(200);
+	});
 });
 
-app.get("/login", isAuthenticated, (req, res) => {
-	res.redirect("/");
-});
+app.post("/register", isNotAuthenticated, async (req, res, next) => {
+	const { email, password } = req.body;
 
-app.get("/login", isAuthenticated, (req, res) => {
-	res.redirect("/");
-});
+	try {
+		const saltRounds = 10;
+		const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-passport.use(
-	new LocalStrategy(function verify(username, password, cb) {
 		db.query(
-			"SELECT * FROM users WHERE username = ?",
-			[username],
-			function (err, user) {
+			"INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *",
+			[email, hashedPassword],
+			(err, result) => {
 				if (err) {
-					return cb(err);
-				}
-				if (!user) {
-					return cb(null, false, {
-						message: "Incorrect username or password.",
-					});
+					console.error("Error registering user:", err);
+					return res
+						.status(500)
+						.json({ error: "Internal server error" });
 				}
 
-				crypto.pbkdf2(
-					password,
-					user.salt,
-					310000,
-					32,
-					"sha256",
-					function (err, hashedPassword) {
-						if (err) {
-							return cb(err);
-						}
-						if (
-							!crypto.timingSafeEqual(
-								user.hashed_password,
-								hashedPassword
-							)
-						) {
-							return cb(null, false, {
-								message: "Incorrect username or password.",
-							});
-						}
-						return cb(null, user);
+				const newUser = result.rows[0];
+				console.log("User registered successfully:", newUser);
+
+				req.login(newUser, (err) => {
+					if (err) {
+						console.error("Login error after registration:", err);
+						return res
+							.status(500)
+							.json({ error: "Internal server error" });
 					}
-				);
+
+					return res.json({
+						success: true,
+						message: "User registered and logged in successfully",
+						user: newUser,
+					});
+				});
 			}
 		);
-	})
-);
+	} catch (err) {
+		console.error("Error during registration:", err);
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
+app.post("/login", (req, res, next) => {
+	passport.authenticate("local", (err, user, info) => {
+		if (err) {
+			console.error("Authentication error:", err);
+			return res.status(500).json({ error: "Internal server error" });
+		}
+		if (!user) {
+			// Authentication failed, send the failure message
+			return res.status(401).json({ error: info.message });
+		}
+
+		req.login(user, (err) => {
+			if (err) {
+				console.error("Login error:", err);
+				return res.status(500).json({ error: "Internal server error" });
+			}
+
+			return res.json({ success: true, user });
+		});
+	})(req, res, next);
+});
 
 io.on("connection", async (socket) => {
 	// persist session

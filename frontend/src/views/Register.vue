@@ -1,6 +1,69 @@
+<script setup>
+import { ref } from "vue";
+import router from "../router/index";
+
+const email = ref("");
+const password = ref("");
+const repeatedPassword = ref("");
+const validEmail = ref(false);
+
+const emailError = ref("");
+const passwordError = ref("");
+const serverError = ref("");
+
+const sendForm = async () => {
+	emailError.value = "";
+	passwordError.value = "";
+
+	validEmail.value = validateEmail(email);
+	if (!validEmail.value) {
+		emailError.value = "Invalid email";
+		return;
+	}
+
+	if (password.value !== repeatedPassword.value) {
+		passwordError.value = "Passwords don't match";
+		return;
+	}
+
+	try {
+		const response = await fetch("http://localhost:3000/register", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				email: email.value,
+				password: password.value,
+			}),
+		});
+		console.log(response);
+		if (response.status === 409) {
+			const data = await response.json();
+			serverError.value = data.error;
+			return;
+		}
+
+		if (!response.ok) {
+			throw new Error("Failed to register. Please try again.");
+		}
+
+		if (response.ok) router.push("/");
+	} catch (error) {
+		console.error(error);
+		serverError.value = error.message;
+	}
+};
+
+const validateEmail = (email) => {
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+	return emailRegex.test(email.value);
+};
+</script>
+
 <template>
 	<div class="form-container">
-		<form action="action_page.php">
+		<form @submit.prevent="sendForm">
 			<div class="container">
 				<h1>Register</h1>
 				<p>Please fill in this form to create an account.</p>
@@ -12,14 +75,16 @@
 					placeholder="Enter Email"
 					name="email"
 					id="email"
+					v-model="email"
 					required />
-
+				<p v-if="emailError" style="color: red">{{ emailError }}</p>
 				<label for="psw"><b>Password</b></label>
 				<input
 					type="password"
 					placeholder="Enter Password"
 					name="psw"
 					id="psw"
+					v-model="password"
 					required />
 
 				<label for="psw-repeat"><b>Repeat Password</b></label>
@@ -28,9 +93,13 @@
 					placeholder="Repeat Password"
 					name="psw-repeat"
 					id="psw-repeat"
+					v-model="repeatedPassword"
 					required />
+				<p v-if="passwordError" style="color: red">
+					{{ passwordError }}
+				</p>
 				<hr />
-
+				<p v-if="serverError" style="color: red">{{ serverError }}</p>
 				<p>
 					By creating an account you agree to our
 					<a href="#">Terms & Privacy</a>.
@@ -39,25 +108,24 @@
 			</div>
 
 			<div class="container signin">
-				<p>Already have an account? <a href="#">Sign in</a>.</p>
+				<p>
+					Already have an account?
+					<RouterLink to="/login">Sign in</RouterLink>.
+				</p>
 			</div>
 		</form>
 	</div>
 </template>
-
-<script setup></script>
 
 <style scoped>
 * {
 	box-sizing: border-box;
 }
 
-/* Add padding to containers */
 .container {
 	padding: 16px;
 }
 
-/* Full-width input fields */
 input[type="text"],
 input[type="password"] {
 	width: 100%;
@@ -74,13 +142,11 @@ input[type="password"]:focus {
 	outline: none;
 }
 
-/* Overwrite default styles of hr */
 hr {
 	border: 1px solid #f1f1f1;
 	margin-bottom: 25px;
 }
 
-/* Set a style for the submit/register button */
 .registerbtn {
 	background-color: #04aa6d;
 	color: white;
@@ -96,12 +162,10 @@ hr {
 	opacity: 1;
 }
 
-/* Add a blue text color to links */
 a {
 	color: dodgerblue;
 }
 
-/* Set a grey background color and center the text of the "sign in" section */
 .signin {
 	background-color: #f1f1f1;
 	text-align: center;
