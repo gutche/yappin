@@ -119,7 +119,6 @@ app.post("/register", isNotAuthenticated, async (req, res, next) => {
 				}
 
 				const newUser = result.rows[0];
-				console.log("User registered successfully:", newUser);
 
 				req.login(newUser, (err) => {
 					if (err) {
@@ -132,7 +131,6 @@ app.post("/register", isNotAuthenticated, async (req, res, next) => {
 					return res.json({
 						success: true,
 						message: "User registered and logged in successfully",
-						user: newUser,
 					});
 				});
 			}
@@ -150,7 +148,6 @@ app.post("/login", (req, res, next) => {
 			return res.status(500).json({ error: "Internal server error" });
 		}
 		if (!user) {
-			// Authentication failed, send the failure message
 			return res.status(401).json({ error: info.message });
 		}
 
@@ -160,9 +157,20 @@ app.post("/login", (req, res, next) => {
 				return res.status(500).json({ error: "Internal server error" });
 			}
 
-			return res.json({ success: true, user });
+			return res.json({
+				success: true,
+				message: "Logged in succesfully",
+			});
 		});
 	})(req, res, next);
+});
+
+app.get("/auth/session-status", (req, res) => {
+	if (req.isAuthenticated()) {
+		res.sendStatus(200);
+	} else {
+		res.sendStatus(401);
+	}
 });
 
 io.on("connection", async (socket) => {

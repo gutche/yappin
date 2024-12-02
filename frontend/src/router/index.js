@@ -35,12 +35,21 @@ const router = createRouter({
 	routes,
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
 	if (to.meta.requiresAuth) {
-		const token = localStorage.getItem("sessionID");
-		if (token) {
-			next();
-		} else {
+		try {
+			const response = await fetch("/auth/session-status", {
+				method: "GET",
+				credentials: "include",
+			});
+
+			if (response.ok) {
+				next();
+			} else {
+				next("/login");
+			}
+		} catch (err) {
+			console.error("Session check failed:", err);
 			next("/login");
 		}
 	} else {
