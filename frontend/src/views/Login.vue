@@ -19,6 +19,7 @@ const submitForm = async () => {
 				password: password.value,
 				rememberUser: rememberUser.value,
 			}),
+			credentials: "include",
 		});
 
 		if (response.status === 404) {

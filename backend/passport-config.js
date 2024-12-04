@@ -13,5 +13,5 @@ export const initPassportConfig = (passport, authenticateUser, getUserById) => {
 		done(null, user.id);
 	});
 
-	passport.deserializeUser((id, done) => (id, done) => getUserById(id, done));
+	passport.deserializeUser((id, done) => getUserById(id, done));
 };

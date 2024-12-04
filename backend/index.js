@@ -22,25 +22,6 @@ const redisClient = new Redis();
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-const secretKey = crypto.randomBytes(32).toString("hex");
-
-app.use(
-	session({
-		secret: secretKey,
-		resave: false,
-		saveUninitialized: false,
-		cookie: {
-			httpOnly: true,
-			secure: process.env.NODE_ENV === "production",
-		},
-	})
-);
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(flash());
-
-initPassportConfig(passport, authenticateUser, getUserById);
-
 app.use(
 	cors({
 		origin: "http://localhost:5173",
@@ -49,6 +30,23 @@ app.use(
 	})
 );
 
+const secretKey = crypto.randomBytes(32).toString("hex");
+const sessionMiddleware = session({
+	secret: secretKey,
+	resave: false,
+	saveUninitialized: false,
+	cookie: {
+		httpOnly: true,
+		secure: false, // Set to true in production with HTTPS
+		maxAge: 24 * 60 * 60 * 1000, // 1 day
+	},
+});
+app.use(sessionMiddleware);
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+initPassportConfig(passport, authenticateUser, getUserById);
+
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
 	cors: {
@@ -56,6 +54,8 @@ const io = new Server(httpServer, {
 		methods: ["GET", "POST"],
 	},
 });
+io.engine.use(sessionMiddleware);
+
 const pubClient = createClient({ url: "redis://localhost:6379" });
 const subClient = pubClient.duplicate();
 await Promise.all([pubClient.connect(), subClient.connect()]);
@@ -71,19 +71,11 @@ io.use(async (socket, next) => {
 	if (sessionID) {
 		const session = await sessionStore.findSession(sessionID);
 		if (session) {
-			socket.sessionID = sessionID;
 			socket.userID = session.userID;
-			socket.username = session.username;
 			return next();
 		}
 	}
-	const username = socket.handshake.auth.username;
-	if (!username) {
-		return next(new Error("invalid username"));
-	}
-	socket.sessionID = randomID();
 	socket.userID = randomID();
-	socket.username = username;
 	next();
 });
 
@@ -99,7 +91,7 @@ app.delete("/logout", function (req, res, next) {
 		if (err) {
 			return next(err);
 		}
-		res.status(200);
+		res.sendStatus(200);
 	});
 });
 
@@ -111,7 +103,7 @@ app.post("/register", isNotAuthenticated, async (req, res, next) => {
 		const hashedPassword = await bcrypt.hash(password, saltRounds);
 
 		db.query(
-			"INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *",
+			"INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id",
 			[email, hashedPassword],
 			(err, result) => {
 				if (err) {
@@ -130,7 +122,6 @@ app.post("/register", isNotAuthenticated, async (req, res, next) => {
 							.status(500)
 							.json({ error: "Internal server error" });
 					}
-
 					return res.json({
 						success: true,
 						message: "User registered and logged in successfully",
@@ -159,7 +150,6 @@ app.post("/login", isNotAuthenticated, (req, res, next) => {
 				console.error("Login error:", err);
 				return res.status(500).json({ error: "Internal server error" });
 			}
-
 			if (req.body.rememberUser) {
 				// Set cookie to last for 7 days
 				req.session.cookie.maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
@@ -167,7 +157,6 @@ app.post("/login", isNotAuthenticated, (req, res, next) => {
 				// Set session cookie to expire on browser close
 				req.session.cookie.expires = false;
 			}
-
 			return res.json({
 				success: true,
 				message: "Logged in succesfully",
@@ -176,11 +165,11 @@ app.post("/login", isNotAuthenticated, (req, res, next) => {
 	})(req, res, next);
 });
 
-app.get("/auth/session-status", (req, res) => {
+app.get("/validate-session", (req, res) => {
 	if (req.isAuthenticated()) {
-		res.sendStatus(200);
+		return res.sendStatus(200);
 	} else {
-		res.sendStatus(401);
+		return res.sendStatus(401);
 	}
 });
 
@@ -194,7 +183,6 @@ io.on("connection", async (socket) => {
 
 	// emit session details
 	socket.emit("session", {
-		sessionID: socket.sessionID,
 		userID: socket.userID,
 	});
 

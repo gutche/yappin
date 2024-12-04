@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
+import { useAuthStore } from "@/stores/authStore.js";
 
 const routes = [
 	{
@@ -41,18 +41,23 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
 	const authStore = useAuthStore();
 
-	// Fetch session status only once or when not set
-	if (authStore.isAuthenticated === null) {
-		await authStore.fetchSession();
+	try {
+		if (to.meta.requiresAuth || to.meta.guestOnly) {
+			await authStore.fetchSession();
+		}
+
+		if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+			return next("/login");
+		} else if (to.meta.guestOnly && authStore.isAuthenticated) {
+			console.log("authenticated -> /");
+			return next("/");
+		}
+	} catch (error) {
+		console.error("Error in beforeEach guard:", error);
+		if (to.meta.requiresAuth) return next("/login");
 	}
 
-	if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-		next("/login"); // Redirect unauthenticated users
-	} else if (to.meta.guestOnly && authStore.isAuthenticated) {
-		next("/"); // Redirect authenticated users from guest-only pages
-	} else {
-		next(); // Allow navigation
-	}
+	next();
 });
 
 export default router;
