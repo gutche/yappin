@@ -6,13 +6,10 @@ export const useAuthStore = defineStore("auth", () => {
 
 	const fetchSession = async () => {
 		try {
-			const response = await fetch(
-				"http://localhost:3000/validate-session",
-				{
-					method: "GET",
-					credentials: "include",
-				}
-			);
+			const response = await fetch("http://localhost:3000/get-session", {
+				method: "GET",
+				credentials: "include",
+			});
 			if (response.ok) {
 				isAuthenticated.value = true;
 			} else {

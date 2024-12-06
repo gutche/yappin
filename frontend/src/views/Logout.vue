@@ -11,9 +11,6 @@ onMounted(async () => {
 		});
 
 		if (response.ok) {
-			console.log("Successfully logged out");
-			const authStore = useAuthStore();
-			authStore.isAuthenticated = false; // Clear auth state
 			router.push("/login");
 		} else {
 			console.error("Failed to log out:", response.status);

@@ -29,13 +29,17 @@ export const authenticateUser = (email, password, done) => {
 };
 
 export const getUserById = (id, done) =>
-	db.query("SELECT * FROM users WHERE id = $1", [id], (err, results) => {
-		if (err) {
-			return done(err);
+	db.query(
+		"SELECT id, email FROM users WHERE id = $1",
+		[id],
+		(err, results) => {
+			if (err) {
+				return done(err);
+			}
+			if (!results.rows.length) {
+				return done(new Error("User not found"));
+			}
+			const user = results.rows[0];
+			done(null, user);
 		}
-		if (!results.rows.length) {
-			return done(new Error("User not found"));
-		}
-		const user = results.rows[0];
-		done(null, user);
-	});
+	);

@@ -9,9 +9,7 @@ export const initPassportConfig = (passport, authenticateUser, getUserById) => {
 			}
 		)
 	);
-	passport.serializeUser((user, done) => {
-		done(null, user.id);
-	});
+	passport.serializeUser((user, done) => done(null, user.id));
 
 	passport.deserializeUser((id, done) => getUserById(id, done));
 };

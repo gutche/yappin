@@ -17,18 +17,23 @@ import { authenticateUser, getUserById } from "./auth.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 
-const redisClient = new Redis();
-
 const app = express();
+
+const redisClient = new Redis();
+const httpServer = createServer(app);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(
-	cors({
-		origin: "http://localhost:5173",
-		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-		credentials: true,
-	})
-);
+
+const corsOptions = {
+	origin: "http://localhost:5173",
+	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+	credentials: true,
+};
+app.use(cors(corsOptions));
+const io = new Server(httpServer, {
+	cors: corsOptions,
+});
 
 const secretKey = crypto.randomBytes(32).toString("hex");
 const sessionMiddleware = session({
@@ -37,7 +42,7 @@ const sessionMiddleware = session({
 	saveUninitialized: false,
 	cookie: {
 		httpOnly: true,
-		secure: false, // Set to true in production with HTTPS
+		secure: false,
 		maxAge: 24 * 60 * 60 * 1000, // 1 day
 	},
 });
@@ -45,16 +50,32 @@ app.use(sessionMiddleware);
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
+
 initPassportConfig(passport, authenticateUser, getUserById);
 
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-	cors: {
-		origin: "http://localhost:5173",
-		methods: ["GET", "POST"],
-	},
-});
-io.engine.use(sessionMiddleware);
+function onlyForHandshake(middleware) {
+	return (req, res, next) => {
+		const isHandshake = req._query.sid === undefined;
+		if (isHandshake) {
+			middleware(req, res, next);
+		} else {
+			next();
+		}
+	};
+}
+
+io.engine.use(onlyForHandshake(sessionMiddleware));
+io.engine.use(onlyForHandshake(passport.session()));
+io.engine.use(
+	onlyForHandshake((req, res, next) => {
+		if (req.user) {
+			next();
+		} else {
+			res.writeHead(401);
+			res.end();
+		}
+	})
+);
 
 const pubClient = createClient({ url: "redis://localhost:6379" });
 const subClient = pubClient.duplicate();
@@ -66,16 +87,10 @@ const sessionStore = new RedisSessionStore(redisClient);
 const messageStore = new RedisMessageStore(redisClient);
 
 io.use(async (socket, next) => {
-	const sessionID = socket.handshake.auth.sessionID;
-
-	if (sessionID) {
-		const session = await sessionStore.findSession(sessionID);
-		if (session) {
-			socket.userID = session.userID;
-			return next();
-		}
-	}
-	socket.userID = randomID();
+	const { sessionID, user } = socket.request;
+	socket.sessionID = sessionID;
+	socket.userID = user.id;
+	socket.username = user.email.split("@")[0];
 	next();
 });
 
@@ -87,11 +102,11 @@ const isNotAuthenticated = (req, res, next) => {
 };
 
 app.delete("/logout", function (req, res, next) {
-	req.logout(function (err) {
-		if (err) {
-			return next(err);
-		}
-		res.sendStatus(200);
+	const sessionId = req.session.id;
+	req.session.destroy(() => {
+		// disconnect all Socket.IO connections linked to this session ID
+		io.to(`session:${sessionId}`).disconnectSockets();
+		res.status(204).end();
 	});
 });
 
@@ -142,7 +157,7 @@ app.post("/login", isNotAuthenticated, (req, res, next) => {
 			return res.status(500).json({ error: "Internal server error" });
 		}
 		if (!user) {
-			return res.status(401).json({ error: info.message });
+			return res.status(404).json({ error: info.message });
 		}
 
 		req.login(user, (err) => {
@@ -165,7 +180,7 @@ app.post("/login", isNotAuthenticated, (req, res, next) => {
 	})(req, res, next);
 });
 
-app.get("/validate-session", (req, res) => {
+app.get("/get-session", (req, res) => {
 	if (req.isAuthenticated()) {
 		return res.sendStatus(200);
 	} else {
@@ -174,31 +189,27 @@ app.get("/validate-session", (req, res) => {
 });
 
 io.on("connection", async (socket) => {
+	const { sessionID, userID, username } = socket;
 	// persist session
-	sessionStore.saveSession(socket.sessionID, {
-		userID: socket.userID,
-		username: socket.username,
+	sessionStore.saveSession(sessionID, {
+		userID: userID,
+		username: username,
 		connected: true,
 	});
 
-	// emit session details
-	socket.emit("session", {
-		userID: socket.userID,
-	});
-
 	// join the "userID" room
-	socket.join(socket.userID);
+	socket.join(userID);
 
 	// fetch existing users
 	const users = [];
 	const [messages, sessions] = await Promise.all([
-		messageStore.findMessagesForUser(socket.userID),
+		messageStore.findMessagesForUser(userID),
 		sessionStore.findAllSessions(),
 	]);
 	const messagesPerUser = new Map();
 	messages.forEach((message) => {
 		const { from, to } = message;
-		const otherUser = socket.userID === from ? to : from;
+		const otherUser = userId === from ? to : from;
 		if (messagesPerUser.has(otherUser)) {
 			messagesPerUser.get(otherUser).push(message);
 		} else {
@@ -218,8 +229,8 @@ io.on("connection", async (socket) => {
 
 	// notify existing users
 	socket.broadcast.emit("user connected", {
-		userID: socket.userID,
-		username: socket.username,
+		userID: userID,
+		username: username,
 		connected: true,
 		messages: [],
 	});
@@ -228,25 +239,25 @@ io.on("connection", async (socket) => {
 	socket.on("private message", ({ content, to }) => {
 		const message = {
 			content,
-			from: socket.userID,
+			from: userID,
 			to,
 		};
-		socket.to(to).to(socket.userID).emit("private message", message);
+		socket.to(to).to(userID).emit("private message", message);
 		messageStore.saveMessage(message);
 	});
 
 	// notify users upon disconnection
 	socket.on("disconnect", async () => {
-		const matchingSockets = await io.in(socket.userID).fetchSockets();
+		const matchingSockets = await io.in(userID).fetchSockets();
 		const isDisconnected = matchingSockets.length === 0;
 		if (isDisconnected) {
 			// notify other users
-			socket.broadcast.emit("user disconnected", socket.userID);
+			socket.broadcast.emit("user disconnected", userID);
 
 			// update the connection status of the session
-			sessionStore.saveSession(socket.sessionID, {
-				userID: socket.userID,
-				username: socket.username,
+			sessionStore.saveSession(sessionID, {
+				userID: userID,
+				username: username,
 				connected: false,
 			});
 		}
