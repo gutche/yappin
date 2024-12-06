@@ -23,7 +23,6 @@ const onMessage = (content) => {
 };
 
 const onSelectUser = (user) => {
-	console.log(user);
 	selectedUser.value = user;
 	user.hasNewMessages = false;
 };
@@ -114,32 +113,42 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-	<div class="left-panel">
-		<User
-			v-for="user in connectedUsers"
-			:key="user.userID"
-			:user="user"
-			:selected="selectedUser === user"
-			@select="onSelectUser(user)" />
+	<div class="wrapper">
+		<div class="left-panel">
+			<User
+				v-for="user in connectedUsers"
+				:key="user.userID"
+				:user="user"
+				:selected="selectedUser === user"
+				@select="onSelectUser(user)" />
+		</div>
+		<MessagePanel
+			v-if="selectedUser"
+			:user="selectedUser"
+			@input="onMessage"
+			class="message-panel" />
+		<div class="right-panel"></div>
 	</div>
-	<MessagePanel
-		v-if="selectedUser"
-		:user="selectedUser"
-		@input="onMessage"
-		class="right-panel" />
 </template>
 <style scoped>
+.wrapper {
+	display: flex;
+	height: inherit;
+	width: inherit;
+}
 .left-panel {
-	position: fixed;
-	left: 0;
-	top: 0;
-	bottom: 0;
+	height: 100%;
 	width: 260px;
 	overflow-x: hidden;
 	background-color: #3f0e40;
 	color: white;
 }
+.message-panel {
+	flex-grow: 1;
+}
 .right-panel {
-	margin-left: 260px;
+	width: 100px;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.119);
 }
 </style>

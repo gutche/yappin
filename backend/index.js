@@ -15,7 +15,6 @@ import passport from "passport";
 import { initPassportConfig } from "./passport-config.js";
 import { authenticateUser, getUserById } from "./auth.js";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
 
 const app = express();
 
@@ -34,10 +33,8 @@ app.use(cors(corsOptions));
 const io = new Server(httpServer, {
 	cors: corsOptions,
 });
-
-const secretKey = crypto.randomBytes(32).toString("hex");
 const sessionMiddleware = session({
-	secret: secretKey,
+	secret: process.env.SECRET_KEY,
 	resave: false,
 	saveUninitialized: false,
 	cookie: {
@@ -82,7 +79,6 @@ const subClient = pubClient.duplicate();
 await Promise.all([pubClient.connect(), subClient.connect()]);
 io.adapter(createAdapter(pubClient, subClient));
 
-const randomID = () => crypto.randomBytes(8).toString("hex");
 const sessionStore = new RedisSessionStore(redisClient);
 const messageStore = new RedisMessageStore(redisClient);
 

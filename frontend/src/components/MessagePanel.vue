@@ -29,7 +29,7 @@ const displaySender = (message, index) => {
 </script>
 
 <template>
-	<div>
+	<div class="wrapper">
 		<div class="header">
 			<StatusIcon :connected="user.connected" />{{ user.username }}
 		</div>
@@ -58,19 +58,27 @@ const displaySender = (message, index) => {
 </template>
 
 <style>
+.message-panel {
+	height: inherit;
+	width: inherit;
+	display: flex;
+	flex-direction: column;
+	background-color: rgba(128, 128, 128, 0.041);
+}
 .header {
 	line-height: 40px;
 	padding: 10px 20px;
 	border-bottom: 1px solid #dddddd;
+	background-color: white;
 }
 
 .messages {
 	margin: 0;
-	padding: 10px;
 	display: flex;
+	padding: 0;
 	flex-direction: column;
-	gap: 10px;
 	overflow-y: auto;
+	flex-grow: 1;
 }
 
 .message {
@@ -94,18 +102,19 @@ const displaySender = (message, index) => {
 }
 
 .form {
-	position: fixed;
-	padding: 10px;
 	display: flex;
 	align-items: center;
-	bottom: 40px;
-	width: 1400px;
+	bottom: 0;
+	width: inherit;
+	margin: 10px;
 }
 
 .body {
 	display: flex;
 	flex-direction: column;
 	margin: 0 120px;
+	height: inherit;
+	background-color: white;
 }
 
 .input {
