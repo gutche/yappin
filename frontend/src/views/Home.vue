@@ -1,6 +1,7 @@
 <script setup>
 import MessagePanel from "../components/MessagePanel.vue";
 import User from "../components/User.vue";
+import ButtonIcon from "@/components/ButtonIcon.vue";
 import socket from "../socket";
 import { ref, onBeforeUnmount } from "vue";
 
@@ -111,6 +112,11 @@ onBeforeUnmount(() => {
 	socket.off("private message");
 	socket.off("connect_error");
 });
+
+const profileClick = () => {};
+const messageClick = () => {};
+const addUser = () => {};
+const logout = () => {};
 </script>
 <template>
 	<div class="wrapper">
@@ -127,7 +133,16 @@ onBeforeUnmount(() => {
 			:user="selectedUser"
 			@input="onMessage"
 			class="message-panel" />
-		<div class="right-panel"></div>
+		<div class="right-panel">
+			<ButtonIcon iconClass="fa-regular fa-user" @click="profileClick" />
+			<ButtonIcon
+				iconClass="fa-regular fa-message"
+				@click="messageClick" />
+			<ButtonIcon iconClass="fa-solid fa-user-group" @click="addUser" />
+			<ButtonIcon
+				iconClass="fa-solid fa-right-from-bracket"
+				@click="logout" />
+		</div>
 	</div>
 </template>
 <style scoped>
@@ -150,5 +165,16 @@ onBeforeUnmount(() => {
 	width: 100px;
 	height: 100%;
 	background-color: rgba(0, 0, 0, 0.119);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+i {
+	font-size: 25px;
+	line-height: 50px;
+	text-align: center;
+	display: inline-block;
+	cursor: pointer;
 }
 </style>

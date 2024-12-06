@@ -41,6 +41,7 @@ const status = computed(() => {
 
 .user {
 	padding: 10px;
+	cursor: pointer;
 }
 
 .description {
