@@ -29,38 +29,34 @@ const displaySender = (message, index) => {
 </script>
 
 <template>
-	<div class="wrapper">
-		<div class="header">
-			<StatusIcon :connected="user.connected" />{{ user.username }}
-		</div>
-		<main class="body">
-			<ul class="messages">
-				<li
-					v-for="(message, index) in user.messages"
-					:key="index"
-					:class="['message', { self: message.fromSelf }]">
-					<div v-if="displaySender(message, index)" class="sender">
-						{{ message.fromSelf ? "" : user.username }}
-					</div>
-					{{ message.content }}
-				</li>
-			</ul>
-
-			<form @submit.prevent="onSubmit" class="form">
-				<textarea
-					v-model="input"
-					placeholder="Your message..."
-					class="input" />
-				<button :disabled="!isValid" class="send-button">Send</button>
-			</form>
-		</main>
+	<div class="header">
+		<StatusIcon :connected="user.connected" />{{ user.username }}
 	</div>
+	<main class="body">
+		<ul class="messages">
+			<li
+				v-for="(message, index) in user.messages"
+				:key="index"
+				:class="['message', { self: message.fromSelf }]">
+				<div v-if="displaySender(message, index)" class="sender">
+					{{ message.fromSelf ? "" : user.username }}
+				</div>
+				{{ message.content }}
+			</li>
+		</ul>
+
+		<form @submit.prevent="onSubmit" class="form">
+			<textarea
+				v-model="input"
+				placeholder="Your message..."
+				class="input" />
+			<button :disabled="!isValid" class="send-button">Send</button>
+		</form>
+	</main>
 </template>
 
 <style>
 .message-panel {
-	height: inherit;
-	width: inherit;
 	display: flex;
 	flex-direction: column;
 	background-color: rgba(128, 128, 128, 0.041);
@@ -113,7 +109,6 @@ const displaySender = (message, index) => {
 	display: flex;
 	flex-direction: column;
 	margin: 0 120px;
-	height: inherit;
 	background-color: white;
 }
 

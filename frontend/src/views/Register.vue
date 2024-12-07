@@ -117,6 +117,19 @@ const validateEmail = (email) => {
 </template>
 
 <style scoped>
+.form-container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: inherit;
+}
+
+form {
+	width: 400px;
+	border: 3px solid #f1f1f1;
+	border-radius: 10px;
+}
+
 * {
 	box-sizing: border-box;
 }

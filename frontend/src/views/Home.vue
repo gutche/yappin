@@ -4,6 +4,7 @@ import User from "../components/User.vue";
 import ButtonIcon from "@/components/ButtonIcon.vue";
 import socket from "../socket";
 import { ref, onBeforeUnmount } from "vue";
+import router from "../router/index";
 
 socket.connect();
 
@@ -113,10 +114,9 @@ onBeforeUnmount(() => {
 	socket.off("connect_error");
 });
 
-const profileClick = () => {};
-const messageClick = () => {};
-const addUser = () => {};
-const logout = () => {};
+const redirect = (route) => {
+	router.push(route);
+};
 </script>
 <template>
 	<div class="wrapper">
@@ -128,24 +128,33 @@ const logout = () => {};
 				:selected="selectedUser === user"
 				@select="onSelectUser(user)" />
 		</div>
-		<MessagePanel
-			v-if="selectedUser"
-			:user="selectedUser"
-			@input="onMessage"
-			class="message-panel" />
+		<div class="middle-panel">
+			<MessagePanel
+				v-if="selectedUser"
+				:user="selectedUser"
+				@input="onMessage"
+				class="message-panel" />
+		</div>
 		<div class="right-panel">
-			<ButtonIcon iconClass="fa-regular fa-user" @click="profileClick" />
+			<ButtonIcon
+				iconClass="fa-regular fa-user"
+				@click="redirect('/profile')" />
 			<ButtonIcon
 				iconClass="fa-regular fa-message"
-				@click="messageClick" />
-			<ButtonIcon iconClass="fa-solid fa-user-group" @click="addUser" />
+				@click="redirect('/')" />
+			<ButtonIcon
+				iconClass="fa-solid fa-user-group"
+				@click="redirect('friends')" />
 			<ButtonIcon
 				iconClass="fa-solid fa-right-from-bracket"
-				@click="logout" />
+				@click="redirect('/logout')" />
 		</div>
 	</div>
 </template>
 <style scoped>
+.middle-panel {
+	flex-grow: 1;
+}
 .wrapper {
 	display: flex;
 	height: inherit;
@@ -158,23 +167,12 @@ const logout = () => {};
 	background-color: #3f0e40;
 	color: white;
 }
-.message-panel {
-	flex-grow: 1;
-}
 .right-panel {
-	width: 100px;
+	width: 80px;
 	height: 100%;
 	background-color: rgba(0, 0, 0, 0.119);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-}
-
-i {
-	font-size: 25px;
-	line-height: 50px;
-	text-align: center;
-	display: inline-block;
-	cursor: pointer;
 }
 </style>

@@ -1,7 +1,6 @@
 <template>
 	<button @click="onClick" class="btn">
 		<i :class="iconClass"></i>
-		<span v-if="label">{{ label }}</span>
 	</button>
 </template>
 
@@ -11,10 +10,6 @@ const props = defineProps({
 		type: String,
 		required: true,
 	},
-	label: {
-		type: String,
-		default: "",
-	},
 	onClick: {
 		type: Function,
 		default: () => {},
@@ -22,4 +17,23 @@ const props = defineProps({
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+/* Remove those stupid default styles for button */
+.btn {
+	background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	outline: inherit;
+}
+
+i {
+	font-size: 25px;
+	line-height: 50px;
+	text-align: center;
+	display: inline-block;
+	cursor: pointer;
+}
+</style>
