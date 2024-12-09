@@ -98,11 +98,13 @@ const isNotAuthenticated = (req, res, next) => {
 };
 
 app.delete("/logout", function (req, res, next) {
-	const sessionId = req.session.id;
-	req.session.destroy(() => {
-		// disconnect all Socket.IO connections linked to this session ID
-		io.to(`session:${sessionId}`).disconnectSockets();
-		res.status(204).end();
+	const userID = req.user.id;
+	req.logout(function (err) {
+		if (err) {
+			return next(err);
+		}
+		io.to(userID).disconnectSockets();
+		res.sendStatus(200);
 	});
 });
 

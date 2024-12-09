@@ -154,6 +154,8 @@ const redirect = (route) => {
 <style scoped>
 .middle-panel {
 	flex-grow: 1;
+	display: flex;
+	flex-direction: column;
 }
 .wrapper {
 	display: flex;

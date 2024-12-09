@@ -56,11 +56,6 @@ const displaySender = (message, index) => {
 </template>
 
 <style>
-.message-panel {
-	display: flex;
-	flex-direction: column;
-	background-color: rgba(128, 128, 128, 0.041);
-}
 .header {
 	line-height: 40px;
 	padding: 10px 20px;
@@ -109,7 +104,8 @@ const displaySender = (message, index) => {
 	display: flex;
 	flex-direction: column;
 	margin: 0 120px;
-	background-color: white;
+	background-color: rgba(237, 237, 237, 0.269);
+	flex-grow: 1;
 }
 
 .input {
