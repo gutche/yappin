@@ -35,5 +35,6 @@ i {
 	text-align: center;
 	display: inline-block;
 	cursor: pointer;
+	color: white;
 }
 </style>

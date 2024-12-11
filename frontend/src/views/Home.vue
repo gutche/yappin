@@ -168,13 +168,13 @@ const redirect = (route) => {
 	height: 100%;
 	width: 260px;
 	overflow-x: hidden;
-	background-color: #3f0e40;
+	background-color: var(--primary-color);
 	color: white;
 }
 .right-panel {
 	width: 80px;
 	height: 100%;
-	background-color: rgba(0, 0, 0, 0.119);
+	background-color: var(--primary-color);
 	display: flex;
 	flex-direction: column;
 	align-items: center;

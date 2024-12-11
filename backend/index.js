@@ -212,8 +212,6 @@ io.on("connection", async (socket) => {
 			messagesPerUser.set(otherUser, [message]);
 		}
 	});
-	console.log(sessions);
-	console.log(userID);
 	// Create unique users list
 	users = sessions.reduce((acc, session) => {
 		// Check if the user already exists in the list
