@@ -2,6 +2,7 @@
 <script setup>
 import router from "../router/index";
 import { onMounted } from "vue";
+import socket from "../socket";
 
 onMounted(async () => {
 	try {
@@ -11,6 +12,7 @@ onMounted(async () => {
 		});
 
 		if (response.ok) {
+			socket.disconnect();
 			router.push("/login");
 		} else {
 			console.error("Failed to log out:", response.status);

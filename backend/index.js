@@ -83,9 +83,8 @@ const sessionStore = new RedisSessionStore(redisClient);
 const messageStore = new RedisMessageStore(redisClient);
 
 io.use(async (socket, next) => {
-	const { sessionID, user } = socket.request;
-	socket.sessionID = sessionID;
-	socket.userID = user.id;
+	const { user } = socket.request;
+	socket.userID = "" + user.id;
 	socket.username = user.email.split("@")[0];
 	next();
 });
@@ -98,12 +97,10 @@ const isNotAuthenticated = (req, res, next) => {
 };
 
 app.delete("/logout", function (req, res, next) {
-	const userID = req.user.id;
 	req.logout(function (err) {
 		if (err) {
 			return next(err);
 		}
-		io.to(userID).disconnectSockets();
 		res.sendStatus(200);
 	});
 });
@@ -187,9 +184,10 @@ app.get("/get-session", (req, res) => {
 });
 
 io.on("connection", async (socket) => {
-	const { sessionID, userID, username } = socket;
+	const { userID, username } = socket;
+
 	// persist session
-	sessionStore.saveSession(sessionID, {
+	sessionStore.saveSession(userID, {
 		userID: userID,
 		username: username,
 		connected: true,
@@ -199,7 +197,7 @@ io.on("connection", async (socket) => {
 	socket.join(userID);
 
 	// fetch existing users
-	const users = [];
+	let users = [];
 	const [messages, sessions] = await Promise.all([
 		messageStore.findMessagesForUser(userID),
 		sessionStore.findAllSessions(),
@@ -207,22 +205,34 @@ io.on("connection", async (socket) => {
 	const messagesPerUser = new Map();
 	messages.forEach((message) => {
 		const { from, to } = message;
-		const otherUser = userId === from ? to : from;
+		const otherUser = userID === from ? to : from;
 		if (messagesPerUser.has(otherUser)) {
 			messagesPerUser.get(otherUser).push(message);
 		} else {
 			messagesPerUser.set(otherUser, [message]);
 		}
 	});
+	console.log(sessions);
+	console.log(userID);
+	// Create unique users list
+	users = sessions.reduce((acc, session) => {
+		// Check if the user already exists in the list
+		const existingUser = acc.find((user) => user.userID === session.userID);
 
-	sessions.forEach((session) => {
-		users.push({
-			userID: session.userID,
-			username: session.username,
-			connected: session.connected,
-			messages: messagesPerUser.get(session.userID) || [],
-		});
-	});
+		if (existingUser) {
+			// If the user exists, update their connection status
+			existingUser.connected = session.connected;
+		} else {
+			// If the user doesn't exist, add them to the list
+			acc.push({
+				userID: session.userID,
+				username: session.username,
+				connected: session.connected, // Reflect the correct status
+				messages: messagesPerUser.get(session.userID) || [],
+			});
+		}
+		return acc;
+	}, []);
 	socket.emit("users", users);
 
 	// notify existing users
@@ -253,7 +263,7 @@ io.on("connection", async (socket) => {
 			socket.broadcast.emit("user disconnected", userID);
 
 			// update the connection status of the session
-			sessionStore.saveSession(sessionID, {
+			sessionStore.saveSession(userID, {
 				userID: userID,
 				username: username,
 				connected: false,

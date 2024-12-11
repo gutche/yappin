@@ -76,9 +76,12 @@ socket.on("users", (users) => {
 });
 
 socket.on("user connected", (user) => {
+	console.log(user);
+	console.log(connectedUsers.value);
 	const existingUser = connectedUsers.value.find(
 		(u) => u.userID === user.userID
 	);
+	console.log(existingUser);
 	if (existingUser) {
 		existingUser.connected = true;
 		return;
@@ -132,8 +135,7 @@ const redirect = (route) => {
 			<MessagePanel
 				v-if="selectedUser"
 				:user="selectedUser"
-				@input="onMessage"
-				class="message-panel" />
+				@input="onMessage" />
 		</div>
 		<div class="right-panel">
 			<ButtonIcon

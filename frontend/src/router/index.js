@@ -40,7 +40,6 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
 	const authStore = useAuthStore();
-
 	try {
 		if (to.meta.requiresAuth || to.meta.guestOnly) {
 			await authStore.fetchSession();
@@ -49,7 +48,6 @@ router.beforeEach(async (to, from, next) => {
 		if (to.meta.requiresAuth && !authStore.isAuthenticated) {
 			return next("/login");
 		} else if (to.meta.guestOnly && authStore.isAuthenticated) {
-			console.log("authenticated -> /");
 			return next("/");
 		}
 	} catch (error) {
