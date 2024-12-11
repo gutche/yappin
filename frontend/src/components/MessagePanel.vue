@@ -79,7 +79,7 @@ const displaySender = (message, index) => {
 	border-radius: 10px;
 	background: #f1f1f1;
 	word-wrap: break-word;
-	margin-top: 5px;
+	margin: 10px;
 }
 
 .message.self {
