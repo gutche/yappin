@@ -20,6 +20,7 @@ const status = computed(() => {
 
 <template>
 	<div class="user" @click="onClick" :class="{ selected: selected }">
+		<img :src="user.profile || '/no-profile.png'" alt="User profile" />
 		<div class="description">
 			<div class="name">
 				{{ user.username }}
@@ -35,6 +36,17 @@ const status = computed(() => {
 </template>
 
 <style scoped>
+img {
+	height: 40px;
+	width: 40px;
+	border-radius: 50%;
+	margin-right: 10px;
+}
+
+.name {
+	font-size: 16px;
+}
+
 .selected {
 	background-color: #1164a3;
 }
@@ -42,6 +54,8 @@ const status = computed(() => {
 .user {
 	padding: 10px;
 	cursor: pointer;
+	display: flex;
+	align-items: center;
 }
 
 .description {

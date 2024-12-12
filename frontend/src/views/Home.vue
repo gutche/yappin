@@ -177,7 +177,7 @@ const toggleLeftPanelView = (viewSelected) => {
 }
 .left-panel {
 	height: 100%;
-	width: 400px;
+	width: 350px;
 	overflow-x: hidden;
 	color: white;
 	display: flex;
