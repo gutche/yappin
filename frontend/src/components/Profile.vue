@@ -21,14 +21,8 @@
 </template>
 <script setup></script>
 <style scoped>
-.wrapper {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
 .card {
 	display: flex;
-	justify-content: center;
 	align-items: center;
 	flex-direction: column;
 	width: 350px;

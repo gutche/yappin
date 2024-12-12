@@ -1,6 +1,7 @@
 <script setup>
 import MessagePanel from "../components/MessagePanel.vue";
 import User from "../components/User.vue";
+import Profile from "../components/Profile.vue";
 import ButtonIcon from "@/components/ButtonIcon.vue";
 import socket from "../socket";
 import { ref, onBeforeUnmount } from "vue";
@@ -9,6 +10,8 @@ import router from "../router/index";
 socket.connect();
 
 const selectedUser = ref(null);
+const selectedProfile = ref(false);
+const selectedFriendList = ref(false);
 const connectedUsers = ref([]);
 
 const onMessage = (content) => {
@@ -76,8 +79,6 @@ socket.on("users", (users) => {
 });
 
 socket.on("user connected", (user) => {
-	console.log(user);
-	console.log(connectedUsers.value);
 	const existingUser = connectedUsers.value.find(
 		(u) => u.userID === user.userID
 	);
@@ -117,39 +118,43 @@ onBeforeUnmount(() => {
 	socket.off("connect_error");
 });
 
-const redirect = (route) => {
-	router.push(route);
+const toggleProfile = () => {
+	selectedProfile.value = !selectedProfile.value;
+	console.log(selectedProfile.value);
+};
+const toggleFriends = () => {
+	selectedProfile.value = !selectedProfile.value;
 };
 </script>
 <template>
 	<div class="wrapper">
 		<div class="left-panel">
 			<User
+				v-if="!selectedProfile.value && !selectedFriendList.value"
 				v-for="user in connectedUsers"
 				:key="user.userID"
 				:user="user"
 				:selected="selectedUser === user"
 				@select="onSelectUser(user)" />
+			<Profile
+				v-if="selectedProfile.value && !selectedFriendList.value" />
+			<div class="buttons-container">
+				<ButtonIcon
+					iconClass="fa-regular fa-user"
+					@click="toggleProfile" />
+				<ButtonIcon
+					iconClass="fa-solid fa-user-group"
+					@click="toggleFriends" />
+				<ButtonIcon
+					iconClass="fa-solid fa-right-from-bracket"
+					@click="router.push('/logout')" />
+			</div>
 		</div>
 		<div class="middle-panel">
 			<MessagePanel
 				v-if="selectedUser"
 				:user="selectedUser"
 				@input="onMessage" />
-		</div>
-		<div class="right-panel">
-			<ButtonIcon
-				iconClass="fa-regular fa-user"
-				@click="redirect('/profile')" />
-			<ButtonIcon
-				iconClass="fa-regular fa-message"
-				@click="redirect('/')" />
-			<ButtonIcon
-				iconClass="fa-solid fa-user-group"
-				@click="redirect('friends')" />
-			<ButtonIcon
-				iconClass="fa-solid fa-right-from-bracket"
-				@click="redirect('/logout')" />
 		</div>
 	</div>
 </template>
@@ -166,17 +171,17 @@ const redirect = (route) => {
 }
 .left-panel {
 	height: 100%;
-	width: 260px;
+	width: 300px;
 	overflow-x: hidden;
 	background-color: var(--primary-color);
 	color: white;
-}
-.right-panel {
-	width: 80px;
-	height: 100%;
-	background-color: var(--primary-color);
 	display: flex;
 	flex-direction: column;
-	align-items: center;
+}
+.buttons-container {
+	margin-top: auto;
+	display: flex;
+	width: inherit;
+	justify-content: space-evenly;
 }
 </style>
