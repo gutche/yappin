@@ -19,7 +19,9 @@
 		</div>
 	</div>
 </template>
-<script setup></script>
+<script setup>
+console.log("Profile loaded");
+</script>
 <style scoped>
 .card {
 	display: flex;

@@ -11,8 +11,7 @@ import router from "../router/index";
 socket.connect();
 
 const selectedUser = ref(null);
-const selectedProfile = ref(false);
-const selectedFriendList = ref(false);
+const leftPanelView = ref("users");
 const connectedUsers = ref([]);
 
 const onMessage = (content) => {
@@ -83,7 +82,6 @@ socket.on("user connected", (user) => {
 	const existingUser = connectedUsers.value.find(
 		(u) => u.userID === user.userID
 	);
-	console.log(existingUser);
 	if (existingUser) {
 		existingUser.connected = true;
 		return;
@@ -119,37 +117,34 @@ onBeforeUnmount(() => {
 	socket.off("connect_error");
 });
 
-const toggleProfile = () => {
-	selectedProfile.value = !selectedProfile.value;
-	console.log(selectedProfile.value);
-};
-const toggleFriends = () => {
-	selectedProfile.value = !selectedProfile.value;
+const toggleLeftPanelView = (viewSelected) => {
+	leftPanelView.value = viewSelected;
 };
 </script>
 <template>
 	<div class="wrapper">
 		<div class="left-panel">
 			<User
-				v-if="!selectedProfile.value && !selectedFriendList.value"
+				v-if="leftPanelView === 'users'"
 				v-for="user in connectedUsers"
 				:key="user.userID"
 				:user="user"
 				:selected="selectedUser === user"
 				@select="onSelectUser(user)" />
-			<Profile
-				v-if="selectedProfile.value && !selectedFriendList.value"
-				:user="user" />
+			<Profile v-if="leftPanelView === 'profile'" :user="selectedUser" />
 			<FriendList
-				v-if="!selectedProfile.value && selectedFriendList.value"
-				:user="user" />
+				v-if="leftPanelView === 'friends'"
+				:user="selectedUser" />
 			<div class="buttons-container">
 				<ButtonIcon
+					iconClass="fa-regular fa-message"
+					@click="toggleLeftPanelView('users')" />
+				<ButtonIcon
 					iconClass="fa-regular fa-user"
-					@click="toggleProfile" />
+					@click="toggleLeftPanelView('profile')" />
 				<ButtonIcon
 					iconClass="fa-solid fa-user-group"
-					@click="toggleFriends" />
+					@click="toggleLeftPanelView('friends')" />
 				<ButtonIcon
 					iconClass="fa-solid fa-right-from-bracket"
 					@click="router.push('/logout')" />
