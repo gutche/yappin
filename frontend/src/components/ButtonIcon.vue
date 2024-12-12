@@ -30,7 +30,7 @@ const props = defineProps({
 }
 
 i {
-	font-size: 25px;
+	font-size: 20px;
 	line-height: 50px;
 	text-align: center;
 	display: inline-block;

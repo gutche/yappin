@@ -84,8 +84,7 @@ const messageStore = new RedisMessageStore(redisClient);
 
 io.use(async (socket, next) => {
 	const { user } = socket.request;
-	socket.userID = "" + user.id;
-	socket.username = user.email.split("@")[0];
+	user.username = user.email.split("@")[0];
 	next();
 });
 
@@ -184,7 +183,10 @@ app.get("/get-session", (req, res) => {
 });
 
 io.on("connection", async (socket) => {
-	const { userID, username } = socket;
+	const { user } = socket.request;
+	const { userID, username } = user;
+
+	socket.emit("current user", user);
 
 	// persist session
 	sessionStore.saveSession(userID, {

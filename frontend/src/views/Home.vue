@@ -11,6 +11,7 @@ import router from "../router/index";
 socket.connect();
 
 const selectedUser = ref(null);
+const currentUser = ref(null);
 const leftPanelView = ref("users");
 const connectedUsers = ref([]);
 
@@ -31,6 +32,10 @@ const onSelectUser = (user) => {
 	selectedUser.value = user;
 	user.hasNewMessages = false;
 };
+
+socket.on("current user", (user) => {
+	currentUser.value = user;
+});
 
 socket.on("connect", () => {
 	const currentUser = connectedUsers.value.find((user) => user.self);
@@ -131,7 +136,7 @@ const toggleLeftPanelView = (viewSelected) => {
 				:user="user"
 				:selected="selectedUser === user"
 				@select="onSelectUser(user)" />
-			<Profile v-if="leftPanelView === 'profile'" :user="selectedUser" />
+			<Profile v-if="leftPanelView === 'profile'" :user="currentUser" />
 			<FriendList
 				v-if="leftPanelView === 'friends'"
 				:user="selectedUser" />
@@ -163,7 +168,7 @@ const toggleLeftPanelView = (viewSelected) => {
 	flex-grow: 1;
 	display: flex;
 	flex-direction: column;
-	background-image: url("../../public/whatsapp-background-original.png");
+	background-image: url("/whatsapp-background-original.png");
 }
 .wrapper {
 	display: flex;
@@ -172,7 +177,7 @@ const toggleLeftPanelView = (viewSelected) => {
 }
 .left-panel {
 	height: 100%;
-	width: 300px;
+	width: 400px;
 	overflow-x: hidden;
 	color: white;
 	display: flex;
@@ -180,24 +185,12 @@ const toggleLeftPanelView = (viewSelected) => {
 	color: black;
 	background-color: #f4f4f4;
 	border-right: 1px solid rgba(0, 0, 0, 0.144);
-	/* background: #0f2027;
-	background: -webkit-linear-gradient(
-		to right,
-		#2c5364,
-		#203a43,
-		#0f2027
-	);
-	background: linear-gradient(
-		to right,
-		#2c5364,
-		#203a43,
-		#0f2027
-	);  */
 }
 .buttons-container {
 	margin-top: auto;
 	display: flex;
 	width: inherit;
 	justify-content: space-evenly;
+	border-top: 1px solid rgba(0, 0, 0, 0.156);
 }
 </style>
