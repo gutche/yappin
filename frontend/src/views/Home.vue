@@ -2,6 +2,7 @@
 import MessagePanel from "../components/MessagePanel.vue";
 import User from "../components/User.vue";
 import Profile from "../components/Profile.vue";
+import FriendList from "../components/FriendList.vue";
 import ButtonIcon from "@/components/ButtonIcon.vue";
 import socket from "../socket";
 import { ref, onBeforeUnmount } from "vue";
@@ -137,7 +138,11 @@ const toggleFriends = () => {
 				:selected="selectedUser === user"
 				@select="onSelectUser(user)" />
 			<Profile
-				v-if="selectedProfile.value && !selectedFriendList.value" />
+				v-if="selectedProfile.value && !selectedFriendList.value"
+				:user="user" />
+			<FriendList
+				v-if="!selectedProfile.value && selectedFriendList.value"
+				:user="user" />
 			<div class="buttons-container">
 				<ButtonIcon
 					iconClass="fa-regular fa-user"
@@ -163,6 +168,7 @@ const toggleFriends = () => {
 	flex-grow: 1;
 	display: flex;
 	flex-direction: column;
+	background-image: url("../../public/whatsapp-background-original.png");
 }
 .wrapper {
 	display: flex;
@@ -173,10 +179,25 @@ const toggleFriends = () => {
 	height: 100%;
 	width: 300px;
 	overflow-x: hidden;
-	background-color: var(--primary-color);
 	color: white;
 	display: flex;
 	flex-direction: column;
+	color: black;
+	background-color: #f4f4f4;
+	border-right: 1px solid rgba(0, 0, 0, 0.144);
+	/* background: #0f2027;
+	background: -webkit-linear-gradient(
+		to right,
+		#2c5364,
+		#203a43,
+		#0f2027
+	);
+	background: linear-gradient(
+		to right,
+		#2c5364,
+		#203a43,
+		#0f2027
+	);  */
 }
 .buttons-container {
 	margin-top: auto;

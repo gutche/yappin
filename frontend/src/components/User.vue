@@ -49,7 +49,7 @@ const status = computed(() => {
 }
 
 .status {
-	color: #92959e;
+	color: black;
 }
 
 .new-messages {

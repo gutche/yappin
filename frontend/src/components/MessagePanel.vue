@@ -59,8 +59,8 @@ const displaySender = (message, index) => {
 .header {
 	line-height: 40px;
 	padding: 10px 20px;
-	border-bottom: 1px solid #dddddd;
-	background-color: white;
+	background-color: #ffffff;
+	color: black;
 }
 
 .messages {
@@ -104,7 +104,6 @@ const displaySender = (message, index) => {
 	display: flex;
 	flex-direction: column;
 	margin: 0 120px;
-	background-color: rgba(237, 237, 237, 0.269);
 	flex-grow: 1;
 }
 
@@ -121,5 +120,7 @@ const displaySender = (message, index) => {
 	height: 40px;
 	width: 100px;
 	margin-left: 10px;
+	background-color: white;
+	color: black;
 }
 </style>
