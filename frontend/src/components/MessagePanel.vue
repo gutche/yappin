@@ -30,7 +30,8 @@ const displaySender = (message, index) => {
 
 <template>
 	<div class="header">
-		<StatusIcon :connected="user.connected" />{{ user.username }}
+		<img :src="user.profile || '/no-profile.png'" alt="User profile" />
+		{{ user.username }}<StatusIcon :connected="user.connected" />
 	</div>
 	<main class="body">
 		<ul class="messages">
@@ -56,11 +57,24 @@ const displaySender = (message, index) => {
 </template>
 
 <style>
+img {
+	height: 40px;
+	width: 40px;
+	border-radius: 50%;
+	margin-right: 10px;
+}
+
+i {
+	margin-left: 5px;
+}
+
 .header {
 	line-height: 40px;
 	padding: 10px 20px;
 	background-color: #ffffff;
 	color: black;
+	display: flex;
+	align-items: center;
 }
 
 .messages {
