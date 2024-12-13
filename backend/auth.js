@@ -30,7 +30,7 @@ export const authenticateUser = (email, password, done) => {
 
 export const getUserById = (id, done) =>
 	db.query(
-		"SELECT id, email FROM users WHERE id = $1",
+		"SELECT id, email, friend_code FROM users WHERE id = $1",
 		[id],
 		(err, results) => {
 			if (err) {

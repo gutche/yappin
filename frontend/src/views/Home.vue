@@ -3,6 +3,7 @@ import MessagePanel from "../components/MessagePanel.vue";
 import User from "../components/User.vue";
 import Profile from "../components/Profile.vue";
 import FriendList from "../components/FriendList.vue";
+import Notification from "../components/Notification.vue";
 import ButtonIcon from "@/components/ButtonIcon.vue";
 import socket from "../socket";
 import { ref, onBeforeUnmount } from "vue";
@@ -140,6 +141,9 @@ const toggleLeftPanelView = (viewSelected) => {
 			<FriendList
 				v-if="leftPanelView === 'friends'"
 				:user="selectedUser" />
+			<Notification
+				v-if="leftPanelView === 'notifications'"
+				:user="currentUser" />
 			<div class="buttons-container">
 				<ButtonIcon
 					iconClass="fa-regular fa-message"
@@ -150,6 +154,9 @@ const toggleLeftPanelView = (viewSelected) => {
 				<ButtonIcon
 					iconClass="fa-solid fa-user-group"
 					@click="toggleLeftPanelView('friends')" />
+				<ButtonIcon
+					iconClass="fa-regular fa-bell"
+					@click="toggleLeftPanelView('notifications')" />
 				<ButtonIcon
 					iconClass="fa-solid fa-right-from-bracket"
 					@click="router.push('/logout')" />

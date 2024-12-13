@@ -1,6 +1,8 @@
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
+    friend_code VARCHAR(10) UNIQUE NOT NULL DEFAULT
+    LPAD(TRUNC(RANDOM() * 1000000)::TEXT, 6, '0'),
     password VARCHAR(512) NOT NULL,
     last_active TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -15,11 +17,14 @@ CREATE TABLE IF NOT EXISTS messages (
     read_at TIMESTAMP DEFAULT NULL
 );
 
-CREATE TABLE IF NOT EXISTS friends (
+CREATE TABLE IF NOT EXISTS friendships (
     id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    friend_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    user_id INT NOT NULL,
+    friend_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE (user_id, friend_id) -- Prevent duplicate friendships
 );
 
 CREATE TABLE IF NOT EXISTS groups (
@@ -42,10 +47,3 @@ CREATE TABLE IF NOT EXISTS group_messages (
     content TEXT NOT NULL,
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-/* INSERT INTO users (email, password, salt) VALUES(
-    "gledrian.dev@gmail.com",
-    "f237c2d49f5a8a992c4cbbc3d9228f1b9dd4f3c89ed4e262f8ffa08032bca91b",
-    "cbf9ac22689c1bcdf01f6b7ba519fee6"
-) */
-

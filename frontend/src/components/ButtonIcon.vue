@@ -18,17 +18,6 @@ const props = defineProps({
 </script>
 
 <style scoped>
-/* Remove those stupid default styles for button */
-.btn {
-	background: none;
-	color: inherit;
-	border: none;
-	padding: 0;
-	font: inherit;
-	cursor: pointer;
-	outline: inherit;
-}
-
 i {
 	font-size: 20px;
 	line-height: 50px;
