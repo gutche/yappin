@@ -1,13 +1,13 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { RedisSessionStore } from "./sessionStore.js";
-import { RedisMessageStore } from "./messageStore.js";
+import { RedisSessionStore } from "./store/sessionStore.js";
+import { RedisMessageStore } from "./store/messageStore.js";
 import Redis from "ioredis";
 import { createClient } from "redis";
 import { setupWorker } from "@socket.io/sticky";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { getUserByEmail, insertUser, getUserById } from "./database.js";
+import { getUserByEmail, insertUser, getUserById } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
 import flash from "express-flash";
