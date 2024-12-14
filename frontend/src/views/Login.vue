@@ -21,7 +21,6 @@ const submitForm = async () => {
 			}),
 			credentials: "include",
 		});
-
 		if (response.status === 404) {
 			serverError.value = "Email or password is incorrect!";
 		}

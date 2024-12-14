@@ -7,13 +7,12 @@ import Redis from "ioredis";
 import { createClient } from "redis";
 import { setupWorker } from "@socket.io/sticky";
 import { createAdapter } from "@socket.io/redis-adapter";
-import db from "./database.js";
+import { getUserByEmail, insertUser, getUserById } from "./database.js";
 import cors from "cors";
 import session from "express-session";
 import flash from "express-flash";
 import passport from "passport";
 import { initPassportConfig } from "./passport-config.js";
-import { authenticateUser, getUserById } from "./auth.js";
 import bcrypt from "bcrypt";
 
 const app = express();
@@ -48,7 +47,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
-initPassportConfig(passport, authenticateUser, getUserById);
+initPassportConfig(passport, getUserByEmail, getUserById);
 
 function onlyForHandshake(middleware) {
 	return (req, res, next) => {
@@ -110,34 +109,17 @@ app.post("/register", isNotAuthenticated, async (req, res, next) => {
 	try {
 		const saltRounds = 10;
 		const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-		db.query(
-			"INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id",
-			[email, hashedPassword],
-			(err, result) => {
-				if (err) {
-					console.error("Error registering user:", err);
-					return res
-						.status(500)
-						.json({ error: "Internal server error" });
-				}
-
-				const newUser = result.rows[0];
-
-				req.login(newUser, (err) => {
-					if (err) {
-						console.error("Login error after registration:", err);
-						return res
-							.status(500)
-							.json({ error: "Internal server error" });
-					}
-					return res.json({
-						success: true,
-						message: "User registered and logged in successfully",
-					});
-				});
+		const newUser = await insertUser(email, hashedPassword);
+		req.login(newUser, (err) => {
+			if (err) {
+				console.error("Login error after registration:", err);
+				return res.status(500).json({ error: "Internal server error" });
 			}
-		);
+			return res.json({
+				success: true,
+				message: "User registered and logged in successfully",
+			});
+		});
 	} catch (err) {
 		console.error("Error during registration:", err);
 		res.status(500).json({ error: "Internal server error" });
