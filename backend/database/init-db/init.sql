@@ -17,14 +17,19 @@ CREATE TABLE IF NOT EXISTS messages (
     read_at TIMESTAMP DEFAULT NULL
 );
 
+CREATE TABLE friend_requests (
+    id SERIAL PRIMARY KEY,
+    sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    receiver_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'accepted', 'declined'
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS friendships (
     id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
-    friend_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE,
-    UNIQUE (user_id, friend_id) -- Prevent duplicate friendships
+    user_one_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    user_two_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS groups (
