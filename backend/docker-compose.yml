@@ -13,4 +13,4 @@ services:
             POSTGRES_PASSWORD: ${PGPASSWORD}
             POSTGRES_DB: ${PGDATABASE}
         volumes:
-            - ./init-db:/docker-entrypoint-initdb.d
+            - ./database/init-db:/docker-entrypoint-initdb.d
