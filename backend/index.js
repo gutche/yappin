@@ -269,16 +269,16 @@ app.post("/friend-request", async (req, res) => {
 			return res.status(404).json({ error: "User not found." });
 
 		const result = await sendFriendRequest(user.id, targetUser.id);
+		if (!result)
+			return res
+				.status(400)
+				.json({ message: "Friend request already sent" });
 		if (result.rowCount > 0) {
 			return res
 				.status(200)
 				.json({ message: "Friend request sent successfully." });
 		}
 	} catch (error) {
-		// Handle specific error for duplicate request
-		if (error.message === "Friend request already sent.") {
-			return res.status(400).json({ error: error.message });
-		}
 		console.log(error);
 	}
 });

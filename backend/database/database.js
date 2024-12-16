@@ -75,14 +75,13 @@ export const getUserByEmail = (email) => {
 export const sendFriendRequest = (sender_id, receiver_id) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			"SELECT * FROM friend_requests WHERE sender_id = $1 AND receiver_id = $2 AND status = 'pending'",
+			"SELECT id FROM friend_requests WHERE sender_id = $1 AND receiver_id = $2 AND status = 'pending'",
 			[sender_id, receiver_id],
 			(err, results) => {
 				if (err) return reject(err);
-
 				if (results.rowCount > 0) {
 					// A pending request already exists
-					return reject(new Error("Friend request already sent."));
+					return resolve();
 				}
 
 				// No pending request exists; proceed to insert
@@ -91,7 +90,6 @@ export const sendFriendRequest = (sender_id, receiver_id) => {
 					[sender_id, receiver_id],
 					(err, results) => {
 						if (err) return reject(err);
-						const { sender_id } = results.rows[0];
 						resolve(results);
 					}
 				);

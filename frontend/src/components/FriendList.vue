@@ -25,9 +25,7 @@ import { ref } from "vue";
 const friendCode = ref("");
 const serverMessage = ref("");
 
-const props = defineProps({
-	user: Object,
-});
+const messageDuration = 5000; // 5000ms or 5s
 
 const addFriend = async () => {
 	if (!friendCode.value || friendCode.value.length < 6) {
@@ -49,13 +47,19 @@ const addFriend = async () => {
 			serverMessage.value = "User doesn't exist";
 			setTimeout(() => {
 				serverMessage.value = "";
-			}, 2000);
+			}, messageDuration);
+		}
+		if (response.status === 400) {
+			serverMessage.value = "Friend request already sent";
+			setTimeout(() => {
+				serverMessage.value = "";
+			}, messageDuration);
 		}
 		if (response.ok) {
 			serverMessage.value = "You friend request was sent successfully!";
 			setTimeout(() => {
 				serverMessage.value = "";
-			}, 2000);
+			}, messageDuration);
 		}
 	} catch (error) {
 		serverMessage.value = error.message;

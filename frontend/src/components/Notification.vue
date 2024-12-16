@@ -1,5 +1,5 @@
 <template>
-	<p v-if="users.length === 0">You have no friends.</p>
+	<p v-if="users.length === 0">You have 0 notifications.</p>
 	<FriendRequest v-for="user in users" :user="user" />
 </template>
 <script setup>
