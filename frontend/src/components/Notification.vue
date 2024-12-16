@@ -1,25 +1,27 @@
 <template>
+	<p v-if="users.length === 0">You have no friends.</p>
 	<FriendRequest v-for="user in users" :user="user" />
 </template>
 <script setup>
 import FriendRequest from "./FriendRequest.vue";
-const users = [
-	{
-		name: "Gledrian",
-	},
-	{
-		name: "Santi",
-	},
-	{
-		name: "Albert",
-	},
-];
+import { ref, onMounted } from "vue";
 
-const props = defineProps({
-	currentUser: Object,
+const users = ref([]);
+
+onMounted(async () => {
+	try {
+		const response = await fetch("http://localhost:3000/friend-requests", {
+			method: "GET",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			credentials: "include",
+		});
+		const jsonResponse = await response.json();
+		if (jsonResponse) users.value = jsonResponse;
+	} catch (error) {
+		console.error("Error fetching friend requests:", error);
+	}
 });
-
-const accept = () => {};
-const decline = () => {};
 </script>
 <style scoped></style>

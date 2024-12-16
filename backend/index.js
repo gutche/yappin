@@ -7,7 +7,15 @@ import Redis from "ioredis";
 import { createClient } from "redis";
 import { setupWorker } from "@socket.io/sticky";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { getUserByEmail, insertUser, getUserById } from "./database/database.js";
+import {
+	getUserByEmail,
+	insertUser,
+	getUserById,
+	getUserByFriendCode,
+	sendFriendRequest,
+	getPendingFriendRequests,
+	getRecentlyAcceptedFriendRequests,
+} from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
 import flash from "express-flash";
@@ -80,89 +88,6 @@ io.adapter(createAdapter(pubClient, subClient));
 
 const sessionStore = new RedisSessionStore(redisClient);
 const messageStore = new RedisMessageStore(redisClient);
-
-io.use(async (socket, next) => {
-	const { user } = socket.request;
-	user.username = user.email.split("@")[0];
-	next();
-});
-
-const isNotAuthenticated = (req, res, next) => {
-	if (!req.isAuthenticated()) {
-		return next();
-	}
-	res.status(403).json({ message: "You must logout before proceeding" });
-};
-
-app.delete("/logout", function (req, res, next) {
-	req.logout(function (err) {
-		if (err) {
-			return next(err);
-		}
-		res.sendStatus(200);
-	});
-});
-
-app.post("/register", isNotAuthenticated, async (req, res, next) => {
-	const { email, password } = req.body;
-
-	try {
-		const saltRounds = 10;
-		const hashedPassword = await bcrypt.hash(password, saltRounds);
-		const newUser = await insertUser(email, hashedPassword);
-		req.login(newUser, (err) => {
-			if (err) {
-				console.error("Login error after registration:", err);
-				return res.status(500).json({ error: "Internal server error" });
-			}
-			return res.json({
-				success: true,
-				message: "User registered and logged in successfully",
-			});
-		});
-	} catch (err) {
-		console.error("Error during registration:", err);
-		res.status(500).json({ error: "Internal server error" });
-	}
-});
-
-app.post("/login", isNotAuthenticated, (req, res, next) => {
-	passport.authenticate("local", (err, user, info) => {
-		if (err) {
-			console.error("Authentication error:", err);
-			return res.status(500).json({ error: "Internal server error" });
-		}
-		if (!user) {
-			return res.status(404).json({ error: info.message });
-		}
-
-		req.login(user, (err) => {
-			if (err) {
-				console.error("Login error:", err);
-				return res.status(500).json({ error: "Internal server error" });
-			}
-			if (req.body.rememberUser) {
-				// Set cookie to last for 7 days
-				req.session.cookie.maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-			} else {
-				// Set session cookie to expire on browser close
-				req.session.cookie.expires = false;
-			}
-			return res.json({
-				success: true,
-				message: "Logged in succesfully",
-			});
-		});
-	})(req, res, next);
-});
-
-app.get("/get-session", (req, res) => {
-	if (req.isAuthenticated()) {
-		return res.sendStatus(200);
-	} else {
-		return res.sendStatus(401);
-	}
-});
 
 io.on("connection", async (socket) => {
 	const { user } = socket.request;
@@ -255,3 +180,114 @@ io.on("connection", async (socket) => {
 });
 
 setupWorker(io);
+
+const isNotAuthenticated = (req, res, next) => {
+	if (!req.isAuthenticated()) {
+		return next();
+	}
+	res.status(403).json({ message: "You must logout before proceeding" });
+};
+
+app.delete("/logout", function (req, res, next) {
+	req.logout(function (err) {
+		if (err) {
+			return next(err);
+		}
+		res.sendStatus(200);
+	});
+});
+
+app.post("/register", isNotAuthenticated, async (req, res, next) => {
+	const { email, password } = req.body;
+
+	try {
+		const saltRounds = 10;
+		const hashedPassword = await bcrypt.hash(password, saltRounds);
+		const newUser = await insertUser(email, hashedPassword);
+		req.login(newUser, (err) => {
+			if (err) {
+				console.error("Login error after registration:", err);
+				return res.status(500).json({ error: "Internal server error" });
+			}
+			return res.json({
+				success: true,
+				message: "User registered and logged in successfully",
+			});
+		});
+	} catch (err) {
+		console.error("Error during registration:", err);
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
+app.post("/login", isNotAuthenticated, (req, res, next) => {
+	passport.authenticate("local", (err, user, info) => {
+		if (err) {
+			console.error("Authentication error:", err);
+			return res.status(500).json({ error: "Internal server error" });
+		}
+		if (!user) {
+			return res.status(404).json({ error: info.message });
+		}
+
+		req.login(user, (err) => {
+			if (err) {
+				console.error("Login error:", err);
+				return res.status(500).json({ error: "Internal server error" });
+			}
+			if (req.body.rememberUser) {
+				// Set cookie to last for 7 days
+				req.session.cookie.maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+			} else {
+				// Set session cookie to expire on browser close
+				req.session.cookie.expires = false;
+			}
+			return res.json({
+				success: true,
+				message: "Logged in succesfully",
+			});
+		});
+	})(req, res, next);
+});
+
+app.get("/get-session", (req, res) => {
+	if (req.isAuthenticated()) {
+		return res.sendStatus(200);
+	} else {
+		return res.sendStatus(401);
+	}
+});
+
+app.post("/friend-request", async (req, res) => {
+	const { friendCode } = req.body;
+	const { user } = req;
+
+	try {
+		// Check if the target user exists
+		const targetUser = await getUserByFriendCode(friendCode);
+		if (!targetUser)
+			return res.status(404).json({ error: "User not found." });
+
+		const result = await sendFriendRequest(user.id, targetUser.id);
+		if (result.rowCount > 0) {
+			return res
+				.status(200)
+				.json({ message: "Friend request sent successfully." });
+		}
+	} catch (error) {
+		// Handle specific error for duplicate request
+		if (error.message === "Friend request already sent.") {
+			return res.status(400).json({ error: error.message });
+		}
+		console.log(error);
+	}
+});
+
+app.get("/friend-requests", async (req, res) => {
+	const { id } = req.user;
+	const result = await Promise.all([
+		getPendingFriendRequests(id),
+		getRecentlyAcceptedFriendRequests(id),
+	]);
+	res.json(result.flat().filter((request) => request !== null));
+});

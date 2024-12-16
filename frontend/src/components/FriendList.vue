@@ -14,18 +14,52 @@
 					<i class="fa-solid fa-plus"></i>
 				</button>
 			</div>
+			<p>{{ serverMessage }}</p>
 		</div>
-		
 	</div>
 </template>
 
 <script setup>
+import { ref } from "vue";
+
+const friendCode = ref("");
+const serverMessage = ref("");
+
 const props = defineProps({
 	user: Object,
 });
 
-const addFriend = () => {
-	console.log("button clicked");
+const addFriend = async () => {
+	if (!friendCode.value || friendCode.value.length < 6) {
+		friendCode.value = "";
+		return;
+	}
+	try {
+		const response = await fetch("http://localhost:3000/friend-request", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				friendCode: friendCode.value,
+			}),
+			credentials: "include",
+		});
+		if (response.status === 404) {
+			serverMessage.value = "User doesn't exist";
+			setTimeout(() => {
+				serverMessage.value = "";
+			}, 2000);
+		}
+		if (response.ok) {
+			serverMessage.value = "You friend request was sent successfully!";
+			setTimeout(() => {
+				serverMessage.value = "";
+			}, 2000);
+		}
+	} catch (error) {
+		serverMessage.value = error.message;
+	}
 };
 </script>
 <style scoped>
@@ -52,6 +86,7 @@ const addFriend = () => {
 	border-bottom: 1px solid rgba(0, 0, 0, 0.156);
 	align-items: center;
 	padding: 10px;
+	height: 90px;
 }
 
 .input-wrapper {

@@ -141,9 +141,7 @@ const toggleLeftPanelView = (viewSelected) => {
 			<FriendList
 				v-if="leftPanelView === 'friends'"
 				:user="selectedUser" />
-			<Notification
-				v-if="leftPanelView === 'notifications'"
-				:currentUser="currentUser" />
+			<Notification v-if="leftPanelView === 'notifications'" />
 			<div class="buttons-container">
 				<ButtonIcon
 					iconClass="fa-regular fa-message"

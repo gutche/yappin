@@ -1,7 +1,7 @@
 <template>
-	<div class="grid-container">
+	<div v-if="user" class="grid-container">
 		<img class="item1" src="/no-profile.png" alt="User's profile picture" />
-		<p class="item2">{{ user.name }} sent you a friend request</p>
+		<p class="item2">{{ user.username }} sent you a friend request</p>
 		<div class="item3">
 			<button class="accept" @click="accept">Accept</button>
 			<button class="decline" @click="decline">Decline</button>
@@ -25,8 +25,8 @@ const props = defineProps({
 .item1 {
 	grid-column: 1;
 	grid-row: 1 / span 2;
-	width: 65px;
-	height: 65px;
+	width: 55px;
+	height: 55px;
 	align-self: center;
 	justify-self: center;
 }
@@ -35,7 +35,7 @@ const props = defineProps({
 	grid-column: 2;
 	grid-row: 1;
 	align-self: center;
-	font-size: 16px;
+	font-size: 14px;
 	font-weight: bold;
 	color: #333;
 	margin: 0;

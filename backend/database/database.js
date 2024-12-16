@@ -28,19 +28,32 @@ export const insertUser = (email, hashedPassword) => {
 	});
 };
 
-export const getUserById = (id) => {
+export const getUserByFriendCode = (friendCode) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			"SELECT id, email, friend_code FROM users WHERE id = $1",
-			[id],
-			(err, results) => {
+			"SELECT * from users WHERE friend_code = $1",
+			[friendCode],
+			(err, result) => {
 				if (err) {
 					return reject(err);
 				}
-				const user = results.rows[0];
+
+				const user = result.rows[0];
 				resolve(user);
 			}
 		);
+	});
+};
+
+export const getUserById = (id) => {
+	return new Promise((resolve, reject) => {
+		db.query("SELECT * FROM users WHERE id = $1", [id], (err, results) => {
+			if (err) {
+				return reject(err);
+			}
+			const user = results.rows[0];
+			resolve(user);
+		});
 	});
 };
 
@@ -54,6 +67,84 @@ export const getUserByEmail = (email) => {
 
 				const user = results.rows[0];
 				resolve(user);
+			}
+		);
+	});
+};
+
+export const sendFriendRequest = (sender_id, receiver_id) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			"SELECT * FROM friend_requests WHERE sender_id = $1 AND receiver_id = $2 AND status = 'pending'",
+			[sender_id, receiver_id],
+			(err, results) => {
+				if (err) return reject(err);
+
+				if (results.rowCount > 0) {
+					// A pending request already exists
+					return reject(new Error("Friend request already sent."));
+				}
+
+				// No pending request exists; proceed to insert
+				db.query(
+					"INSERT INTO friend_requests (sender_id, receiver_id) VALUES ($1, $2)",
+					[sender_id, receiver_id],
+					(err, results) => {
+						if (err) return reject(err);
+						const { sender_id } = results.rows[0];
+						resolve(results);
+					}
+				);
+			}
+		);
+	});
+};
+
+export const getPendingFriendRequests = (receiver_id) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			"SELECT sender_id FROM friend_requests WHERE receiver_id = $1 and status = 'pending'",
+			[receiver_id],
+			async (err, results) => {
+				if (err) return reject(err);
+				if (results.rowCount > 0) {
+					const { sender_id } = results.rows[0];
+					db.query(
+						"SELECT username FROM users WHERE id = $1",
+						[sender_id],
+						async (err, results) => {
+							if (err) return reject(err);
+							resolve(results.rows[0]);
+						}
+					);
+				} else {
+					resolve(null);
+				}
+			}
+		);
+	});
+};
+
+export const getRecentlyAcceptedFriendRequests = (receiver_id) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			"SELECT sender_id FROM friend_requests WHERE receiver_id = $1 AND status = 'accepted' AND created_at >= NOW() - INTERVAL '1 day' ORDER BY created_at DESC",
+			[receiver_id],
+			async (err, results) => {
+				if (err) return reject(err);
+				if (results.rowCount > 0) {
+					const { sender_id } = results.rows[0];
+					db.query(
+						"SELECT username FROM users WHERE id = $1",
+						[sender_id],
+						async (err, results) => {
+							if (err) return reject(err);
+							resolve(results.rows[0]);
+						}
+					);
+				} else {
+					resolve(null);
+				}
 			}
 		);
 	});
