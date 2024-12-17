@@ -101,18 +101,23 @@ export const sendFriendRequest = (sender_id, receiver_id) => {
 export const getPendingFriendRequests = (receiver_id) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			"SELECT sender_id FROM friend_requests WHERE receiver_id = $1 and status = 'pending'",
+			"SELECT sender_id, id, status FROM friend_requests WHERE receiver_id = $1 and status = 'pending'",
 			[receiver_id],
 			async (err, results) => {
 				if (err) return reject(err);
 				if (results.rowCount > 0) {
-					const { sender_id } = results.rows[0];
+					const { sender_id, id, status } = results.rows[0];
 					db.query(
 						"SELECT username FROM users WHERE id = $1",
 						[sender_id],
 						async (err, results) => {
 							if (err) return reject(err);
-							resolve(results.rows[0]);
+							const { username } = results.rows[0];
+							resolve({
+								request_id: id,
+								status,
+								username,
+							});
 						}
 					);
 				} else {
@@ -126,23 +131,41 @@ export const getPendingFriendRequests = (receiver_id) => {
 export const getRecentlyAcceptedFriendRequests = (receiver_id) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			"SELECT sender_id FROM friend_requests WHERE receiver_id = $1 AND status = 'accepted' AND created_at >= NOW() - INTERVAL '1 day' ORDER BY created_at DESC",
+			"SELECT sender_id, id, status FROM friend_requests WHERE receiver_id = $1 AND status = 'accepted' AND created_at >= NOW() - INTERVAL '1 day' ORDER BY created_at DESC",
 			[receiver_id],
 			async (err, results) => {
 				if (err) return reject(err);
 				if (results.rowCount > 0) {
-					const { sender_id } = results.rows[0];
+					const { sender_id, id, status } = results.rows[0];
 					db.query(
 						"SELECT username FROM users WHERE id = $1",
 						[sender_id],
 						async (err, results) => {
+							const { username } = results.rows[0];
 							if (err) return reject(err);
-							resolve(results.rows[0]);
+							resolve({
+								request_id: id,
+								status,
+								username,
+							});
 						}
 					);
 				} else {
 					resolve(null);
 				}
+			}
+		);
+	});
+};
+
+export const acceptFriendRequest = (id) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			"UPDATE friend_requests SET status = 'accepted' WHERE id = $1",
+			[id],
+			async (err, results) => {
+				if (err) reject(err);
+				resolve(true);
 			}
 		);
 	});

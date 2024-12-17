@@ -15,6 +15,7 @@ import {
 	sendFriendRequest,
 	getPendingFriendRequests,
 	getRecentlyAcceptedFriendRequests,
+	acceptFriendRequest,
 } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
@@ -289,5 +290,20 @@ app.get("/friend-requests", async (req, res) => {
 		getPendingFriendRequests(id),
 		getRecentlyAcceptedFriendRequests(id),
 	]);
-	res.json(result.flat().filter((request) => request !== null));
+	res.json(
+		result
+			.flat()
+			.filter((request) => request !== null)
+			.sort((a, b) => {
+				// put pending status first
+				if (a.status === "pending" && b.status !== "pending") return -1;
+				if (a.status !== "pending" && b.status === "pending") return 1;
+				return 0;
+			})
+	);
+});
+
+app.post("/accept-friend-request", async (req, res) => {
+	const accepted = await acceptFriendRequest(req.body.id);
+	if (accepted) res.sendStatus(200);
 });

@@ -1,17 +1,44 @@
 <template>
 	<div v-if="user" class="grid-container">
 		<img class="item1" src="/no-profile.png" alt="User's profile picture" />
-		<p class="item2">{{ user.username }} sent you a friend request</p>
-		<div class="item3">
+		<p v-if="user.status === 'accepted'" class="item2">
+			You are now friends with {{ user.username }}
+		</p>
+		<p v-else class="item2">
+			{{ user.username }} sent you a friend request
+		</p>
+		<div v-if="user.status === 'pending'" class="item3">
 			<button class="accept" @click="accept">Accept</button>
 			<button class="decline" @click="decline">Decline</button>
 		</div>
+		<div v-if="user.status === 'accepted'">Accepted</div>
 	</div>
 </template>
 <script setup>
 const props = defineProps({
 	user: Object,
 });
+
+const accept = async () => {
+	try {
+		const response = await fetch(
+			"http://localhost:3000/accept-friend-request",
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					id: props.user.request_id,
+				}),
+				credentials: "include",
+			}
+		);
+		if (response.ok) props.user.status = "accepted";
+	} catch (error) {
+		console.log(error);
+	}
+};
 </script>
 <style scoped>
 .grid-container {
