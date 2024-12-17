@@ -1,5 +1,5 @@
 <template>
-	<div v-if="user" class="grid-container">
+	<div v-if="user.status !== 'rejected'" class="grid-container">
 		<img class="item1" src="/no-profile.png" alt="User's profile picture" />
 		<p v-if="user.status === 'accepted'" class="item2">
 			You are now friends with {{ user.username }}
@@ -35,6 +35,27 @@ const accept = async () => {
 			}
 		);
 		if (response.ok) props.user.status = "accepted";
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+const decline = async () => {
+	try {
+		const response = await fetch(
+			"http://localhost:3000/decline-friend-request",
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					id: props.user.request_id,
+				}),
+				credentials: "include",
+			}
+		);
+		if (response.ok) props.user.status = "rejected";
 	} catch (error) {
 		console.log(error);
 	}

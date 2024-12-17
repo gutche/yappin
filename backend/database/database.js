@@ -171,4 +171,17 @@ export const acceptFriendRequest = (id) => {
 	});
 };
 
+export const declineFriendRequest = (id) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			"UPDATE friend_requests SET status = 'declined' WHERE id = $1",
+			[id],
+			async (err, results) => {
+				if (err) reject(err);
+				resolve(true);
+			}
+		);
+	});
+};
+
 export default db;

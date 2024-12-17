@@ -16,6 +16,7 @@ import {
 	getPendingFriendRequests,
 	getRecentlyAcceptedFriendRequests,
 	acceptFriendRequest,
+	declineFriendRequest,
 } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
@@ -307,3 +308,10 @@ app.post("/accept-friend-request", async (req, res) => {
 	const accepted = await acceptFriendRequest(req.body.id);
 	if (accepted) res.sendStatus(200);
 });
+
+app.post("/decline-friend-request", async (req, res) => {
+	const declined = await declineFriendRequest(req.body.id);
+	if (declined) res.sendStatus(200);
+});
+
+
