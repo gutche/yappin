@@ -11,12 +11,10 @@ import {
 	getUserByEmail,
 	insertUser,
 	getUserById,
-	getUserByFriendCode,
 	sendFriendRequest,
-	getPendingFriendRequests,
-	getRecentlyAcceptedFriendRequests,
 	acceptFriendRequest,
 	declineFriendRequest,
+	getFriendRequests,
 } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
@@ -239,7 +237,7 @@ app.post("/login", isNotAuthenticated, (req, res, next) => {
 			}
 			if (req.body.rememberUser) {
 				// Set cookie to last for 7 days
-				req.session.cookie.maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+				req.session.cookie.maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds855570
 			} else {
 				// Set session cookie to expire on browser close
 				req.session.cookie.expires = false;
@@ -263,44 +261,35 @@ app.get("/get-session", (req, res) => {
 app.post("/friend-request", async (req, res) => {
 	const { friendCode } = req.body;
 	const { user } = req;
-
 	try {
-		// Check if the target user exists
-		const targetUser = await getUserByFriendCode(friendCode);
-		if (!targetUser)
-			return res.status(404).json({ error: "User not found." });
-
-		const result = await sendFriendRequest(user.id, targetUser.id);
-		if (!result)
-			return res
-				.status(400)
-				.json({ message: "Friend request already sent" });
-		if (result.rowCount > 0) {
-			return res
-				.status(200)
-				.json({ message: "Friend request sent successfully." });
+		const result = await sendFriendRequest(user.id, friendCode);
+		console.log(result);
+		res.status(200).json({ message: "Friend request sent successfully" });
+	} catch ({ code }) {
+		console.log(code);
+		let errorMessage;
+		switch (code) {
+			case "23505":
+				errorMessage = "Friend request already exists";
+				break;
+			default:
+				errorMessage = "An unknown error occurred";
 		}
-	} catch (error) {
-		console.log(error);
+		res.status(500).json({ message: errorMessage });
 	}
 });
 
 app.get("/friend-requests", async (req, res) => {
 	const { id } = req.user;
-	const result = await Promise.all([
-		getPendingFriendRequests(id),
-		getRecentlyAcceptedFriendRequests(id),
-	]);
-	res.json(
-		result
-			.flat()
-			.filter((request) => request !== null)
-			.sort((a, b) => {
-				// put pending status first
-				if (a.status === "pending" && b.status !== "pending") return -1;
-				if (a.status !== "pending" && b.status === "pending") return 1;
-				return 0;
-			})
+	const result = await getFriendRequests(id);
+
+	res.status(200).json(
+		result?.sort((a, b) => {
+			// put pending status first
+			if (a.status === "pending" && b.status !== "pending") return -1;
+			if (a.status !== "pending" && b.status === "pending") return 1;
+			return 0;
+		})
 	);
 });
 
@@ -313,5 +302,3 @@ app.post("/decline-friend-request", async (req, res) => {
 	const declined = await declineFriendRequest(req.body.id);
 	if (declined) res.sendStatus(200);
 });
-
-

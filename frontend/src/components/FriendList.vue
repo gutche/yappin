@@ -14,7 +14,7 @@
 					<i class="fa-solid fa-plus"></i>
 				</button>
 			</div>
-			<p>{{ serverMessage }}</p>
+			<p>{{ message }}</p>
 		</div>
 	</div>
 </template>
@@ -23,13 +23,11 @@
 import { ref } from "vue";
 
 const friendCode = ref("");
-const serverMessage = ref("");
-
-const messageDuration = 5000; // 5000ms or 5s
+const message = ref("");
 
 const addFriend = async () => {
 	if (!friendCode.value || friendCode.value.length < 6) {
-		friendCode.value = "";
+		message.value = "Code must be 6 digits";
 		return;
 	}
 	try {
@@ -43,26 +41,14 @@ const addFriend = async () => {
 			}),
 			credentials: "include",
 		});
-		if (response.status === 404) {
-			serverMessage.value = "User doesn't exist";
-			setTimeout(() => {
-				serverMessage.value = "";
-			}, messageDuration);
-		}
-		if (response.status === 400) {
-			serverMessage.value = "Friend request already sent";
-			setTimeout(() => {
-				serverMessage.value = "";
-			}, messageDuration);
-		}
 		if (response.ok) {
-			serverMessage.value = "You friend request was sent successfully!";
-			setTimeout(() => {
-				serverMessage.value = "";
-			}, messageDuration);
+			message.value = "You friend request was sent successfully!";
+		} else {
+			const { message: errorMessage } = await response.json();
+			message.value = errorMessage;
 		}
 	} catch (error) {
-		serverMessage.value = error.message;
+		message.value = error.message;
 	}
 };
 </script>
