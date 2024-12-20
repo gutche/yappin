@@ -20,18 +20,20 @@ CREATE TABLE IF NOT EXISTS messages (
 
 CREATE TABLE IF NOT EXISTS friend_requests (
     id SERIAL PRIMARY KEY,
-    sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    receiver_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    receiver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'accepted', 'declined'
     created_at TIMESTAMP DEFAULT NOW(),
-    CONSTRAINT unique_request UNIQUE (sender_id, receiver_id)
+    CONSTRAINT unique_request UNIQUE (sender_id, receiver_id),
+    CONSTRAINT unique_ids CHECK (sender_id <> receiver_id)
 );
 
 CREATE TABLE IF NOT EXISTS friendships (
     id SERIAL PRIMARY KEY,
-    user_one_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    user_two_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT NOW()
+    user_one_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_two_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT unique_ids CHECK (user_one_id <> user_two_id)
 );
 
 CREATE TABLE IF NOT EXISTS groups (

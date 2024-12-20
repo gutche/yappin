@@ -263,14 +263,19 @@ app.post("/friend-request", async (req, res) => {
 	const { user } = req;
 	try {
 		const result = await sendFriendRequest(user.id, friendCode);
-		console.log(result);
-		res.status(200).json({ message: "Friend request sent successfully" });
-	} catch ({ code }) {
-		console.log(code);
+		if (result)
+			res.status(200).json({
+				message: "Friend request sent successfully",
+			});
+	} catch (error) {
+		console.log(error);
 		let errorMessage;
-		switch (code) {
+		switch (error.code) {
 			case "23505":
 				errorMessage = "Friend request already exists";
+				break;
+			case "23502":
+				errorMessage = "User not found";
 				break;
 			default:
 				errorMessage = "An unknown error occurred";
@@ -281,10 +286,9 @@ app.post("/friend-request", async (req, res) => {
 
 app.get("/friend-requests", async (req, res) => {
 	const { id } = req.user;
-	const result = await getFriendRequests(id);
-
+	const result = (await getFriendRequests(id)) || [];
 	res.status(200).json(
-		result?.sort((a, b) => {
+		result.sort((a, b) => {
 			// put pending status first
 			if (a.status === "pending" && b.status !== "pending") return -1;
 			if (a.status !== "pending" && b.status === "pending") return 1;

@@ -79,65 +79,14 @@ export const getUserByEmail = (email) => {
 export const sendFriendRequest = (sender_id, friend_code) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			`WITH receiver AS (
-				-- Retrieve the receiver's user_id based on their friend_code
-				SELECT id AS receiver_id FROM users WHERE friend_code = $2
-			),
-			is_friend AS (
-				-- Check if users are already friends
-				SELECT 1 FROM friendships
-				WHERE (user_one_id = LEAST(1, (SELECT receiver_id FROM receiver))
-				AND user_two_id = GREATEST(1, (SELECT receiver_id FROM receiver)))
-			),
-			request_exists AS (
-				-- Check if a friend request already exists
-				SELECT 1 FROM friend_requests
-				WHERE sender_id = $1 AND receiver_id = (SELECT receiver_id FROM receiver) AND status = 'pending'
-			),
-			insert_request AS (
-				-- Attempt to insert the friend request
-				INSERT INTO friend_requests (sender_id, receiver_id)
-				SELECT 1, receiver_id
-				FROM receiver
-				WHERE NOT EXISTS (SELECT 1 FROM is_friend)
-				AND NOT EXISTS (SELECT 1 FROM request_exists)
-				RETURNING 'INSERTED' AS status
-			)
-			-- Return the appropriate status
-			SELECT status FROM insert_request
-			UNION ALL
-			SELECT 'ALREADY_FRIENDS' AS status FROM is_friend
-			UNION ALL
-			SELECT 'REQUEST_EXISTS' AS status FROM request_exists
-			UNION ALL
-			SELECT 'USER_NOT_FOUND' AS status FROM receiver WHERE NOT EXISTS (SELECT 1 FROM receiver)
+			`INSERT INTO friend_requests (sender_id, receiver_id) VALUES ($1, (SELECT id FROM users WHERE friend_code = $2))
 			`,
 			[sender_id, friend_code],
 			(err, results) => {
 				if (err) {
-					console.log("were here");
 					return reject(err);
 				}
-				const status = results.rows[0]?.status;
-				console.log(results);
-				switch (status) {
-					case "INSERTED":
-						console.log("Friend request sent successfully.");
-						return resolve(true);
-					case "ALREADY_FRIENDS":
-						console.log("Users are already friends.");
-						return reject(new Error("Users are already friends."));
-					case "REQUEST_EXISTS":
-						console.log("Friend request already exists.");
-						return reject(
-							new Error("Friend request already exists.")
-						);
-					case "USER_NOT_FOUND":
-						console.log("Receiver not found.");
-						return reject(new Error("Receiver not found."));
-					default:
-						return reject(new Error("Unexpected status."));
-				}
+				if (results.rowCount > 0) resolve(true);
 			}
 		);
 	});
@@ -170,15 +119,23 @@ export const acceptFriendRequest = (id) => {
 	return new Promise((resolve, reject) => {
 		db.query(
 			`
-			UPDATE friend_requests SET status = 'accepted' WHERE id = $1;
-			INSERT INTO friendships (user_one_id, user_two_id)
-			SELECT LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id) FROM friend_requests WHERE id = $1;
-			WITH current_request AS (
-				SELECT sender_id, receiver_id FROM friend_requests WHERE id = 1
+			WITH updated_request AS (
+				UPDATE friend_requests
+				SET status = 'accepted'
+				WHERE id = $1
+				RETURNING sender_id, receiver_id
+			),
+			inserted_friendship AS (
+				INSERT INTO friendships (user_one_id, user_two_id)
+				SELECT LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id)
+				FROM updated_request
+				RETURNING *
 			)
 			INSERT INTO friend_requests (sender_id, receiver_id)
-			SELECT receiver_id, sender_id FROM current_request
-			ON CONFLICT ON CONSTRAINT unique_request DO UPDATE SET status = 'accepted'
+			SELECT receiver_id, sender_id
+			FROM updated_request
+			ON CONFLICT ON CONSTRAINT unique_request
+			DO UPDATE SET status = 'accepted'
 			`,
 			[id],
 			async (err, results) => {
