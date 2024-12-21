@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS friend_requests (
     status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'accepted', 'declined'
     created_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT unique_request UNIQUE (sender_id, receiver_id),
-    CONSTRAINT unique_ids CHECK (sender_id <> receiver_id)
+    CONSTRAINT unique_ids CHECK (sender_id <> receiver_id),
+    CONSTRAINT non_zero_id CHECK (sender_id > 0, receiver_id > 0)
 );
 
 CREATE TABLE IF NOT EXISTS friendships (
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS friendships (
     user_one_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     user_two_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT unique_friendship UNIQUE (user_one_id,user_two_id),
     CONSTRAINT unique_ids CHECK (user_one_id <> user_two_id)
 );
 

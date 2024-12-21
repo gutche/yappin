@@ -29,7 +29,7 @@ const accept = async () => {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
-					id: props.user.request_id,
+					id: props.user.id,
 				}),
 				credentials: "include",
 			}

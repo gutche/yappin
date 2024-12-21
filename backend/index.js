@@ -268,7 +268,6 @@ app.post("/friend-request", async (req, res) => {
 				message: "Friend request sent successfully",
 			});
 	} catch (error) {
-		console.log(error);
 		let errorMessage;
 		switch (error.code) {
 			case "23505":
@@ -276,6 +275,9 @@ app.post("/friend-request", async (req, res) => {
 				break;
 			case "23502":
 				errorMessage = "User not found";
+				break;
+			case "400":
+				errorMessage = "Already friends";
 				break;
 			default:
 				errorMessage = "An unknown error occurred";
@@ -298,8 +300,12 @@ app.get("/friend-requests", async (req, res) => {
 });
 
 app.post("/accept-friend-request", async (req, res) => {
-	const accepted = await acceptFriendRequest(req.body.id);
-	if (accepted) res.sendStatus(200);
+	try {
+		const accepted = await acceptFriendRequest(req.body.id);
+		if (accepted) res.sendStatus(200);
+	} catch (error) {
+		console.log(error);
+	}
 });
 
 app.post("/decline-friend-request", async (req, res) => {

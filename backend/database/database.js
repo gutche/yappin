@@ -1,7 +1,7 @@
 import pg from "pg";
 import "dotenv/config";
 
-const db = new pg.Client();
+const db = new pg.Pool();
 
 try {
 	await db.connect();
@@ -79,7 +79,9 @@ export const getUserByEmail = (email) => {
 export const sendFriendRequest = (sender_id, friend_code) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			`INSERT INTO friend_requests (sender_id, receiver_id) VALUES ($1, (SELECT id FROM users WHERE friend_code = $2))
+			`INSERT INTO friend_requests (sender_id, receiver_id)
+			 SELECT $1, (SELECT id FROM users WHERE friend_code = $2)
+			 WHERE NOT EXISTS (SELECT 1 FROM friendships WHERE user_one_id = LEAST($1, (SELECT id FROM users WHERE friend_code = $2)) AND user_two_id = GREATEST($1, (SELECT id FROM users WHERE friend_code = $2)))
 			`,
 			[sender_id, friend_code],
 			(err, results) => {
@@ -87,6 +89,7 @@ export const sendFriendRequest = (sender_id, friend_code) => {
 					return reject(err);
 				}
 				if (results.rowCount > 0) resolve(true);
+				reject({ code: "400" });
 			}
 		);
 	});
@@ -116,34 +119,52 @@ export const getFriendRequests = (receiver_id) => {
 };
 
 export const acceptFriendRequest = (id) => {
-	return new Promise((resolve, reject) => {
-		db.query(
-			`
-			WITH updated_request AS (
-				UPDATE friend_requests
-				SET status = 'accepted'
-				WHERE id = $1
-				RETURNING sender_id, receiver_id
-			),
-			inserted_friendship AS (
-				INSERT INTO friendships (user_one_id, user_two_id)
-				SELECT LEAST(sender_id, receiver_id), GREATEST(sender_id, receiver_id)
-				FROM updated_request
-				RETURNING *
-			)
-			INSERT INTO friend_requests (sender_id, receiver_id)
-			SELECT receiver_id, sender_id
-			FROM updated_request
-			ON CONFLICT ON CONSTRAINT unique_request
-			DO UPDATE SET status = 'accepted'
-			`,
-			[id],
-			async (err, results) => {
-				if (err) reject(err);
-				// save the friendship
-				resolve(true);
-			}
-		);
+	return new Promise(async (resolve, reject) => {
+		try {
+			await db.query("BEGIN"); // Start the transaction
+
+			// Step 1: Update the friend request status
+			const { rows } = await db.query(
+				`
+                UPDATE friend_requests
+                SET status = 'accepted'
+                WHERE id = $1
+                RETURNING sender_id, receiver_id;
+                `,
+				[id]
+			);
+
+			const { sender_id, receiver_id } = rows[0];
+
+			// Step 2: Insert into the friendships table
+			await db.query(
+				`
+                INSERT INTO friendships (user_one_id, user_two_id)
+                VALUES ($1, $2);
+                `,
+				[
+					Math.min(sender_id, receiver_id),
+					Math.max(sender_id, receiver_id),
+				]
+			);
+
+			// Step 3: Insert or update the reverse friend request
+			await db.query(
+				`
+                INSERT INTO friend_requests (sender_id, receiver_id, status)
+                VALUES ($1, $2, 'accepted')
+                ON CONFLICT ON CONSTRAINT unique_request
+                DO UPDATE SET status = 'accepted';
+                `,
+				[receiver_id, sender_id]
+			);
+
+			await db.query("COMMIT"); // Commit the transaction
+			resolve(true);
+		} catch (err) {
+			await db.query("ROLLBACK"); // Rollback on error
+			reject(err);
+		}
 	});
 };
 
