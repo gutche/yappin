@@ -1,10 +1,10 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { RedisSessionStore } from "./store/sessionStore.js";
 import { RedisMessageStore } from "./store/messageStore.js";
 import Redis from "ioredis";
 import { createClient } from "redis";
+import { RedisStore } from "connect-redis";
 import { setupWorker } from "@socket.io/sticky";
 import { createAdapter } from "@socket.io/redis-adapter";
 import {
@@ -24,9 +24,10 @@ import { initPassportConfig } from "./passport-config.js";
 import bcrypt from "bcrypt";
 
 const app = express();
+const httpServer = createServer(app);
 
 const redisClient = new Redis();
-const httpServer = createServer(app);
+const messageStore = new RedisMessageStore(redisClient);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -42,6 +43,7 @@ const io = new Server(httpServer, {
 });
 const sessionMiddleware = session({
 	secret: process.env.SECRET_KEY,
+	store: new RedisStore({ client: redisClient }),
 	resave: false,
 	saveUninitialized: false,
 	cookie: {
@@ -86,30 +88,19 @@ const subClient = pubClient.duplicate();
 await Promise.all([pubClient.connect(), subClient.connect()]);
 io.adapter(createAdapter(pubClient, subClient));
 
-const sessionStore = new RedisSessionStore(redisClient);
-const messageStore = new RedisMessageStore(redisClient);
-
 io.on("connection", async (socket) => {
 	const { user } = socket.request;
 	const { userID, username } = user;
 
 	socket.emit("current user", user);
 
-	// persist session
-	sessionStore.saveSession(userID, {
-		userID: userID,
-		username: username,
-		connected: true,
-	});
-
 	// join the "userID" room
 	socket.join(userID);
 
 	// fetch existing users
 	let users = [];
-	const [messages, sessions] = await Promise.all([
+	const [messages] = await Promise.all([
 		messageStore.findMessagesForUser(userID),
-		sessionStore.findAllSessions(),
 	]);
 	const messagesPerUser = new Map();
 	messages.forEach((message) => {
@@ -121,26 +112,6 @@ io.on("connection", async (socket) => {
 			messagesPerUser.set(otherUser, [message]);
 		}
 	});
-	// Create unique users list
-	users = sessions.reduce((acc, session) => {
-		// Check if the user already exists in the list
-		const existingUser = acc.find((user) => user.userID === session.userID);
-
-		if (existingUser) {
-			// If the user exists, update their connection status
-			existingUser.connected = session.connected;
-		} else {
-			// If the user doesn't exist, add them to the list
-			acc.push({
-				userID: session.userID,
-				username: session.username,
-				connected: session.connected, // Reflect the correct status
-				messages: messagesPerUser.get(session.userID) || [],
-			});
-		}
-		return acc;
-	}, []);
-	socket.emit("users", users);
 
 	// notify existing users
 	socket.broadcast.emit("user connected", {
@@ -168,13 +139,6 @@ io.on("connection", async (socket) => {
 		if (isDisconnected) {
 			// notify other users
 			socket.broadcast.emit("user disconnected", userID);
-
-			// update the connection status of the session
-			sessionStore.saveSession(userID, {
-				userID: userID,
-				username: username,
-				connected: false,
-			});
 		}
 	});
 });
@@ -309,6 +273,10 @@ app.post("/accept-friend-request", async (req, res) => {
 });
 
 app.post("/decline-friend-request", async (req, res) => {
-	const declined = await declineFriendRequest(req.body.id);
-	if (declined) res.sendStatus(200);
+	try {
+		const declined = await declineFriendRequest(req.body.id);
+		if (declined) res.sendStatus(200);
+	} catch (error) {
+		console.log(error);
+	}
 });
