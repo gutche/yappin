@@ -14,7 +14,7 @@ try {
 export const insertUser = (email, hashedPassword) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			"INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id",
+			"INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email, friend_code, username, last_active, created_at",
 			[email, hashedPassword],
 			(err, result) => {
 				if (err) {

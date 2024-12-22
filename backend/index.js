@@ -173,14 +173,15 @@ app.post("/register", isNotAuthenticated, async (req, res, next) => {
 				console.error("Login error after registration:", err);
 				return res.status(500).json({ error: "Internal server error" });
 			}
-			return res.json({
-				success: true,
+			return res.status(200).json({
 				message: "User registered and logged in successfully",
 			});
 		});
 	} catch (err) {
-		console.error("Error during registration:", err);
-		res.status(500).json({ error: "Internal server error" });
+		console.error(err);
+		if (err.code === "23505")
+			return res.status(400).json({ error: "Email already exists" });
+		return res.status(500).json({ error: "Server error" });
 	}
 });
 
@@ -193,7 +194,6 @@ app.post("/login", isNotAuthenticated, (req, res, next) => {
 		if (!user) {
 			return res.status(404).json({ error: info.message });
 		}
-
 		req.login(user, (err) => {
 			if (err) {
 				console.error("Login error:", err);

@@ -30,11 +30,14 @@ const sendForm = async () => {
 				password: password.value,
 			}),
 		});
-
-		if (response.ok) router.push("/");
+		if (!response.ok) {
+			const { error: err } = await response.json();
+			error.value = err;
+		} else {
+			router.push("/");
+		}
 	} catch (error) {
 		console.error(error);
-		error.value = "Server error";
 	}
 };
 
@@ -59,6 +62,7 @@ const validateEmail = (email) => {
 					name="email"
 					id="email"
 					v-model="email"
+					:class="error === 'Invalid email' ? 'error' : ''"
 					required />
 				<label for="psw"><b>Password</b></label>
 				<input
@@ -67,6 +71,7 @@ const validateEmail = (email) => {
 					name="psw"
 					id="psw"
 					v-model="password"
+					:class="error === 'Passwords don\'t match' ? 'error' : ''"
 					required />
 
 				<label for="psw-repeat"><b>Repeat Password</b></label>
@@ -76,6 +81,7 @@ const validateEmail = (email) => {
 					name="psw-repeat"
 					id="psw-repeat"
 					v-model="repeatedPassword"
+					:class="error === 'Passwords don\'t match' ? 'error' : ''"
 					required />
 				<hr />
 				<p v-if="error" style="color: red">
@@ -134,6 +140,10 @@ input[type="text"]:focus,
 input[type="password"]:focus {
 	background-color: #ddd;
 	outline: none;
+}
+
+input.error {
+	border: 1px solid red;
 }
 
 hr {

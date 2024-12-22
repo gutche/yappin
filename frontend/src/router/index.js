@@ -44,7 +44,6 @@ router.beforeEach(async (to, from, next) => {
 		if (to.meta.requiresAuth || to.meta.guestOnly) {
 			await authStore.fetchSession();
 		}
-
 		if (to.meta.requiresAuth && !authStore.isAuthenticated) {
 			return next("/login");
 		} else if (to.meta.guestOnly && authStore.isAuthenticated) {
