@@ -6,18 +6,27 @@ export const initPassportConfig = (passport, getUserByEmail, getUserById) => {
 		new LocalStrategy(
 			{ usernameField: "email" },
 			async (email, password, done) => {
-				const user = await getUserByEmail(email);
-				const isPasswordValid = await bcrypt.compare(
-					password,
-					user.password
-				);
+				try {
+					const user = await getUserByEmail(email);
+					if (!user) {
+						return done(null, false, {
+							message: "Incorrect username or password.",
+						});
+					}
+					const isPasswordValid = await bcrypt.compare(
+						password,
+						user.password
+					);
 
-				if (!isPasswordValid) {
-					return done(null, false, {
-						message: "Incorrect username or password.",
-					});
+					if (!isPasswordValid) {
+						return done(null, false, {
+							message: "Incorrect username or password.",
+						});
+					}
+					return done(null, user);
+				} catch (error) {
+					console.log(error);
 				}
-				return done(null, user);
 			}
 		)
 	);

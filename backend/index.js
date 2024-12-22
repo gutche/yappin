@@ -206,8 +206,7 @@ app.post("/login", isNotAuthenticated, (req, res, next) => {
 				// Set session cookie to expire on browser close
 				req.session.cookie.expires = false;
 			}
-			return res.json({
-				success: true,
+			return res.status(200).json({
 				message: "Logged in succesfully",
 			});
 		});

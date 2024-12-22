@@ -5,24 +5,17 @@ import router from "../router/index";
 const email = ref("");
 const password = ref("");
 const repeatedPassword = ref("");
-const validEmail = ref(false);
 
-const emailError = ref("");
-const passwordError = ref("");
-const serverError = ref("");
+const error = ref("");
 
 const sendForm = async () => {
-	emailError.value = "";
-	passwordError.value = "";
-
-	validEmail.value = validateEmail(email);
-	if (!validEmail.value) {
-		emailError.value = "Invalid email";
+	if (!validateEmail(email.value)) {
+		error.value = "Invalid email";
 		return;
 	}
 
 	if (password.value !== repeatedPassword.value) {
-		passwordError.value = "Passwords don't match";
+		error.value = "Passwords don't match";
 		return;
 	}
 
@@ -37,26 +30,17 @@ const sendForm = async () => {
 				password: password.value,
 			}),
 		});
-		if (response.status === 409) {
-			const data = await response.json();
-			serverError.value = data.error;
-			return;
-		}
-
-		if (!response.ok) {
-			throw new Error("Failed to register. Please try again.");
-		}
 
 		if (response.ok) router.push("/");
 	} catch (error) {
 		console.error(error);
-		serverError.value = error.message;
+		error.value = "Server error";
 	}
 };
 
 const validateEmail = (email) => {
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-	return emailRegex.test(email.value);
+	return emailRegex.test(email);
 };
 </script>
 
@@ -76,7 +60,6 @@ const validateEmail = (email) => {
 					id="email"
 					v-model="email"
 					required />
-				<p v-if="emailError" style="color: red">{{ emailError }}</p>
 				<label for="psw"><b>Password</b></label>
 				<input
 					type="password"
@@ -94,11 +77,10 @@ const validateEmail = (email) => {
 					id="psw-repeat"
 					v-model="repeatedPassword"
 					required />
-				<p v-if="passwordError" style="color: red">
-					{{ passwordError }}
-				</p>
 				<hr />
-				<p v-if="serverError" style="color: red">{{ serverError }}</p>
+				<p v-if="error" style="color: red">
+					{{ error }}
+				</p>
 				<p>
 					By creating an account you agree to our
 					<a href="#">Terms & Privacy</a>.
