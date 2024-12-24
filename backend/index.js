@@ -201,7 +201,7 @@ app.post("/login", isNotAuthenticated, (req, res, next) => {
 			}
 			if (req.body.rememberUser) {
 				// Set cookie to last for 7 days
-				req.session.cookie.maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds855570
+				req.session.cookie.maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 			} else {
 				// Set session cookie to expire on browser close
 				req.session.cookie.expires = false;

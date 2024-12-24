@@ -29,6 +29,7 @@ const sendForm = async () => {
 				email: email.value,
 				password: password.value,
 			}),
+			credentials: "include",
 		});
 		if (!response.ok) {
 			const { error: err } = await response.json();
