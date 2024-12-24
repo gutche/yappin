@@ -20,7 +20,7 @@ import cors from "cors";
 import session from "express-session";
 import flash from "express-flash";
 import passport from "passport";
-import { initPassportConfig } from "./passport-config.js";
+import { initPassportConfig } from "./auth/passport-config.js";
 import bcrypt from "bcrypt";
 
 const app = express();
