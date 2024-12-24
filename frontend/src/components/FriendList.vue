@@ -21,6 +21,7 @@
 
 <script setup>
 import { ref } from "vue";
+import api from "@/api/api";
 
 const friendCode = ref("");
 const message = ref("");

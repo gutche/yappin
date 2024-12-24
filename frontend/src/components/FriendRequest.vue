@@ -15,6 +15,8 @@
 	</div>
 </template>
 <script setup>
+import api from "@/api/api";
+
 const props = defineProps({
 	user: Object,
 });

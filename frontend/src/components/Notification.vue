@@ -5,6 +5,7 @@
 <script setup>
 import FriendRequest from "./FriendRequest.vue";
 import { ref, onMounted } from "vue";
+import api from "@/api/api";
 
 const users = ref([]);
 
