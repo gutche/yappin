@@ -31,16 +31,10 @@ const addFriend = async () => {
 		return;
 	}
 	try {
-		const response = await fetch("http://localhost:3000/friend-request", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				friendCode: friendCode.value,
-			}),
-			credentials: "include",
+		const response = await api.post("/friend-request", {
+			friendCode: friendCode.value,
 		});
+
 		if (response.ok) {
 			message.value = "You friend request was sent successfully!";
 		} else {

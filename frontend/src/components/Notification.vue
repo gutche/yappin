@@ -10,13 +10,7 @@ const users = ref([]);
 
 onMounted(async () => {
 	try {
-		const response = await fetch("http://localhost:3000/friend-requests", {
-			method: "GET",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			credentials: "include",
-		});
+		const response = await api.get("/friend-requests");
 		const jsonResponse = await response.json();
 		if (jsonResponse) users.value = jsonResponse;
 	} catch (error) {

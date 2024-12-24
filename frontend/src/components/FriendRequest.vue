@@ -21,19 +21,10 @@ const props = defineProps({
 
 const accept = async () => {
 	try {
-		const response = await fetch(
-			"http://localhost:3000/accept-friend-request",
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					id: props.user.id,
-				}),
-				credentials: "include",
-			}
-		);
+		const response = await api.post("/accept-friend-request", {
+			id: props.user.id,
+		});
+
 		if (response.ok) props.user.status = "accepted";
 	} catch (error) {
 		console.log(error);
@@ -42,19 +33,9 @@ const accept = async () => {
 
 const decline = async () => {
 	try {
-		const response = await fetch(
-			"http://localhost:3000/decline-friend-request",
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					id: props.user.request_id,
-				}),
-				credentials: "include",
-			}
-		);
+		const response = await fetch("/decline-friend-request", {
+			id: props.user.request_id,
+		});
 		if (response.ok) props.user.status = "rejected";
 	} catch (error) {
 		console.log(error);

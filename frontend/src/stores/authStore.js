@@ -1,15 +1,14 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
+import api from "@/api/api";
 
 export const useAuthStore = defineStore("auth", () => {
 	const isAuthenticated = ref(null);
 
 	const fetchSession = async () => {
 		try {
-			const response = await fetch("http://localhost:3000/get-session", {
-				method: "GET",
-				credentials: "include",
-			});
+			const response = await api.get("/get-session");
+
 			if (response.ok) {
 				isAuthenticated.value = true;
 			} else {

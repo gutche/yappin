@@ -2,14 +2,12 @@
 <script setup>
 import router from "../router/index";
 import { onMounted } from "vue";
-import socket from "../socket";
+import socket from "../socket/socket";
+import api from "@/api/api";
 
 onMounted(async () => {
 	try {
-		const response = await fetch("http://localhost:3000/logout", {
-			method: "DELETE",
-			credentials: "include",
-		});
+		const response = await api.delete("/logout");
 
 		if (response.ok) {
 			socket.disconnect();

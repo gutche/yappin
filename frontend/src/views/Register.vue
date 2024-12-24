@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import router from "../router/index";
+import api from "@/api/api.js";
 
 const email = ref("");
 const password = ref("");
@@ -20,17 +21,11 @@ const sendForm = async () => {
 	}
 
 	try {
-		const response = await fetch("http://localhost:3000/register", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				email: email.value,
-				password: password.value,
-			}),
-			credentials: "include",
+		const response = await api.post("/register", {
+			email: email.value,
+			password: password.value,
 		});
+		console.log(response);
 		if (!response.ok) {
 			const { error: err } = await response.json();
 			error.value = err;

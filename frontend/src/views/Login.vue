@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import router from "../router";
+import api from "@/api/api.js";
 
 const email = ref("");
 const password = ref("");
@@ -9,17 +10,10 @@ const serverError = ref("");
 
 const submitForm = async () => {
 	try {
-		const response = await fetch("http://localhost:3000/login", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				email: email.value,
-				password: password.value,
-				rememberUser: rememberUser.value,
-			}),
-			credentials: "include",
+		const response = await api.post("/login", {
+			email: email.value,
+			password: password.value,
+			rememberUser: rememberUser.value,
 		});
 		if (response.status === 404) {
 			serverError.value = "Email or password is incorrect!";

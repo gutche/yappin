@@ -5,7 +5,7 @@ import Profile from "../components/Profile.vue";
 import FriendList from "../components/FriendList.vue";
 import Notification from "../components/Notification.vue";
 import ButtonIcon from "@/components/ButtonIcon.vue";
-import socket from "../socket";
+import socket from "../socket/socket";
 import { ref, onBeforeUnmount, onMounted } from "vue";
 import router from "../router/index";
 
