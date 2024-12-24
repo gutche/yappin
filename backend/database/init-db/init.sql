@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS friend_requests (
     created_at TIMESTAMP DEFAULT NOW(),
     CONSTRAINT unique_request UNIQUE (sender_id, receiver_id),
     CONSTRAINT unique_ids CHECK (sender_id <> receiver_id),
-    CONSTRAINT non_zero_id CHECK (sender_id > 0, receiver_id > 0)
+    CONSTRAINT non_zero_id CHECK (sender_id > 0 AND receiver_id > 0)
 );
 
 CREATE TABLE IF NOT EXISTS friendships (
