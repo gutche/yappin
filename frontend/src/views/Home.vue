@@ -7,7 +7,8 @@ import Notification from "../components/Notification.vue";
 import ButtonIcon from "@/components/ButtonIcon.vue";
 import socket from "../socket/socket";
 import { ref, onBeforeUnmount, onMounted } from "vue";
-import router from "../router/index";
+import api from "@/api/api";
+import router from "@/router/index";
 
 const selectedUser = ref(null);
 const currentUser = ref(null);
@@ -38,6 +39,21 @@ const toggleLeftPanelView = (viewSelected) => {
 
 const initReactiveProperties = (user) => {
 	user.hasNewMessages = false;
+};
+
+const logout = async () => {
+	try {
+		const response = await api.delete("/logout");
+
+		if (response.ok) {
+			socket.disconnect();
+			router.push("/login");
+		} else {
+			console.error("Failed to log out:", response.status);
+		}
+	} catch (error) {
+		console.error("Error during logout:", error);
+	}
 };
 
 onMounted(() => {
@@ -156,7 +172,7 @@ onBeforeUnmount(() => {
 					@click="toggleLeftPanelView('notifications')" />
 				<ButtonIcon
 					iconClass="fa-solid fa-right-from-bracket"
-					@click="router.push('/logout')" />
+					@click="logout" />
 			</div>
 		</div>
 		<div class="middle-panel">
