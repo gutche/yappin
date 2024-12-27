@@ -33,6 +33,11 @@ import User from "./User.vue";
 const friendCode = ref("");
 const message = ref("");
 const friends = ref([]);
+const selectedFriend = ref(null);
+
+const onSelectFriend = (friend) => {
+	selectedFriend.value = friend;
+};
 
 const addFriend = async () => {
 	if (!friendCode.value || friendCode.value.length < 6) {
@@ -55,15 +60,10 @@ const addFriend = async () => {
 	}
 };
 
-const onSelectFriend = () => {
-	console.log("Friend selected");
-};
-
 onMounted(async () => {
 	try {
 		const _friends = await api.get("/friends");
 		friends.value = await _friends.json();
-		console.log(friends.value);
 	} catch (error) {
 		console.log(error);
 	}

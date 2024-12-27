@@ -159,15 +159,19 @@ onBeforeUnmount(() => {
 			<Notification v-if="leftPanelView === 'notifications'" />
 			<div class="buttons-container">
 				<ButtonIcon
+					:class="{ selected: leftPanelView === 'users' }"
 					iconClass="fa-regular fa-message"
 					@click="toggleLeftPanelView('users')" />
 				<ButtonIcon
+					:class="{ selected: leftPanelView === 'profile' }"
 					iconClass="fa-regular fa-user"
 					@click="toggleLeftPanelView('profile')" />
 				<ButtonIcon
+					:class="{ selected: leftPanelView === 'friends' }"
 					iconClass="fa-solid fa-user-group"
 					@click="toggleLeftPanelView('friends')" />
 				<ButtonIcon
+					:class="{ selected: leftPanelView === 'notifications' }"
 					iconClass="fa-regular fa-bell"
 					@click="toggleLeftPanelView('notifications')" />
 				<ButtonIcon
@@ -212,5 +216,16 @@ onBeforeUnmount(() => {
 	width: inherit;
 	justify-content: space-evenly;
 	border-top: 1px solid rgba(0, 0, 0, 0.156);
+}
+.btn {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 0 15px;
+}
+
+.btn:hover,
+.selected {
+	background-color: rgba(211, 211, 211, 0.8);
 }
 </style>

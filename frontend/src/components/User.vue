@@ -48,7 +48,7 @@ img {
 }
 
 .selected {
-	background-color: #1164a3;
+	background-color: rgba(211, 211, 211, 0.8);
 }
 
 .user {

@@ -25,5 +25,6 @@ i {
 	display: inline-block;
 	cursor: pointer;
 	color: black;
+	margin: 0;
 }
 </style>
