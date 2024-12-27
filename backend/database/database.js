@@ -95,7 +95,7 @@ export const sendFriendRequest = (sender_id, friend_code) => {
 	});
 };
 
-export const getFriendRequests = (receiver_id) => {
+export const getFriendRequests = (user_id) => {
 	return new Promise((resolve, reject) => {
 		db.query(
 			`SELECT fr.status as status, fr.id as id, u.username as username
@@ -105,7 +105,7 @@ export const getFriendRequests = (receiver_id) => {
 				OR fr.receiver_id = $1 AND fr.status = 'accepted' AND fr.created_at >= NOW() - INTERVAL '1 day'
 				ORDER BY fr.created_at DESC
 			`,
-			[receiver_id],
+			[user_id],
 			async (err, results) => {
 				if (err) return reject(err);
 				if (results.rowCount > 0) {
@@ -176,6 +176,31 @@ export const declineFriendRequest = (id) => {
 			async (err, results) => {
 				if (err) reject(err);
 				resolve(true);
+			}
+		);
+	});
+};
+
+export const getFriends = (user_id) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			`SELECT 
+				u.id AS friend_id,
+				u.username,
+				u.email,
+				u.last_active
+			FROM friendships f
+			JOIN users u ON u.id = 
+				CASE 
+					WHEN f.user_one_id = $1 THEN f.user_two_id 
+					ELSE f.user_one_id 
+				END
+			WHERE f.user_one_id = $1 OR f.user_two_id = $1
+			`,
+			[user_id],
+			async (err, results) => {
+				if (err) reject(err);
+				resolve(results.rows);
 			}
 		);
 	});

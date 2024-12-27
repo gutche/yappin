@@ -16,15 +16,23 @@
 			</div>
 			<p>{{ message }}</p>
 		</div>
+		<User
+			v-for="friend in friends"
+			:key="friend.userID"
+			:user="friend"
+			:selected="selectedFriend === friend"
+			@select="onSelectFriend(friend)" />
 	</div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import api from "@/api/api";
+import User from "./User.vue";
 
 const friendCode = ref("");
 const message = ref("");
+const friends = ref([]);
 
 const addFriend = async () => {
 	if (!friendCode.value || friendCode.value.length < 6) {
@@ -46,6 +54,20 @@ const addFriend = async () => {
 		message.value = error.message;
 	}
 };
+
+const onSelectFriend = () => {
+	console.log("Friend selected");
+};
+
+onMounted(async () => {
+	try {
+		const _friends = await api.get("/friends");
+		friends.value = await _friends.json();
+		console.log(friends.value);
+	} catch (error) {
+		console.log(error);
+	}
+});
 </script>
 <style scoped>
 .fa-plus {
