@@ -3,20 +3,24 @@ const port = "3000";
 
 const api = (() => {
 	const request = async (endpoint, method, data = null, options = {}) => {
-		const headers = {
-			"Content-Type": "application/json",
-			...options.headers,
-		};
+		const isMultipart = data instanceof FormData;
+		const headers = isMultipart
+			? {} // Let the browser set the Content-Type for FormData
+			: {
+					"Content-Type": "application/json",
+			  };
 
 		const config = {
 			method,
-			headers,
+			headers: {
+				...headers,
+				...options.headers,
+			},
 			credentials: "include",
-			...options,
 		};
 
 		if (data) {
-			config.body = JSON.stringify(data);
+			config.body = isMultipart ? data : JSON.stringify(data);
 		}
 
 		const response = await fetch(`${baseURL}:${port}${endpoint}`, config);

@@ -215,7 +215,6 @@ export const setProfilePicture = (user_id, profilePicture) => {
 			[user_id, profilePicture],
 			async (err, results) => {
 				if (err) reject(err);
-				console.log(results.rowCount);
 				resolve(true);
 			}
 		);

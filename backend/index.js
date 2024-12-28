@@ -295,13 +295,16 @@ app.get("/friends", async (req, res) => {
 
 app.post(
 	"/upload-profile-picture",
-	upload.single("profile_picture"),
+	upload.single("profilePicture"),
 	async (req, res) => {
 		try {
 			const { id } = req.user;
 			const profilePicture = req.file.buffer; // Binary data
-
 			const result = await setProfilePicture(id, profilePicture);
+			if (result)
+				res.status(200).json({
+					message: "Profile photo updated successfully.",
+				});
 		} catch (error) {
 			console.error("Error saving profile picture:", error);
 			res.status(500).send("Internal server error");
