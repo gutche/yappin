@@ -154,7 +154,7 @@ onBeforeUnmount(() => {
 				:user="user"
 				:selected="selectedUser === user"
 				@select="onSelectUser(user)" />
-			<Profile v-if="leftPanelView === 'profile'" :user="currentUser" />
+			<Profile v-if="leftPanelView === 'profile'" />
 			<FriendList v-if="leftPanelView === 'friends'" />
 			<Notification v-if="leftPanelView === 'notifications'" />
 			<div class="buttons-container">

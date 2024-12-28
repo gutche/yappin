@@ -2,8 +2,8 @@
 	<div class="wrapper">
 		<div class="card">
 			<img
-				:src="user.profile || '/no-profile.png'"
-				alt="user's profile"
+				:src="currentUser?.profile_picture || '/no-profile.png'"
+				alt="user's profile picture"
 				@click="toggleDropdown" />
 			<div class="dropdown" v-if="showDropdown">
 				<button @click="viewPhoto">View photo</button>
@@ -20,7 +20,7 @@
 				<button @click="removePhoto">Remove photo</button>
 			</div>
 			<div class="username">
-				<span>{{ user.username }}</span>
+				<span>{{ currentUser?.username }}</span>
 			</div>
 			<div class="bio">
 				<p>
@@ -34,13 +34,10 @@
 	</div>
 </template>
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import api from "@/api/api";
 
-const props = defineProps({
-	user: Object,
-});
-
+const currentUser = ref(null);
 const showDropdown = ref(false);
 const toggleDropdown = () => {
 	showDropdown.value = !showDropdown.value;
@@ -61,6 +58,17 @@ const uploadPhoto = async (event) => {
 	}
 };
 const removePhoto = () => {};
+
+onMounted(async () => {
+	try {
+		const result = await api.get("/profile");
+		currentUser.value = await result.json();
+		// Construct Base64 image source
+		currentUser.value.profile_picture = `data:image/png;base64,${currentUser.value.profile_picture}`;
+	} catch (error) {
+		console.log(error);
+	}
+});
 </script>
 <style scoped>
 .card {

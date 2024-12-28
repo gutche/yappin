@@ -48,13 +48,19 @@ export const getUserByFriendCode = (friendCode) => {
 export const getUserById = (id) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			"SELECT id, email, friend_code, username, last_active, created_at FROM users WHERE id = $1",
+			"SELECT id, email, friend_code, username, profile_picture, bio, last_active, created_at FROM users WHERE id = $1",
 			[id],
 			(err, results) => {
 				if (err) {
 					return reject(err);
 				}
 				const user = results.rows[0];
+				// If profile_picture is binary, encode it as Base64
+				if (user && user.profile_picture) {
+					user.profile_picture = Buffer.from(
+						user.profile_picture
+					).toString("base64");
+				}
 				resolve(user);
 			}
 		);

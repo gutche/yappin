@@ -311,3 +311,12 @@ app.post(
 		}
 	}
 );
+
+app.get("/profile", async (req, res) => {
+	try {
+		const user = await getUserById(req.user.id);
+		res.status(200).json(user);
+	} catch (error) {
+		console.log(error);
+	}
+});
