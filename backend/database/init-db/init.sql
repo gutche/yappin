@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS users (
     LPAD(TRUNC(RANDOM() * 1000000)::TEXT, 6, '0'),
     username VARCHAR(255) GENERATED ALWAYS AS (split_part(email, '@', 1)) STORED,
     password VARCHAR(512) NOT NULL,
+    profile_picture BYTEA,
+    bio TEXT,
     last_active TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

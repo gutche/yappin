@@ -16,6 +16,7 @@ import {
 	declineFriendRequest,
 	getFriendRequests,
 	getFriends,
+	setProfilePicture,
 } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
@@ -23,12 +24,14 @@ import flash from "express-flash";
 import passport from "passport";
 import { initPassportConfig } from "./auth/passport-config.js";
 import bcrypt from "bcrypt";
+import multer from "multer";
 
 const app = express();
 const httpServer = createServer(app);
 
 const redisClient = new Redis();
 const messageStore = new RedisMessageStore(redisClient);
+const upload = multer();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -289,3 +292,19 @@ app.get("/friends", async (req, res) => {
 		console.log(error);
 	}
 });
+
+app.post(
+	"/upload-profile-picture",
+	upload.single("profile_picture"),
+	async (req, res) => {
+		try {
+			const { id } = req.user;
+			const profilePicture = req.file.buffer; // Binary data
+
+			const result = await setProfilePicture(id, profilePicture);
+		} catch (error) {
+			console.error("Error saving profile picture:", error);
+			res.status(500).send("Internal server error");
+		}
+	}
+);

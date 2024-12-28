@@ -206,4 +206,20 @@ export const getFriends = (user_id) => {
 	});
 };
 
+export const setProfilePicture = (user_id, profilePicture) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			`
+			UPDATE users SET profile_picture = $2 WHERE id = $1
+			`,
+			[user_id, profilePicture],
+			async (err, results) => {
+				if (err) reject(err);
+				console.log(results.rowCount);
+				resolve(true);
+			}
+		);
+	});
+};
+
 export default db;
