@@ -36,7 +36,11 @@ const friends = ref([]);
 const selectedFriend = ref(null);
 
 const onSelectFriend = (friend) => {
-	selectedFriend.value = friend;
+	if (selectedFriend.value === friend) {
+		selectedFriend.value = null;
+	} else {
+		selectedFriend.value = friend;
+	}
 };
 
 const addFriend = async () => {

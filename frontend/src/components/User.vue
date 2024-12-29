@@ -24,7 +24,6 @@ const status = computed(() => {
 		<div class="description">
 			<div class="name">
 				{{ user.username }}
-				{{ user.self ? " (yourself)" : "" }}
 			</div>
 			<div class="status">
 				<StatusIcon :connected="user.connected" />
@@ -32,10 +31,45 @@ const status = computed(() => {
 			</div>
 		</div>
 		<div v-if="user.hasNewMessages" class="new-messages">!</div>
+		<div class="button-container">
+			<i class="fa-regular fa-message"></i>
+			<i class="fa-regular fa-user"></i>
+			<i class="fa-solid fa-x"></i>
+		</div>
 	</div>
 </template>
 
 <style scoped>
+.button-container {
+	margin-left: auto;
+	display: none;
+	justify-content: space-evenly;
+	width: 150px;
+}
+
+.user:hover .button-container,
+.user.selected .button-container {
+	display: flex; /* Show for hovered or selected users */
+}
+
+.user:hover,
+.selected {
+	background-color: rgba(211, 211, 211, 0.8);
+}
+
+.fa-regular,
+.fa-solid {
+	font-size: 18px;
+	cursor: pointer;
+	padding: 5px;
+	border-radius: 5px;
+}
+
+.fa-regular:hover,
+.fa-solid:hover {
+	background-color: rgb(174, 173, 173);
+}
+
 img {
 	height: 40px;
 	width: 40px;
@@ -47,13 +81,8 @@ img {
 	font-size: 16px;
 }
 
-.selected {
-	background-color: rgba(211, 211, 211, 0.8);
-}
-
 .user {
 	padding: 10px;
-	cursor: pointer;
 	display: flex;
 	align-items: center;
 }
