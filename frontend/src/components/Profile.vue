@@ -52,7 +52,15 @@ const uploadPhoto = async (event) => {
 	const formData = new FormData();
 	formData.append("profilePicture", file);
 	try {
-		await api.post("/upload-profile-picture", formData);
+		const result = await api.post("/upload-profile-picture", formData);
+		if (result.ok) {
+			// Convert the uploaded file to Base64 and assign it directly
+			const reader = new FileReader();
+			reader.onload = () => {
+				currentUser.value.profile_picture = reader.result; // Update the profile picture directly
+			};
+			reader.readAsDataURL(file);
+		}
 	} catch (error) {
 		console.log(error);
 	}
@@ -71,7 +79,10 @@ onMounted(async () => {
 		const result = await api.get("/profile");
 		currentUser.value = await result.json();
 		// Construct Base64 image source
-		currentUser.value.profile_picture = `data:image/png;base64,${currentUser.value.profile_picture}`;
+		const { profile_picture } = currentUser.value;
+		currentUser.value.profile_picture = profile_picture
+			? `data:image/png;base64,${profile_picture}`
+			: null;
 	} catch (error) {
 		console.log(error);
 	}

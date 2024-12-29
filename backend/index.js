@@ -301,11 +301,8 @@ app.post(
 		try {
 			const { id } = req.user;
 			const profilePicture = req.file.buffer; // Binary data
-			const result = await setProfilePicture(id, profilePicture);
-			if (result)
-				res.status(200).json({
-					message: "Profile photo updated successfully.",
-				});
+			const success = await setProfilePicture(id, profilePicture);
+			if (success) res.sendStatus(200);
 		} catch (error) {
 			console.error("Error saving profile picture:", error);
 			res.status(500).send("Internal server error");
@@ -324,8 +321,8 @@ app.get("/profile", async (req, res) => {
 
 app.post("/remove-profile-picture", async (req, res) => {
 	try {
-		const result = await removeProfilePicture(req.user.id);
-		if (result.ok) res.sendStatus(200);
+		const success = await removeProfilePicture(req.user.id);
+		if (success) res.sendStatus(200);
 	} catch (error) {
 		console.log(error);
 	}
