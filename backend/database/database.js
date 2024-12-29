@@ -227,4 +227,17 @@ export const setProfilePicture = (user_id, profilePicture) => {
 	});
 };
 
+export const removeProfilePicture = (user_id) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			`UPDATE users SET profile_picture = null WHERE id = $1`,
+			[user_id],
+			async (err, results) => {
+				if (err) reject(err);
+				resolve(true);
+			}
+		);
+	});
+};
+
 export default db;

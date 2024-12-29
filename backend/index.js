@@ -17,6 +17,7 @@ import {
 	getFriendRequests,
 	getFriends,
 	setProfilePicture,
+	removeProfilePicture,
 } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
@@ -316,6 +317,15 @@ app.get("/profile", async (req, res) => {
 	try {
 		const user = await getUserById(req.user.id);
 		res.status(200).json(user);
+	} catch (error) {
+		console.log(error);
+	}
+});
+
+app.post("/remove-profile-picture", async (req, res) => {
+	try {
+		const result = await removeProfilePicture(req.user.id);
+		if (result.ok) res.sendStatus(200);
 	} catch (error) {
 		console.log(error);
 	}

@@ -57,7 +57,14 @@ const uploadPhoto = async (event) => {
 		console.log(error);
 	}
 };
-const removePhoto = () => {};
+const removePhoto = async () => {
+	try {
+		await api.post("/remove-profile-picture");
+		currentUser.value.profile_picture = null;
+	} catch (error) {
+		console.log(error);
+	}
+};
 
 onMounted(async () => {
 	try {
