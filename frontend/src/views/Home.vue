@@ -13,7 +13,7 @@ import router from "@/router/index";
 const selectedUser = ref(null);
 const currentUser = ref(null);
 const leftPanelView = ref("users");
-const connectedUsers = ref([]);
+const chats = ref([]);
 
 const onMessage = (content) => {
 	if (selectedUser) {
@@ -63,12 +63,12 @@ onMounted(() => {
 	});
 
 	socket.on("connect", () => {
-		const currentUser = connectedUsers.value.find((user) => user.self);
+		const currentUser = chats.value.find((user) => user.self);
 		if (currentUser) currentUser.connected = true;
 	});
 
 	socket.on("disconnect", () => {
-		const currentUser = connectedUsers.value.find((user) => user.self);
+		const currentUser = chats.value.find((user) => user.self);
 		if (currentUser) currentUser.connected = false;
 	});
 
@@ -82,7 +82,7 @@ onMounted(() => {
 			user.messages.forEach((message) => {
 				message.fromSelf = message.from === socket.userID;
 			});
-			const existingUser = connectedUsers.value.find(
+			const existingUser = chats.value.find(
 				(u) => u.userID === user.userID
 			);
 			if (existingUser) {
@@ -92,11 +92,11 @@ onMounted(() => {
 			}
 			user.self = user.userID === socket.userID;
 			initReactiveProperties(user);
-			connectedUsers.value.push(user);
+			chats.value.push(user);
 		});
 
 		// put the current user first, and sort by username
-		connectedUsers.value = users.sort((a, b) => {
+		chats.value = users.sort((a, b) => {
 			if (a.self) return -1;
 			if (b.self) return 1;
 			if (a.username < b.username) return -1;
@@ -105,25 +105,23 @@ onMounted(() => {
 	});
 
 	socket.on("user connected", (user) => {
-		const existingUser = connectedUsers.value.find(
-			(u) => u.userID === user.userID
-		);
+		const existingUser = chats.value.find((u) => u.userID === user.userID);
 		if (existingUser) {
 			existingUser.connected = true;
 			return;
 		}
 		initReactiveProperties(user);
-		connectedUsers.value.push(user);
+		chats.value.push(user);
 	});
 
 	socket.on("user disconnected", (id) => {
-		const user = connectedUsers.value.find((user) => user.userID === id);
+		const user = chats.value.find((user) => user.userID === id);
 		if (user) user.connected = false;
 	});
 
 	socket.on("private message", ({ content, from, to }) => {
 		const fromSelf = socket.userID === from;
-		const targetUser = connectedUsers.value.find(
+		const targetUser = chats.value.find(
 			(user) => user.userID === (fromSelf ? to : from)
 		);
 		targetUser.messages.push({
@@ -149,32 +147,44 @@ onBeforeUnmount(() => {
 		<div class="left-panel">
 			<User
 				v-if="leftPanelView === 'users'"
-				v-for="user in connectedUsers"
+				v-for="user in chats"
 				:key="user.userID"
 				:user="user"
 				:selected="selectedUser === user"
 				@select="onSelectUser(user)" />
+			<div v-if="leftPanelView === 'users' && chats.length === 0">
+				<p class="info">You do not have active chats.</p>
+				<p class="tip">
+					Head over to friends section to start chatting
+				</p>
+			</div>
+
 			<Profile v-if="leftPanelView === 'profile'" />
 			<FriendList v-if="leftPanelView === 'friends'" />
 			<Notification v-if="leftPanelView === 'notifications'" />
 			<div class="buttons-container">
 				<ButtonIcon
+					title="Chats"
 					:class="{ selected: leftPanelView === 'users' }"
 					iconClass="fa-regular fa-message"
 					@click="toggleLeftPanelView('users')" />
 				<ButtonIcon
 					:class="{ selected: leftPanelView === 'profile' }"
 					iconClass="fa-regular fa-user"
+					title="Profile"
 					@click="toggleLeftPanelView('profile')" />
 				<ButtonIcon
 					:class="{ selected: leftPanelView === 'friends' }"
 					iconClass="fa-solid fa-user-group"
+					title="Friends"
 					@click="toggleLeftPanelView('friends')" />
 				<ButtonIcon
+					title="Notifications"
 					:class="{ selected: leftPanelView === 'notifications' }"
 					iconClass="fa-regular fa-bell"
 					@click="toggleLeftPanelView('notifications')" />
 				<ButtonIcon
+					title="Logout"
 					iconClass="fa-solid fa-right-from-bracket"
 					@click="logout" />
 			</div>
@@ -227,5 +237,14 @@ onBeforeUnmount(() => {
 .btn:hover,
 .selected {
 	background-color: rgba(211, 211, 211, 0.8);
+}
+.info {
+	font-size: 18px;
+	margin: 15px;
+}
+
+p {
+	display: block;
+	text-align: center;
 }
 </style>

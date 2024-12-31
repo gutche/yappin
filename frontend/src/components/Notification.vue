@@ -1,5 +1,5 @@
 <template>
-	<p v-if="users.length === 0">You have 0 notifications.</p>
+	<p class="info" v-if="users.length === 0">You do not have notifications.</p>
 	<FriendRequest v-for="user in users" :user="user" />
 </template>
 <script setup>
@@ -19,4 +19,11 @@ onMounted(async () => {
 	}
 });
 </script>
-<style scoped></style>
+<style scoped>
+.info {
+	font-size: 18px;
+	margin: 15px;
+	display: block;
+	text-align: center;
+}
+</style>
