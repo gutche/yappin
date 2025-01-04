@@ -6,12 +6,16 @@ const onClick = () => {
 	emit("select");
 };
 
+const messageUser = () => {
+	emit("message", props.user);
+};
+
 const props = defineProps({
 	user: Object,
 	selected: Boolean,
 });
 
-const emit = defineEmits(["select"]);
+const emit = defineEmits(["select", "message"]);
 
 const status = computed(() => {
 	return props.user.connected ? "online" : "offline";
@@ -32,7 +36,7 @@ const status = computed(() => {
 		</div>
 		<div v-if="user.hasNewMessages" class="new-messages">!</div>
 		<div class="button-container">
-			<i class="fa-regular fa-message"></i>
+			<i @click="messageUser" class="fa-regular fa-message"></i>
 			<i class="fa-regular fa-user"></i>
 			<i class="fa-solid fa-x"></i>
 		</div>

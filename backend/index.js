@@ -18,6 +18,7 @@ import {
 	getFriends,
 	setProfilePicture,
 	removeProfilePicture,
+	getUserMessages,
 } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
@@ -58,6 +59,7 @@ const sessionMiddleware = session({
 	},
 });
 app.use(sessionMiddleware);
+
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
@@ -77,6 +79,7 @@ function onlyForHandshake(middleware) {
 
 io.engine.use(onlyForHandshake(sessionMiddleware));
 io.engine.use(onlyForHandshake(passport.session()));
+
 io.engine.use(
 	onlyForHandshake((req, res, next) => {
 		if (req.user) {
@@ -93,31 +96,41 @@ const subClient = pubClient.duplicate();
 await Promise.all([pubClient.connect(), subClient.connect()]);
 io.adapter(createAdapter(pubClient, subClient));
 
+//redisClient.flushdb();
+
 io.on("connection", async (socket) => {
 	const { user } = socket.request;
-	const { userID, username } = user;
+	const { id: userID, username } = user;
 
 	socket.emit("current user", user);
 
 	// join the "userID" room
 	socket.join(userID);
 
-	// fetch existing users
-	let users = [];
-	const [messages] = await Promise.all([
-		messageStore.findMessagesForUser(userID),
-	]);
-	const messagesPerUser = new Map();
-	messages.forEach((message) => {
-		const { from, to } = message;
-		const otherUser = userID === from ? to : from;
-		if (messagesPerUser.has(otherUser)) {
-			messagesPerUser.get(otherUser).push(message);
-		} else {
-			messagesPerUser.set(otherUser, [message]);
+	// fetch existing messages from DB and/or Redis
+	const cachedMessages = await messageStore.findMessagesForUser(userID);
+	const activeChats = new Map();
+	if (cachedMessages.length > 0) {
+		// save different users. group chat name will be saved as a user
+		cachedMessages.forEach((message) => {
+			const { from, to } = message;
+			const otherUser = userID === from.id ? to.id : from.id;
+			if (activeChats.has(otherUser)) {
+				activeChats.get(otherUser).push(message);
+			} else {
+				activeChats.set(otherUser, [message]);
+			}
+		});
+		console.log(activeChats);
+		socket.emit("active chats", Array.from(activeChats.entries()));
+	} else {
+		try {
+			const dbMessages = await getUserMessages(userID);
+			//console.log(dbMessages);
+		} catch (error) {
+			console.log(error);
 		}
-	});
-
+	}
 	// notify existing users
 	socket.broadcast.emit("user connected", {
 		userID: userID,
@@ -130,10 +143,14 @@ io.on("connection", async (socket) => {
 	socket.on("private message", ({ content, to }) => {
 		const message = {
 			content,
-			from: userID,
+			from: {
+				id: user.id,
+				username: user.username,
+				profile_picture: user.profile_picture,
+			},
 			to,
 		};
-		socket.to(to).to(userID).emit("private message", message);
+		socket.to(to.id).to(userID).emit("private message", message);
 		messageStore.saveMessage(message);
 	});
 
@@ -243,6 +260,9 @@ app.post("/friend-request", async (req, res) => {
 				break;
 			case "23502":
 				errorMessage = "User not found";
+				break;
+			case "23514":
+				errorMessage = "You can't add yourself :)";
 				break;
 			case "400":
 				errorMessage = "Already friends";

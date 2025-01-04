@@ -85,7 +85,7 @@ export const getUserByEmail = (email) => {
 export const sendFriendRequest = (sender_id, friend_code) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			`INSERT INTO friend_requests (sender_id, receiver_id)
+			`INSERT INTO friend_requests (sender_id, recipient_id)
 			 SELECT $1, (SELECT id FROM users WHERE friend_code = $2)
 			 WHERE NOT EXISTS (SELECT 1 FROM friendships WHERE user_one_id = LEAST($1, (SELECT id FROM users WHERE friend_code = $2)) AND user_two_id = GREATEST($1, (SELECT id FROM users WHERE friend_code = $2)))
 			`,
@@ -107,8 +107,8 @@ export const getFriendRequests = (user_id) => {
 			`SELECT fr.status as status, fr.id as id, u.username as username
 				FROM friend_requests AS fr
 				JOIN users AS u ON fr.sender_id = u.id
-				WHERE fr.receiver_id = $1 AND fr.status = 'pending'
-				OR fr.receiver_id = $1 AND fr.status = 'accepted' AND fr.created_at >= NOW() - INTERVAL '1 day'
+				WHERE fr.recipient_id = $1 AND fr.status = 'pending'
+				OR fr.recipient_id = $1 AND fr.status = 'accepted' AND fr.created_at >= NOW() - INTERVAL '1 day'
 				ORDER BY fr.created_at DESC
 			`,
 			[user_id],
@@ -135,12 +135,12 @@ export const acceptFriendRequest = (id) => {
                 UPDATE friend_requests
                 SET status = 'accepted'
                 WHERE id = $1
-                RETURNING sender_id, receiver_id;
+                RETURNING sender_id, recipient_id;
                 `,
 				[id]
 			);
 
-			const { sender_id, receiver_id } = rows[0];
+			const { sender_id, recipient_id } = rows[0];
 
 			// Step 2: Insert into the friendships table
 			await db.query(
@@ -149,20 +149,20 @@ export const acceptFriendRequest = (id) => {
                 VALUES ($1, $2);
                 `,
 				[
-					Math.min(sender_id, receiver_id),
-					Math.max(sender_id, receiver_id),
+					Math.min(sender_id, recipient_id),
+					Math.max(sender_id, recipient_id),
 				]
 			);
 
 			// Step 3: Insert or update the reverse friend request
 			await db.query(
 				`
-                INSERT INTO friend_requests (sender_id, receiver_id, status)
+                INSERT INTO friend_requests (sender_id, recipient_id, status)
                 VALUES ($1, $2, 'accepted')
                 ON CONFLICT ON CONSTRAINT unique_request
                 DO UPDATE SET status = 'accepted';
                 `,
-				[receiver_id, sender_id]
+				[recipient_id, sender_id]
 			);
 
 			await db.query("COMMIT"); // Commit the transaction
@@ -191,10 +191,11 @@ export const getFriends = (user_id) => {
 	return new Promise((resolve, reject) => {
 		db.query(
 			`SELECT 
-				u.id AS friend_id,
+				u.id,
 				u.username,
-				u.email,
-				u.last_active
+				u.last_active,
+				u.profile_picture,
+				u.bio
 			FROM friendships f
 			JOIN users u ON u.id = 
 				CASE 
@@ -235,6 +236,19 @@ export const removeProfilePicture = (user_id) => {
 			async (err, results) => {
 				if (err) reject(err);
 				resolve(true);
+			}
+		);
+	});
+};
+
+export const getUserMessages = (userID) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			`SELECT * FROM messages WHERE recipient_id = $1 LIMIT 20`,
+			[userID],
+			async (err, results) => {
+				if (err) reject(err);
+				resolve(results.rows || []);
 			}
 		);
 	});

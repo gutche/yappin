@@ -18,10 +18,12 @@
 		</div>
 		<User
 			v-for="friend in friends"
-			:key="friend.userID"
+			:key="friend.id"
 			:user="friend"
 			:selected="selectedFriend === friend"
+			@message="onMessageUser(friend)"
 			@select="onSelectFriend(friend)" />
+		<p v-if="friends.length === 0" class="info">You do not have friends</p>
 	</div>
 </template>
 
@@ -34,6 +36,7 @@ const friendCode = ref("");
 const message = ref("");
 const friends = ref([]);
 const selectedFriend = ref(null);
+const emit = defineEmits(["message"]);
 
 const onSelectFriend = (friend) => {
 	if (selectedFriend.value === friend) {
@@ -41,6 +44,10 @@ const onSelectFriend = (friend) => {
 	} else {
 		selectedFriend.value = friend;
 	}
+};
+
+const onMessageUser = (friend) => {
+	emit("message", friend);
 };
 
 const addFriend = async () => {
@@ -74,6 +81,12 @@ onMounted(async () => {
 });
 </script>
 <style scoped>
+.info {
+	font-size: 18px;
+	margin: 15px;
+	display: block;
+	text-align: center;
+}
 .fa-plus {
 	padding: 5px;
 	background-color: green;

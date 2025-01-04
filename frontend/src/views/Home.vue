@@ -1,44 +1,67 @@
 <script setup>
 import MessagePanel from "../components/MessagePanel.vue";
-import User from "../components/User.vue";
 import Profile from "../components/Profile.vue";
 import FriendList from "../components/FriendList.vue";
 import Notification from "../components/Notification.vue";
 import ButtonIcon from "@/components/ButtonIcon.vue";
 import socket from "../socket/socket";
-import { ref, onBeforeUnmount, onMounted } from "vue";
+import { ref, onBeforeUnmount } from "vue";
 import api from "@/api/api";
 import router from "@/router/index";
+import Chat from "@/components/Chat.vue";
 
-const selectedUser = ref(null);
+const selectedChat = ref(null);
 const currentUser = ref(null);
-const leftPanelView = ref("users");
-const chats = ref([]);
+const leftPanelView = ref("chats");
+const activeChats = ref([]);
 
-const onMessage = (content) => {
-	if (selectedUser) {
+socket.connect();
+
+const onMessageSent = (content) => {
+	if (selectedChat) {
+		const { id, username, profile_picture } = selectedChat.value;
 		socket.emit("private message", {
 			content,
-			to: selectedUser.value.userID,
+			to: {
+				id,
+				username,
+				profile_picture,
+			},
 		});
-		selectedUser.value.messages.push({
+		selectedChat.value.messages.push({
 			content,
 			fromSelf: true,
 		});
 	}
 };
 
-const onSelectUser = (user) => {
-	selectedUser.value = user;
-	user.hasNewMessages = false;
+const onUserMessage = (user) => {
+	const targetUser = activeChats.value.find((chat) => chat.id === user.id);
+	if (!targetUser) {
+		initReactiveProperties(user);
+		activeChats.value.push(user);
+	}
+	leftPanelView.value = "chats";
+	selectedChat.value = targetUser || user;
+};
+
+const onSelectUser = (chat) => {
+	selectedChat.value = chat;
+	chat.hasNewMessages = false;
 };
 
 const toggleLeftPanelView = (viewSelected) => {
-	leftPanelView.value = viewSelected;
+	if (leftPanelView.value !== viewSelected) {
+		leftPanelView.value = viewSelected;
+		if (viewSelected === "chats") {
+			selectedChat.value = null;
+		}
+	}
 };
 
-const initReactiveProperties = (user) => {
-	user.hasNewMessages = false;
+const initReactiveProperties = (chat) => {
+	chat.hasNewMessages = false;
+	chat.messages = [];
 };
 
 const logout = async () => {
@@ -56,79 +79,75 @@ const logout = async () => {
 	}
 };
 
-onMounted(() => {
-	socket.connect();
-	socket.on("current user", (user) => {
-		currentUser.value = user;
-	});
+socket.on("current user", (user) => {
+	currentUser.value = user;
+});
 
-	socket.on("connect", () => {
-		const currentUser = chats.value.find((user) => user.self);
-		if (currentUser) currentUser.connected = true;
-	});
+socket.on("connect", () => {
+	const currentUser = activeChats.value.find((user) => user.self);
+	if (currentUser) currentUser.connected = true;
+});
 
-	socket.on("disconnect", () => {
-		const currentUser = chats.value.find((user) => user.self);
-		if (currentUser) currentUser.connected = false;
-	});
+socket.on("disconnect", () => {
+	const currentUser = activeChats.value.find((user) => user.self);
+	if (currentUser) currentUser.connected = false;
+});
 
-	socket.on("connect_error", (err) => {
-		console.log(err);
-	});
+socket.on("connect_error", (err) => {
+	console.log(err);
+});
 
-	socket.on("users", (users) => {
-		// init properties of every user
-		users.forEach((user) => {
-			user.messages.forEach((message) => {
-				message.fromSelf = message.from === socket.userID;
-			});
-			const existingUser = chats.value.find(
-				(u) => u.userID === user.userID
-			);
-			if (existingUser) {
-				existingUser.connected = user.connected;
-				existingUser.messages = user.messages;
-				return;
-			}
-			user.self = user.userID === socket.userID;
-			initReactiveProperties(user);
-			chats.value.push(user);
+socket.on("active chats", (chats) => {
+	// init properties of every user
+	for (const [id, messages] of chats) {
+		messages?.forEach((message) => {
+			message.fromSelf = message.from.id === currentUser.value.id;
 		});
+		const existingUser = activeChats.value.find((c) => c.id === id);
+		if (existingUser) {
+			existingUser.messages = messages;
+			continue;
+		} else {
+			const chat =
+				messages[0].to.id === currentUser.value.id
+					? messages[0].from
+					: messages[0].to;
+			initReactiveProperties(chat);
+			chat.messages = messages;
+			activeChats.value.push(chat);
+		}
+	}
 
-		// put the current user first, and sort by username
-		chats.value = users.sort((a, b) => {
-			if (a.self) return -1;
-			if (b.self) return 1;
-			if (a.username < b.username) return -1;
-			return a.username > b.username ? 1 : 0;
-		});
-	});
+	// put the current user first, and sort by username
 
 	socket.on("user connected", (user) => {
-		const existingUser = chats.value.find((u) => u.userID === user.userID);
+		const existingUser = activeChats.value.find(
+			(u) => u.id === user.userID
+		);
 		if (existingUser) {
 			existingUser.connected = true;
 			return;
 		}
 		initReactiveProperties(user);
-		chats.value.push(user);
+		activeChats.value.push(user);
 	});
 
 	socket.on("user disconnected", (id) => {
-		const user = chats.value.find((user) => user.userID === id);
+		const user = activeChats.value.find((user) => user.id === id);
 		if (user) user.connected = false;
 	});
 
 	socket.on("private message", ({ content, from, to }) => {
 		const fromSelf = socket.userID === from;
-		const targetUser = chats.value.find(
-			(user) => user.userID === (fromSelf ? to : from)
+		const targetUser = activeChats.value.find(
+			(user) => user.id === (fromSelf ? to : from)
 		);
 		targetUser.messages.push({
 			content,
 			fromSelf,
 		});
-		if (targetUser !== selectedUser.value) targetUser.hasNewMessages = true;
+		// When user receives a message and this user isnt on activeChat, create the active chat
+		if (targetUser !== selectedChat.value) targetUser.hasNewMessages = true;
 	});
 });
 
@@ -145,14 +164,14 @@ onBeforeUnmount(() => {
 <template>
 	<div class="wrapper">
 		<div class="left-panel">
-			<User
-				v-if="leftPanelView === 'users'"
-				v-for="user in chats"
-				:key="user.userID"
-				:user="user"
-				:selected="selectedUser === user"
-				@select="onSelectUser(user)" />
-			<div v-if="leftPanelView === 'users' && chats.length === 0">
+			<Chat
+				v-if="leftPanelView === 'chats'"
+				v-for="chat in activeChats"
+				:key="chat.id"
+				:user="chat"
+				:selected="selectedChat === chat"
+				@select="onSelectUser(chat)" />
+			<div v-if="leftPanelView === 'chats' && activeChats.length === 0">
 				<p class="info">You do not have active chats.</p>
 				<p class="tip">
 					Head over to friends section to start chatting
@@ -160,14 +179,16 @@ onBeforeUnmount(() => {
 			</div>
 
 			<Profile v-if="leftPanelView === 'profile'" />
-			<FriendList v-if="leftPanelView === 'friends'" />
+			<FriendList
+				v-if="leftPanelView === 'friends'"
+				@message="onUserMessage" />
 			<Notification v-if="leftPanelView === 'notifications'" />
 			<div class="buttons-container">
 				<ButtonIcon
 					title="Chats"
-					:class="{ selected: leftPanelView === 'users' }"
+					:class="{ selected: leftPanelView === 'chats' }"
 					iconClass="fa-regular fa-message"
-					@click="toggleLeftPanelView('users')" />
+					@click="toggleLeftPanelView('chats')" />
 				<ButtonIcon
 					:class="{ selected: leftPanelView === 'profile' }"
 					iconClass="fa-regular fa-user"
@@ -191,9 +212,9 @@ onBeforeUnmount(() => {
 		</div>
 		<div class="middle-panel">
 			<MessagePanel
-				v-if="selectedUser"
-				:user="selectedUser"
-				@input="onMessage" />
+				v-if="selectedChat"
+				:user="selectedChat"
+				@input="onMessageSent" />
 		</div>
 	</div>
 </template>
