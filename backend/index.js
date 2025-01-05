@@ -114,10 +114,8 @@ io.on("connection", async (socket) => {
 			const { from, to } = message;
 			const otherUser = userID === from.id ? to.id : from.id;
 			if (activeChats.has(otherUser)) {
-				console.log("Server: user exists in active chat");
 				activeChats.get(otherUser).messages.push(message);
 			} else {
-				console.log("Server: user does not exist in active chat");
 				activeChats.set(otherUser, {
 					messages: [message],
 					connected: (await redisClient.sismember(
@@ -129,7 +127,6 @@ io.on("connection", async (socket) => {
 				});
 			}
 		}
-		console.log(activeChats);
 		socket.emit("active chats", Array.from(activeChats.entries()));
 	} else {
 		try {
