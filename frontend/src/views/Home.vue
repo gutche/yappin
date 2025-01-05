@@ -99,21 +99,24 @@ socket.on("connect_error", (err) => {
 
 socket.on("active chats", (chats) => {
 	// init properties of every user
-	for (const [id, messages] of chats) {
+	for (const [id, { messages, connected }] of chats) {
 		messages?.forEach((message) => {
 			message.fromSelf = message.from.id === currentUser.value.id;
 		});
 		const existingUser = activeChats.value.find((c) => c.id === id);
 		if (existingUser) {
 			existingUser.messages = messages;
+			existingUser.connected = connected;
 			continue;
 		} else {
+			console.log(messages);
 			const chat =
 				messages[0].to.id === currentUser.value.id
 					? messages[0].from
 					: messages[0].to;
 			initReactiveProperties(chat);
 			chat.messages = messages;
+			chat.connected = connected;
 			activeChats.value.push(chat);
 		}
 	}
