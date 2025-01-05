@@ -138,9 +138,9 @@ socket.on("active chats", (chats) => {
 	});
 
 	socket.on("private message", ({ content, from, to }) => {
-		const fromSelf = socket.userID === from;
+		const fromSelf = currentUser.value.id === from.id;
 		const targetUser = activeChats.value.find(
-			(user) => user.id === (fromSelf ? to : from)
+			(user) => user.id === (fromSelf ? to.id : from.id)
 		);
 		targetUser.messages.push({
 			content,
