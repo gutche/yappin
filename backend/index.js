@@ -3,7 +3,6 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { RedisMessageStore } from "./store/messageStore.js";
 import Redis from "ioredis";
-import { createClient } from "redis";
 import { RedisStore } from "connect-redis";
 import { setupWorker } from "@socket.io/sticky";
 import { createAdapter } from "@socket.io/redis-adapter";
@@ -91,9 +90,8 @@ io.engine.use(
 	})
 );
 
-const pubClient = createClient({ url: "redis://localhost:6379" });
-const subClient = pubClient.duplicate();
-await Promise.all([pubClient.connect(), subClient.connect()]);
+const pubClient = redisClient.duplicate();
+const subClient = redisClient.duplicate();
 io.adapter(createAdapter(pubClient, subClient));
 
 //redisClient.flushdb();
@@ -101,7 +99,7 @@ io.adapter(createAdapter(pubClient, subClient));
 io.on("connection", async (socket) => {
 	const { user } = socket.request;
 	const { id: userID, username } = user;
-
+	await redisClient.sadd("onlineUsers", userID);
 	socket.emit("current user", user);
 
 	// join the "userID" room
@@ -112,15 +110,25 @@ io.on("connection", async (socket) => {
 	const activeChats = new Map();
 	if (cachedMessages.length > 0) {
 		// save different users. group chat name will be saved as a user
-		cachedMessages.forEach((message) => {
+		for (const message of cachedMessages) {
 			const { from, to } = message;
 			const otherUser = userID === from.id ? to.id : from.id;
 			if (activeChats.has(otherUser)) {
-				activeChats.get(otherUser).push(message);
+				console.log("Server: user exists in active chat");
+				activeChats.get(otherUser).messages.push(message);
 			} else {
-				activeChats.set(otherUser, [message]);
+				console.log("Server: user does not exist in active chat");
+				activeChats.set(otherUser, {
+					messages: [message],
+					connected: (await redisClient.sismember(
+						"onlineUsers",
+						otherUser
+					))
+						? true
+						: false,
+				});
 			}
-		});
+		}
 		console.log(activeChats);
 		socket.emit("active chats", Array.from(activeChats.entries()));
 	} else {
@@ -161,6 +169,7 @@ io.on("connection", async (socket) => {
 		if (isDisconnected) {
 			// notify other users
 			socket.broadcast.emit("user disconnected", userID);
+			await redisClient.srem("onlineUsers", userID);
 		}
 	});
 });
