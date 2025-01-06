@@ -112,10 +112,13 @@ io.on("connection", async (socket) => {
 		// save different users. group chat name will be saved as a user
 		for (const message of cachedMessages) {
 			const { from, to } = message;
-			const otherUser = userID === from.id ? to.id : from.id;
+			const otherUser = userID === from ? to : from;
 			if (activeChats.has(otherUser)) {
 				activeChats.get(otherUser).messages.push(message);
 			} else {
+				const { username, profile_picture } = await getUserById(
+					otherUser
+				);
 				activeChats.set(otherUser, {
 					messages: [message],
 					connected: (await redisClient.sismember(
@@ -124,6 +127,8 @@ io.on("connection", async (socket) => {
 					))
 						? true
 						: false,
+					username,
+					profile_picture,
 				});
 			}
 		}
@@ -148,14 +153,10 @@ io.on("connection", async (socket) => {
 	socket.on("private message", ({ content, to }) => {
 		const message = {
 			content,
-			from: {
-				id: user.id,
-				username: user.username,
-				profile_picture: user.profile_picture,
-			},
+			from: userID,
 			to,
 		};
-		socket.to(to.id).to(userID).emit("private message", message);
+		socket.to(to).to(userID).emit("private message", message);
 		messageStore.saveMessage(message);
 	});
 
@@ -314,6 +315,14 @@ app.post("/decline-friend-request", async (req, res) => {
 app.get("/friends", async (req, res) => {
 	try {
 		const friends = (await getFriends(req.user.id)) || [];
+		for (const friend of friends) {
+			friend.connected = (await redisClient.sismember(
+				"onlineUsers",
+				friend.id
+			))
+				? true
+				: false;
+		}
 		res.status(200).json(friends);
 	} catch (error) {
 		console.log(error);
@@ -349,6 +358,18 @@ app.post("/remove-profile-picture", async (req, res) => {
 	try {
 		const success = await removeProfilePicture(req.user.id);
 		if (success) res.sendStatus(200);
+	} catch (error) {
+		console.log(error);
+	}
+});
+
+app.get("/user", async (req, res) => {
+	try {
+		const user = await getUserById(+req.query.id);
+		user.connected = (await redisClient.sismember("onlineUsers", user.id))
+			? true
+			: false;
+		if (user) res.status(200).json(user);
 	} catch (error) {
 		console.log(error);
 	}

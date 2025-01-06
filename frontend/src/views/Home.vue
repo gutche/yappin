@@ -19,14 +19,9 @@ socket.connect();
 
 const onMessageSent = (content) => {
 	if (selectedChat) {
-		const { id, username, profile_picture } = selectedChat.value;
 		socket.emit("private message", {
 			content,
-			to: {
-				id,
-				username,
-				profile_picture,
-			},
+			to: selectedChat.value.id,
 		});
 		selectedChat.value.messages.push({
 			content,
@@ -99,26 +94,22 @@ socket.on("connect_error", (err) => {
 
 socket.on("active chats", (chats) => {
 	// init properties of every user
-	for (const [id, { messages, connected }] of chats) {
-		messages?.forEach((message) => {
-			message.fromSelf = message.from.id === currentUser.value.id;
+	for (const [
+		id,
+		{ messages, connected, username, profile_picture },
+	] of chats) {
+		messages.forEach((message) => {
+			message.fromSelf = message.from === currentUser.value.id;
 		});
-		const existingUser = activeChats.value.find((c) => c.id === id);
-		if (existingUser) {
-			existingUser.messages = messages;
-			existingUser.connected = connected;
-			continue;
-		} else {
-			console.log(messages);
-			const chat =
-				messages[0].to.id === currentUser.value.id
-					? messages[0].from
-					: messages[0].to;
-			initReactiveProperties(chat);
-			chat.messages = messages;
-			chat.connected = connected;
-			activeChats.value.push(chat);
-		}
+		const chat = {
+			id,
+			username,
+			profile_picture,
+		};
+		initReactiveProperties(chat);
+		chat.messages = messages;
+		chat.connected = connected;
+		activeChats.value.push(chat);
 	}
 });
 socket.on("user connected", (user) => {
@@ -134,21 +125,28 @@ socket.on("user disconnected", (id) => {
 	if (user) user.connected = false;
 });
 
-socket.on("private message", ({ content, from, to }) => {
-	const fromSelf = currentUser.value.id === from.id;
-	const id = fromSelf ? to.id : from.id;
+socket.on("private message", async ({ content, from, to }) => {
+	const fromSelf = currentUser.value.id === from;
+	const id = fromSelf ? to : from;
 	let targetUser = activeChats.value.find((user) => user.id === id);
 	if (!targetUser) {
-		targetUser = {
-			id,
-			username: fromSelf ? to.username : from.username,
-			profile_picture: fromSelf
-				? to.profile_picture
-				: from.profile_picture,
-			messages: [],
-			connected: true,
-		};
-		activeChats.value.push(targetUser);
+		// send a request to get that user?
+		try {
+			const user = await api.get("/user", {
+				id,
+			});
+			const { username, profile_picture, connected } = await user.json();
+			targetUser = {
+				id,
+				username,
+				profile_picture,
+				connected,
+				messages: [],
+			};
+			activeChats.value.push(targetUser);
+		} catch (error) {
+			console.log(error);
+		}
 	}
 	targetUser.messages.push({
 		content,

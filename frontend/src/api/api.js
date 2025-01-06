@@ -28,8 +28,15 @@ const api = (() => {
 		return response;
 	};
 
-	const get = (endpoint, options = {}) =>
-		request(endpoint, "GET", null, options);
+	const get = (endpoint, params = {}, options = {}) => {
+		// Convert the params object to a query string
+		const queryString = new URLSearchParams(params).toString();
+		const urlWithParams = queryString
+			? `${endpoint}?${queryString}`
+			: endpoint;
+
+		return request(urlWithParams, "GET", null, options);
+	};
 	const post = (endpoint, data, options = {}) =>
 		request(endpoint, "POST", data, options);
 	const put = (endpoint, data, options = {}) =>

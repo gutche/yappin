@@ -32,10 +32,10 @@ export class RedisMessageStore extends MessageStore {
 		const value = JSON.stringify(message);
 		this.redisClient
 			.multi()
-			.rpush(`messages:${message.from.id}`, value)
-			.rpush(`messages:${message.to.id}`, value)
-			.expire(`messages:${message.from.id}`, CONVERSATION_TTL)
-			.expire(`messages:${message.to.id}`, CONVERSATION_TTL)
+			.rpush(`messages:${message.from}`, value)
+			.rpush(`messages:${message.to}`, value)
+			.expire(`messages:${message.from}`, CONVERSATION_TTL)
+			.expire(`messages:${message.to}`, CONVERSATION_TTL)
 			.exec();
 	}
 
