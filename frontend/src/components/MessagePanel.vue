@@ -21,9 +21,10 @@ const onSubmit = () => {
 
 const displaySender = (message, index) => {
 	return (
-		index === 0 ||
-		props.user.messages[index - 1].fromSelf !==
-			props.user.messages[index].fromSelf
+		(index === 0 ||
+			props.user.messages[index - 1].fromSelf !==
+				props.user.messages[index].fromSelf) &&
+		props.user.isGroup
 	);
 };
 </script>

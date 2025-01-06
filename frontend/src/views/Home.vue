@@ -120,38 +120,42 @@ socket.on("active chats", (chats) => {
 			activeChats.value.push(chat);
 		}
 	}
+});
+socket.on("user connected", (user) => {
+	const existingUser = activeChats.value.find((u) => u.id === user.userID);
+	if (existingUser) {
+		existingUser.connected = true;
+		return;
+	}
+});
 
-	// put the current user first, and sort by username
+socket.on("user disconnected", (id) => {
+	const user = activeChats.value.find((user) => user.id === id);
+	if (user) user.connected = false;
+});
 
-	socket.on("user connected", (user) => {
-		const existingUser = activeChats.value.find(
-			(u) => u.id === user.userID
-		);
-		if (existingUser) {
-			existingUser.connected = true;
-			return;
-		}
-		initReactiveProperties(user);
-		activeChats.value.push(user);
+socket.on("private message", ({ content, from, to }) => {
+	const fromSelf = currentUser.value.id === from.id;
+	const id = fromSelf ? to.id : from.id;
+	let targetUser = activeChats.value.find((user) => user.id === id);
+	if (!targetUser) {
+		targetUser = {
+			id,
+			username: fromSelf ? to.username : from.username,
+			profile_picture: fromSelf
+				? to.profile_picture
+				: from.profile_picture,
+			messages: [],
+			connected: true,
+		};
+		activeChats.value.push(targetUser);
+	}
+	targetUser.messages.push({
+		content,
+		fromSelf,
 	});
-
-	socket.on("user disconnected", (id) => {
-		const user = activeChats.value.find((user) => user.id === id);
-		if (user) user.connected = false;
-	});
-
-	socket.on("private message", ({ content, from, to }) => {
-		const fromSelf = currentUser.value.id === from.id;
-		const targetUser = activeChats.value.find(
-			(user) => user.id === (fromSelf ? to.id : from.id)
-		);
-		targetUser.messages.push({
-			content,
-			fromSelf,
-		});
-		// When user receives a message and this user isnt on activeChat, create the active chat
-		if (targetUser !== selectedChat.value) targetUser.hasNewMessages = true;
-	});
+	// When user receives a message and this user isnt on activeChat, create the active chat
+	if (targetUser !== selectedChat.value) targetUser.hasNewMessages = true;
 });
 
 onBeforeUnmount(() => {
