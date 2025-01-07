@@ -130,7 +130,6 @@ socket.on("private message", async ({ content, from, to }) => {
 	const id = fromSelf ? to : from;
 	let targetUser = activeChats.value.find((user) => user.id === id);
 	if (!targetUser) {
-		// send a request to get that user?
 		try {
 			const user = await api.get("/user", {
 				id,
@@ -152,7 +151,7 @@ socket.on("private message", async ({ content, from, to }) => {
 		content,
 		fromSelf,
 	});
-	// When user receives a message and this user isnt on activeChat, create the active chat
+
 	if (targetUser !== selectedChat.value) targetUser.hasNewMessages = true;
 });
 

@@ -21,7 +21,6 @@ import {
 } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
-import flash from "express-flash";
 import passport from "passport";
 import { initPassportConfig } from "./auth/passport-config.js";
 import bcrypt from "bcrypt";
@@ -35,7 +34,7 @@ const messageStore = new RedisMessageStore(redisClient);
 const upload = multer();
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 
 const corsOptions = {
 	origin: "http://localhost:5173",
@@ -58,10 +57,7 @@ const sessionMiddleware = session({
 	},
 });
 app.use(sessionMiddleware);
-
-app.use(passport.initialize());
 app.use(passport.session());
-app.use(flash());
 
 initPassportConfig(passport, getUserByEmail, getUserById);
 
@@ -93,8 +89,6 @@ io.engine.use(
 const pubClient = redisClient.duplicate();
 const subClient = redisClient.duplicate();
 io.adapter(createAdapter(pubClient, subClient));
-
-//redisClient.flushdb();
 
 io.on("connection", async (socket) => {
 	const { user } = socket.request;
