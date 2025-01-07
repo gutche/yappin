@@ -1,6 +1,5 @@
 # Yappin 🗣 🗣 🗣
-
-Yappin is a modern messaging app built with the **Vue framework** for the frontend and **Express** for the backend. It enables real-time chat capabilities using **Socket.IO** for bidirectional and low-latency communication.
+Yappin is an experimental modern messaging app built with the **Vue framework** for educational purposes. It uses the **Socket.IO** library for bidirectional and low-latency communication.
 
 The backend leverages **Node.js clustering** for load balancing and uses **Redis** as an adapter to propagate events across workers and cache recent messages.
 
