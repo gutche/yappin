@@ -17,6 +17,7 @@ const selectedChat = ref(null);
 const currentUser = ref(null);
 const leftPanelView = ref("chats");
 const activeChats = ref([]);
+const copied = ref(false);
 
 socket.connect();
 
@@ -53,6 +54,14 @@ const onUserMessage = (user) => {
 const onSelectUser = (chat) => {
 	selectedChat.value = chat;
 	chat.hasNewMessages = false;
+};
+
+const copyCode = () => {
+	navigator.clipboard.writeText(currentUser?.value.friend_code);
+	copied.value = true;
+	setTimeout(() => {
+		copied.value = false;
+	}, 3000); // Reset after 3 seconds
 };
 
 const toggleLeftPanelView = (viewSelected) => {
@@ -189,7 +198,15 @@ onBeforeUnmount(() => {
 <template>
 	<div class="wrapper">
 		<div class="left-panel">
-			<div class="view-name">{{ viewName }}</div>
+			<div class="view-name">
+				<span>{{ viewName }}</span>
+				<div @click="copyCode" class="code">
+					# <span>{{ currentUser?.friend_code }}</span
+					><i v-if="!copied" class="fa-regular fa-clipboard"></i>
+					<i v-if="copied" class="fa-solid fa-check"></i>
+				</div>
+			</div>
+
 			<Chat
 				v-if="leftPanelView === 'chats'"
 				v-for="chat in activeChats"
@@ -316,6 +333,38 @@ p {
 .view-name {
 	font-size: 18px;
 	padding: 10px;
+	justify-content: space-between;
+	align-items: center;
 	border-bottom: 1px solid rgba(0, 0, 0, 0.156);
+	display: flex;
+}
+
+.fa-clipboard {
+	visibility: hidden;
+	opacity: 0;
+	transition: opacity 0.2s ease-in-out;
+	font-size: 20px;
+}
+.fa-check {
+	font-size: 20px;
+}
+.code {
+	padding: 5px;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+.code:hover .fa-clipboard {
+	visibility: visible;
+	opacity: 1;
+}
+
+.code:hover {
+	background-color: #4b4b4b3a;
+	transition: 0.2s ease-in-out;
+}
+
+.code span {
+	font-weight: bold;
 }
 </style>

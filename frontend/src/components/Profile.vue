@@ -20,15 +20,12 @@
 				<button @click="removePhoto">Remove photo</button>
 			</div>
 			<div class="username">
-				<span>{{ currentUser?.username }}</span>
+				<span>{{ currentUser?.username }}</span
+				><i class="fa-regular fa-pen-to-square"></i>
 			</div>
+
 			<div class="bio">
-				<p>
-					8x World Champion <br />
-					Winningest driver of all time (106) <br />
-					Most poles in F1 history (104) <br />
-					All I'm saying is, I'm the 🐐<br />
-				</p>
+				{{ currentUser?.bio }}
 			</div>
 		</div>
 	</div>
@@ -89,6 +86,35 @@ onMounted(async () => {
 });
 </script>
 <style scoped>
+.bio {
+	margin-top: 10px;
+	height: 250px;
+	width: 250px;
+	cursor: pointer;
+}
+
+.bio:hover {
+	border: 1px solid rgba(0, 0, 0, 0.099);
+}
+
+.username:hover {
+	background-color: #4b4b4b3a;
+	transition: 0.2s ease-in-out;
+}
+.username:hover .fa-pen-to-square {
+	visibility: visible;
+}
+
+.username {
+	border-radius: 5px;
+	padding: 0 5px;
+}
+
+.fa-pen-to-square {
+	visibility: hidden;
+	font-size: 16px;
+	cursor: pointer;
+}
 .card {
 	display: flex;
 	align-items: center;
@@ -103,7 +129,7 @@ span {
 }
 
 img {
-	margin: 10px;
+	margin: 20px;
 	height: 200px;
 	width: 200px;
 	border-radius: 50%;

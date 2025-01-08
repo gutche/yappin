@@ -55,6 +55,7 @@ img {
 	padding: 10px;
 	display: flex;
 	align-items: center;
+	cursor: pointer;
 }
 
 .description {

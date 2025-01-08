@@ -9,7 +9,6 @@ export const useNotificationStore = defineStore("notification", () => {
 		try {
 			const response = await api.get("/friend-requests");
 			notifications.value = await response.json();
-			console.log(notifications.value);
 		} catch (error) {
 			console.error("Error fetching notifications:", error);
 		}
