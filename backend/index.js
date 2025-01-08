@@ -248,11 +248,12 @@ app.post("/friend-request", async (req, res) => {
 	const { friendCode } = req.body;
 	const { user } = req;
 	try {
-		const result = await sendFriendRequest(user.id, friendCode);
-		if (result)
+		const targetUser = await sendFriendRequest(user.id, friendCode);
+		if (targetUser)
 			res.status(200).json({
 				message: "Friend request sent successfully",
 			});
+		io.to(targetUser.id).emit("friend-request", targetUser);
 	} catch (error) {
 		let errorMessage;
 		switch (error.code) {

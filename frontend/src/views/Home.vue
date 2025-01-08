@@ -9,6 +9,9 @@ import { ref, onBeforeUnmount } from "vue";
 import api from "@/api/api";
 import router from "@/router/index";
 import Chat from "@/components/Chat.vue";
+import { useNotificationStore } from "@/stores/notificationStore";
+
+const notificationStore = useNotificationStore();
 
 const selectedChat = ref(null);
 const currentUser = ref(null);
@@ -50,6 +53,8 @@ const toggleLeftPanelView = (viewSelected) => {
 		leftPanelView.value = viewSelected;
 		if (viewSelected === "chats") {
 			selectedChat.value = null;
+		} else if (viewSelected === "notifications") {
+			currentUser.value.hasNewNotifications = false;
 		}
 	}
 };
@@ -123,6 +128,15 @@ socket.on("user connected", (user) => {
 socket.on("user disconnected", (id) => {
 	const user = activeChats.value.find((user) => user.id === id);
 	if (user) user.connected = false;
+});
+
+socket.on("friend-request", (user) => {
+	if (leftPanelView.value !== "notifications") {
+		currentUser.value.hasNewNotifications = true;
+	} else {
+		user.status = "pending";
+		notificationStore.addNotification(user);
+	}
 });
 
 socket.on("private message", async ({ content, from, to }) => {
@@ -203,11 +217,18 @@ onBeforeUnmount(() => {
 					iconClass="fa-solid fa-user-group"
 					title="Friends"
 					@click="toggleLeftPanelView('friends')" />
-				<ButtonIcon
-					title="Notifications"
-					:class="{ selected: leftPanelView === 'notifications' }"
-					iconClass="fa-regular fa-bell"
-					@click="toggleLeftPanelView('notifications')" />
+				<div class="notification-wrapper">
+					<ButtonIcon
+						title="Notifications"
+						:class="{ selected: leftPanelView === 'notifications' }"
+						iconClass="fa-regular fa-bell"
+						@click="toggleLeftPanelView('notifications')" />
+					<div
+						v-if="currentUser?.hasNewNotifications"
+						class="new-messages">
+						!
+					</div>
+				</div>
 				<ButtonIcon
 					title="Logout"
 					iconClass="fa-solid fa-right-from-bracket"
@@ -271,5 +292,16 @@ onBeforeUnmount(() => {
 p {
 	display: block;
 	text-align: center;
+}
+
+.new-messages {
+	color: white;
+	background-color: red;
+	width: 17px;
+	border-radius: 5px;
+	text-align: center;
+	bottom: 8px;
+	left: 248px;
+	position: absolute;
 }
 </style>

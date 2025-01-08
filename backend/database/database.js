@@ -83,28 +83,44 @@ export const getUserByEmail = (email) => {
 };
 
 export const sendFriendRequest = (sender_id, friend_code) => {
-	return new Promise((resolve, reject) => {
-		db.query(
-			`INSERT INTO friend_requests (sender_id, recipient_id)
-			 SELECT $1, (SELECT id FROM users WHERE friend_code = $2)
-			 WHERE NOT EXISTS (SELECT 1 FROM friendships WHERE user_one_id = LEAST($1, (SELECT id FROM users WHERE friend_code = $2)) AND user_two_id = GREATEST($1, (SELECT id FROM users WHERE friend_code = $2)))
-			`,
-			[sender_id, friend_code],
-			(err, results) => {
-				if (err) {
-					return reject(err);
-				}
-				if (results.rowCount > 0) resolve(true);
-				reject({ code: "400" });
-			}
-		);
+	return new Promise(async (resolve, reject) => {
+		try {
+			await db.query("BEGIN"); // Start the transaction
+
+			// Step 1: Get the user's id
+			const { rows } = await db.query(
+				`
+               SELECT id, username, profile_picture FROM users WHERE friend_code = $1;
+                `,
+				[friend_code]
+			);
+			const { id: recipient_id } = rows[0];
+			// Step 2: Insert fr into fr table
+			const result = await db.query(
+				`
+                INSERT INTO friend_requests (sender_id, recipient_id)
+				SELECT $1, $2
+				WHERE NOT EXISTS (SELECT 1 FROM friendships WHERE user_one_id = $1 AND user_two_id = $2)
+                `,
+				[
+					Math.min(sender_id, recipient_id),
+					Math.max(sender_id, recipient_id),
+				]
+			);
+			await db.query("COMMIT"); // Commit the transaction
+			if (result.rowCount > 0) resolve(rows[0]);
+			reject({ code: "400" });
+		} catch (err) {
+			await db.query("ROLLBACK"); // Rollback on error
+			reject(err);
+		}
 	});
 };
 
 export const getFriendRequests = (user_id) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			`SELECT fr.status as status, fr.id as id, u.username as username
+			`SELECT fr.status as status, fr.id as id, u.username as username, u.profile_picture as profile_picture
 				FROM friend_requests AS fr
 				JOIN users AS u ON fr.sender_id = u.id
 				WHERE fr.recipient_id = $1 AND fr.status = 'pending'

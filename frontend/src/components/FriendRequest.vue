@@ -1,5 +1,5 @@
 <template>
-	<div v-if="user.status !== 'rejected'" class="grid-container">
+	<div class="grid-container">
 		<img class="item1" src="/no-profile.png" alt="User's profile picture" />
 		<p v-if="user.status === 'accepted'" class="item2">
 			You are now friends with {{ user.username }}
@@ -20,7 +20,6 @@ import api from "@/api/api";
 const props = defineProps({
 	user: Object,
 });
-
 const accept = async () => {
 	try {
 		const response = await api.post("/accept-friend-request", {
