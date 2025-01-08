@@ -1,5 +1,12 @@
 <template>
 	<div class="wrapper">
+		<User
+			v-for="friend in friends"
+			:key="friend.id"
+			:user="friend"
+			:selected="selectedFriend === friend"
+			@message="onMessageUser(friend)"
+			@select="onSelectFriend(friend)" />
 		<div class="add-container">
 			<label for="friendCode"
 				>To add a new friend, simply enter their code:</label
@@ -16,13 +23,6 @@
 			</div>
 			<p>{{ message }}</p>
 		</div>
-		<User
-			v-for="friend in friends"
-			:key="friend.id"
-			:user="friend"
-			:selected="selectedFriend === friend"
-			@message="onMessageUser(friend)"
-			@select="onSelectFriend(friend)" />
 		<p v-if="friends.length === 0" class="info">You do not have friends</p>
 	</div>
 </template>
@@ -97,7 +97,6 @@ onMounted(async () => {
 }
 
 .request-container {
-	margin-top: auto;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -107,7 +106,8 @@ onMounted(async () => {
 	flex-direction: column;
 }
 .add-container {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.156);
+	margin-top: auto;
+	border-top: 1px solid rgba(0, 0, 0, 0.156);
 	align-items: center;
 	padding: 10px;
 	height: 90px;

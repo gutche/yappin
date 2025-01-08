@@ -5,7 +5,7 @@ import FriendList from "../components/FriendList.vue";
 import Notification from "../components/Notification.vue";
 import ButtonIcon from "@/components/ButtonIcon.vue";
 import socket from "../socket/socket";
-import { ref, onBeforeUnmount } from "vue";
+import { ref, onBeforeUnmount, computed } from "vue";
 import api from "@/api/api";
 import router from "@/router/index";
 import Chat from "@/components/Chat.vue";
@@ -19,6 +19,13 @@ const leftPanelView = ref("chats");
 const activeChats = ref([]);
 
 socket.connect();
+
+const viewName = computed(() => {
+	return (
+		leftPanelView.value.charAt(0).toUpperCase() +
+		leftPanelView.value.slice(1)
+	);
+});
 
 const onMessageSent = (content) => {
 	if (selectedChat) {
@@ -182,6 +189,7 @@ onBeforeUnmount(() => {
 <template>
 	<div class="wrapper">
 		<div class="left-panel">
+			<div class="view-name">{{ viewName }}</div>
 			<Chat
 				v-if="leftPanelView === 'chats'"
 				v-for="chat in activeChats"
@@ -303,5 +311,11 @@ p {
 	bottom: 8px;
 	left: 248px;
 	position: absolute;
+}
+
+.view-name {
+	font-size: 18px;
+	padding: 10px;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.156);
 }
 </style>
