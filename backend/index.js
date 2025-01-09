@@ -18,6 +18,7 @@ import {
 	setProfilePicture,
 	removeProfilePicture,
 	getUserMessages,
+	updateUserBio,
 } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
@@ -365,6 +366,15 @@ app.get("/user", async (req, res) => {
 			? true
 			: false;
 		if (user) res.status(200).json(user);
+	} catch (error) {
+		console.log(error);
+	}
+});
+
+app.post("/update-bio", async (req, res) => {
+	try {
+		const success = await updateUserBio(req.user.id, req.body.bio);
+		if (success) res.sendStatus(200);
 	} catch (error) {
 		console.log(error);
 	}

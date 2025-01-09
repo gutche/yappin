@@ -270,4 +270,17 @@ export const getUserMessages = (userID) => {
 	});
 };
 
+export const updateUserBio = (id, bio) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			`UPDATE users SET bio = $2 WHERE id = $1`,
+			[id, bio],
+			async (err, results) => {
+				if (err) reject(err);
+				resolve(true);
+			}
+		);
+	});
+};
+
 export default db;

@@ -23,21 +23,54 @@
 				<span>{{ currentUser?.username }}</span
 				><i class="fa-regular fa-pen-to-square"></i>
 			</div>
-
-			<div class="bio">
-				{{ currentUser?.bio }}
+			<div class="bio" @click="startEditingBio" v-if="!isEditingBio">
+				{{ currentUser?.bio || "Click to add a bio" }}
+			</div>
+			<div class="bio-edit" v-else>
+				<textarea
+					v-model="bioDraft"
+					ref="bioInput"
+					@keydown.enter.stop.prevent="saveBio"
+					@blur="saveBio"></textarea>
 			</div>
 		</div>
 	</div>
 </template>
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import api from "@/api/api";
 
 const currentUser = ref(null);
 const showDropdown = ref(false);
+const isEditingBio = ref(false);
+const bioDraft = ref("");
+const bioInput = ref(null);
+
 const toggleDropdown = () => {
 	showDropdown.value = !showDropdown.value;
+};
+
+const startEditingBio = async () => {
+	isEditingBio.value = true;
+	bioDraft.value = currentUser.value.bio || "";
+	await nextTick(); // Wait for the DOM to update
+	bioInput.value.focus(); // Automatically focus the input
+};
+
+const saveBio = async () => {
+	isEditingBio.value = false;
+	if (bioDraft.value === currentUser.value.bio) return; // No change
+
+	try {
+		const response = await api.post("/update-bio", { bio: bioDraft.value });
+		if (response.ok) {
+			currentUser.value.bio = bioDraft.value;
+		} else {
+			console.error("Failed to update bio");
+		}
+	} catch (error) {
+		console.error("Error updating bio:", error);
+	}
 };
 
 const viewPhoto = () => {};
@@ -91,10 +124,23 @@ onMounted(async () => {
 	height: 250px;
 	width: 250px;
 	cursor: pointer;
+	box-sizing: border-box;
+	padding: 5px;
+	border: 1px solid transparent;
 }
 
-.bio:hover {
+.bio:hover,
+.bio-edit textarea:focus {
 	border: 1px solid rgba(0, 0, 0, 0.099);
+}
+
+.bio-edit textarea {
+	margin-top: 10px;
+	height: 250px;
+	width: 250px;
+	box-sizing: border-box; /* Ensures consistent sizing with borders */
+	border: 1px solid transparent; /* Default border, so there's no shift */
+	outline: none; /* Prevents additional outline on focus */
 }
 
 .username:hover {
