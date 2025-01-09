@@ -52,8 +52,12 @@ const onUserMessage = (user) => {
 };
 
 const onSelectUser = (chat) => {
-	selectedChat.value = chat;
-	chat.hasNewMessages = false;
+	if (selectedChat.value === chat) {
+		selectedChat.value = null;
+	} else {
+		selectedChat.value = chat;
+		chat.hasNewMessages = false;
+	}
 };
 
 const copyCode = () => {
