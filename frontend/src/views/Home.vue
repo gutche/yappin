@@ -286,7 +286,7 @@ onBeforeUnmount(() => {
 }
 .left-panel {
 	height: 100%;
-	width: 350px;
+	min-width: 350px;
 	overflow-x: hidden;
 	color: white;
 	display: flex;

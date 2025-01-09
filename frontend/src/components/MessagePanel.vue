@@ -27,6 +27,12 @@ const displaySender = (message, index) => {
 		props.user.isGroup
 	);
 };
+const handleKeydown = (event) => {
+	if (event.key === "Enter" && !event.shiftKey) {
+		event.preventDefault(); // Prevents adding a new line
+		onSubmit();
+	}
+};
 </script>
 
 <template>
@@ -47,12 +53,13 @@ const displaySender = (message, index) => {
 			</li>
 		</ul>
 
-		<form @submit.prevent="onSubmit" class="form">
+		<form class="form">
 			<textarea
 				v-model="input"
 				placeholder="Your message..."
+				@keydown="handleKeydown"
 				class="input" />
-			<button :disabled="!isValid" class="send-button">Send</button>
+			<i class="fa-solid fa-microphone"></i>
 		</form>
 	</main>
 </template>
@@ -67,6 +74,8 @@ img {
 
 i {
 	margin-left: 5px;
+	font-size: 25px;
+	color: rgb(31, 31, 31);
 }
 
 .header {
@@ -126,16 +135,12 @@ i {
 	width: 90%;
 	resize: none;
 	padding: 10px;
-	line-height: 1.5;
 	border-radius: 5px;
-	border: 1px solid #000;
+	border: 1px solid transparent;
+	outline: none;
 }
 
-.send-button {
-	height: 40px;
-	width: 100px;
-	margin-left: 10px;
-	background-color: white;
-	color: black;
+.input:focus {
+	border: 1px solid rgba(0, 0, 0, 0.342);
 }
 </style>
