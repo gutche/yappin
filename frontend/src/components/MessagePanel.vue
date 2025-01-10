@@ -119,6 +119,7 @@ i {
 .form {
 	display: flex;
 	align-items: center;
+	justify-content: center;
 	bottom: 0;
 	width: inherit;
 	margin: 10px;
@@ -127,7 +128,7 @@ i {
 .body {
 	display: flex;
 	flex-direction: column;
-	margin: 0 120px;
+	margin: 0 30px;
 	flex-grow: 1;
 }
 
