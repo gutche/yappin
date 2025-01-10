@@ -1,38 +1,36 @@
 <template>
-	<div class="wrapper">
-		<div class="card">
-			<img
-				:src="currentUser?.profile_picture || '/no-profile.png'"
-				alt="user's profile picture"
-				@click="toggleDropdown" />
-			<div class="dropdown" v-if="showDropdown">
-				<button @click="viewPhoto">View photo</button>
-				<button @click="takePhoto">Take photo</button>
-				<label>
-					Upload photo
-					<form hidden enctype="multipart/form-data">
-						<input
-							type="file"
-							@change="uploadPhoto"
-							name="profilePicture"
-							accept="image/*" /></form
-				></label>
-				<button @click="removePhoto">Remove photo</button>
-			</div>
-			<div class="username">
-				<span>{{ currentUser?.username }}</span
-				><i class="fa-regular fa-pen-to-square"></i>
-			</div>
-			<div class="bio" @click="startEditingBio" v-if="!isEditingBio">
-				{{ currentUser?.bio || "Click to add a bio" }}
-			</div>
-			<div class="bio-edit" v-else>
-				<textarea
-					v-model="bioDraft"
-					ref="bioInput"
-					@keydown.enter.stop.prevent="saveBio"
-					@blur="saveBio"></textarea>
-			</div>
+	<div class="card">
+		<img
+			:src="currentUser?.profile_picture || '/no-profile.png'"
+			alt="user's profile picture"
+			@click="toggleDropdown" />
+		<div class="dropdown" v-if="showDropdown">
+			<button @click="viewPhoto">View photo</button>
+			<button @click="takePhoto">Take photo</button>
+			<label>
+				Upload photo
+				<form hidden enctype="multipart/form-data">
+					<input
+						type="file"
+						@change="uploadPhoto"
+						name="profilePicture"
+						accept="image/*" /></form
+			></label>
+			<button @click="removePhoto">Remove photo</button>
+		</div>
+		<div class="username">
+			<span>{{ currentUser?.username }}</span
+			><i class="fa-regular fa-pen-to-square"></i>
+		</div>
+		<div class="bio" @click="startEditingBio" v-if="!isEditingBio">
+			{{ currentUser?.bio || "Click to add a bio" }}
+		</div>
+		<div class="bio-edit" v-else>
+			<textarea
+				v-model="bioDraft"
+				ref="bioInput"
+				@keydown.enter.stop.prevent="saveBio"
+				@blur="saveBio"></textarea>
 		</div>
 	</div>
 </template>

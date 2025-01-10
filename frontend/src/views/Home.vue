@@ -5,7 +5,7 @@ import FriendList from "../components/FriendList.vue";
 import Notification from "../components/Notification.vue";
 import ButtonIcon from "@/components/ButtonIcon.vue";
 import socket from "../socket/socket";
-import { ref, onBeforeUnmount, computed } from "vue";
+import { ref, onBeforeUnmount, computed, onMounted } from "vue";
 import api from "@/api/api";
 import router from "@/router/index";
 import Chat from "@/components/Chat.vue";
@@ -18,6 +18,8 @@ const currentUser = ref(null);
 const leftPanelView = ref("chats");
 const activeChats = ref([]);
 const copied = ref(false);
+const isLeftPanelCollapsed = ref(false);
+const leftPanelRef = ref(null); // Reference to the left panel
 
 socket.connect();
 
@@ -25,6 +27,13 @@ const viewName = computed(() => {
 	return (
 		leftPanelView.value.charAt(0).toUpperCase() +
 		leftPanelView.value.slice(1)
+	);
+});
+
+const isPanelAbsolute = computed(() => {
+	return (
+		window.matchMedia("(max-width: 768px)").matches &&
+		!isLeftPanelCollapsed.value
 	);
 });
 
@@ -69,6 +78,7 @@ const copyCode = () => {
 };
 
 const toggleLeftPanelView = (viewSelected) => {
+	isLeftPanelCollapsed.value = false;
 	if (leftPanelView.value !== viewSelected) {
 		leftPanelView.value = viewSelected;
 		if (viewSelected === "chats") {
@@ -78,6 +88,29 @@ const toggleLeftPanelView = (viewSelected) => {
 		}
 	}
 };
+
+const updatePanelState = () => {
+	const isTabletWidth = window.matchMedia("(max-width: 768px)").matches;
+	isLeftPanelCollapsed.value = isTabletWidth;
+};
+
+const handleClickOutside = (event) => {
+	if (
+		leftPanelRef.value &&
+		!leftPanelRef.value.contains(event.target) &&
+		window.matchMedia("(max-width: 768px)").matches
+	) {
+		isLeftPanelCollapsed.value = true; // Collapse the panel
+	}
+};
+
+onMounted(() => {
+	// Check panel state on mount
+	updatePanelState();
+	// Add an event listener for screen size changes
+	window.addEventListener("resize", updatePanelState);
+	document.addEventListener("click", handleClickOutside);
+});
 
 const initReactiveProperties = (chat) => {
 	chat.hasNewMessages = false;
@@ -197,39 +230,50 @@ onBeforeUnmount(() => {
 	socket.off("user disconnected");
 	socket.off("private message");
 	socket.off("connect_error");
+	window.removeEventListener("resize", updatePanelState);
 });
 </script>
 <template>
 	<div class="wrapper">
-		<div class="left-panel">
-			<div class="view-name">
+		<div
+			ref="leftPanelRef"
+			class="left-panel"
+			:class="{
+				collapsed: isLeftPanelCollapsed,
+				absolute: isPanelAbsolute,
+			}">
+			<div v-if="!isLeftPanelCollapsed" class="view-name">
 				<span>{{ viewName }}</span>
 				<div @click="copyCode" class="code">
-					# <span>{{ currentUser?.friend_code }}</span
-					><i v-if="!copied" class="fa-regular fa-clipboard"></i>
+					# <span>{{ currentUser?.friend_code }}</span>
+					<i v-if="!copied" class="fa-regular fa-clipboard"></i>
 					<i v-if="copied" class="fa-solid fa-check"></i>
 				</div>
 			</div>
+			<div class="view-container" v-if="!isLeftPanelCollapsed">
+				<Chat
+					v-if="leftPanelView === 'chats'"
+					v-for="chat in activeChats"
+					:key="chat.id"
+					:user="chat"
+					:selected="selectedChat === chat"
+					@select="onSelectUser(chat)" />
+				<div
+					v-if="
+						leftPanelView === 'chats' && activeChats.length === 0
+					">
+					<p class="info">You do not have active chats.</p>
+					<p class="tip">
+						Head over to friends section to start chatting
+					</p>
+				</div>
 
-			<Chat
-				v-if="leftPanelView === 'chats'"
-				v-for="chat in activeChats"
-				:key="chat.id"
-				:user="chat"
-				:selected="selectedChat === chat"
-				@select="onSelectUser(chat)" />
-			<div v-if="leftPanelView === 'chats' && activeChats.length === 0">
-				<p class="info">You do not have active chats.</p>
-				<p class="tip">
-					Head over to friends section to start chatting
-				</p>
+				<Profile v-if="leftPanelView === 'profile'" />
+				<FriendList
+					v-if="leftPanelView === 'friends'"
+					@message="onUserMessage" />
+				<Notification v-if="leftPanelView === 'notifications'" />
 			</div>
-
-			<Profile v-if="leftPanelView === 'profile'" />
-			<FriendList
-				v-if="leftPanelView === 'friends'"
-				@message="onUserMessage" />
-			<Notification v-if="leftPanelView === 'notifications'" />
 			<div class="buttons-container">
 				<ButtonIcon
 					title="Chats"
@@ -286,7 +330,7 @@ onBeforeUnmount(() => {
 }
 .left-panel {
 	height: 100%;
-	min-width: 350px;
+	width: 350px;
 	overflow-x: hidden;
 	color: white;
 	display: flex;
@@ -294,7 +338,22 @@ onBeforeUnmount(() => {
 	color: black;
 	background-color: #f4f4f4;
 	border-right: 1px solid rgba(0, 0, 0, 0.144);
+	transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
+
+.left-panel.collapsed {
+	width: 50px;
+	.buttons-container {
+		flex-direction: column;
+		margin-top: 0;
+	}
+}
+
+.left-panel.absolute {
+	position: absolute;
+	z-index: 9999;
+}
+
 .buttons-container {
 	margin-top: auto;
 	display: flex;
@@ -362,12 +421,21 @@ p {
 	visibility: visible;
 	opacity: 1;
 }
-
+.view-container {
+	display: flex;
+	flex-direction: column;
+	height: inherit;
+	width: inherit;
+}
 .code:hover {
 	background-color: #4b4b4b3a;
 	transition: 0.2s ease-in-out;
 }
-
+.notification-wrapper {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
 .code span {
 	font-weight: bold;
 }

@@ -1,29 +1,27 @@
 <template>
-	<div class="wrapper">
-		<User
-			v-for="friend in friends"
-			:key="friend.id"
-			:user="friend"
-			:selected="selectedFriend === friend"
-			@message="onMessageUser(friend)"
-			@select="onSelectFriend(friend)" />
-		<div class="add-container">
-			<label for="friendCode"
-				>To add a new friend, simply enter their code:</label
-			>
-			<div class="input-wrapper">
-				<input
-					id="friendCode"
-					v-model="friendCode"
-					placeholder="example: 123456"
-					type="text" />
-				<button @click="addFriend">
-					<i class="fa-solid fa-plus"></i>
-				</button>
-			</div>
-			<p>{{ message }}</p>
+	<p v-if="friends.length === 0" class="info">You do not have friends</p>
+	<User
+		v-for="friend in friends"
+		:key="friend.id"
+		:user="friend"
+		:selected="selectedFriend === friend"
+		@message="onMessageUser(friend)"
+		@select="onSelectFriend(friend)" />
+	<div class="add-container">
+		<label for="friendCode"
+			>To add a new friend, simply enter their code:</label
+		>
+		<div class="input-wrapper">
+			<input
+				id="friendCode"
+				v-model="friendCode"
+				placeholder="example: 123456"
+				type="text" />
+			<button @click="addFriend">
+				<i class="fa-solid fa-plus"></i>
+			</button>
 		</div>
-		<p v-if="friends.length === 0" class="info">You do not have friends</p>
+		<p>{{ message }}</p>
 	</div>
 </template>
 
@@ -100,10 +98,6 @@ onMounted(async () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-}
-.wrapper {
-	display: flex;
-	flex-direction: column;
 }
 .add-container {
 	margin-top: auto;
