@@ -19,7 +19,7 @@ const leftPanelView = ref("chats");
 const activeChats = ref([]);
 const copied = ref(false);
 const isLeftPanelCollapsed = ref(false);
-const leftPanelRef = ref(null); // Reference to the left panel
+const leftPanelRef = ref(null);
 
 socket.connect();
 
@@ -290,18 +290,17 @@ onBeforeUnmount(() => {
 					iconClass="fa-solid fa-user-group"
 					title="Friends"
 					@click="toggleLeftPanelView('friends')" />
-				<div class="notification-wrapper">
-					<ButtonIcon
-						title="Notifications"
-						:class="{ selected: leftPanelView === 'notifications' }"
-						iconClass="fa-regular fa-bell"
-						@click="toggleLeftPanelView('notifications')" />
-					<div
+				<ButtonIcon
+					title="Notifications"
+					:class="{ selected: leftPanelView === 'notifications' }"
+					iconClass="fa-regular fa-bell"
+					@click="toggleLeftPanelView('notifications')"
+					><div
 						v-if="currentUser?.hasNewNotifications"
 						class="new-messages">
 						!
-					</div>
-				</div>
+					</div></ButtonIcon
+				>
 				<ButtonIcon
 					title="Logout"
 					iconClass="fa-solid fa-right-from-bracket"
@@ -317,126 +316,130 @@ onBeforeUnmount(() => {
 	</div>
 </template>
 <style scoped>
-.middle-panel {
-	flex-grow: 1;
-	display: flex;
-	flex-direction: column;
-	background-image: url("/whatsapp-background-original.png");
-}
 .wrapper {
 	display: flex;
 	height: inherit;
 	width: inherit;
-}
-.left-panel {
-	height: 100%;
-	width: 350px;
-	overflow-x: hidden;
-	color: white;
-	display: flex;
-	flex-direction: column;
-	color: black;
-	background-color: #f4f4f4;
-	border-right: 1px solid rgba(0, 0, 0, 0.144);
-	transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
-}
 
-.left-panel.collapsed {
-	width: 50px;
-	.buttons-container {
+	.middle-panel {
+		flex-grow: 1;
+		display: flex;
 		flex-direction: column;
-		margin-top: 0;
+		background-image: url("/whatsapp-background-original.png");
 	}
-}
 
-.left-panel.absolute {
-	position: absolute;
-	z-index: 9999;
-}
+	.left-panel {
+		height: 100%;
+		width: 350px;
+		overflow-x: hidden;
+		color: black;
+		display: flex;
+		flex-direction: column;
+		background-color: #f4f4f4;
+		border-right: 1px solid rgba(0, 0, 0, 0.144);
+		transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
 
-.buttons-container {
-	margin-top: auto;
-	display: flex;
-	width: inherit;
-	justify-content: space-evenly;
-	border-top: 1px solid rgba(0, 0, 0, 0.156);
-}
-.btn {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	padding: 0 15px;
-}
+		&.collapsed {
+			width: 50px;
 
-.btn:hover,
-.selected {
-	background-color: rgba(211, 211, 211, 0.8);
-}
-.info {
-	font-size: 18px;
-	margin: 15px;
-}
+			.buttons-container {
+				flex-direction: column;
+				margin-top: 0;
+			}
+		}
 
-p {
-	display: block;
-	text-align: center;
-}
+		&.absolute {
+			position: absolute;
+			z-index: 9999;
+		}
 
-.new-messages {
-	color: white;
-	background-color: red;
-	width: 17px;
-	border-radius: 5px;
-	text-align: center;
-	bottom: 8px;
-	left: 248px;
-	position: absolute;
-}
+		.view-container {
+			display: flex;
+			flex-direction: column;
+			height: inherit;
+			width: inherit;
+		}
 
-.view-name {
-	font-size: 18px;
-	padding: 10px;
-	justify-content: space-between;
-	align-items: center;
-	border-bottom: 1px solid rgba(0, 0, 0, 0.156);
-	display: flex;
-}
+		.view-name {
+			font-size: 18px;
+			padding: 10px;
+			justify-content: space-between;
+			align-items: center;
+			border-bottom: 1px solid rgba(0, 0, 0, 0.156);
+			display: flex;
+		}
 
-.fa-clipboard {
-	visibility: hidden;
-	opacity: 0;
-	transition: opacity 0.2s ease-in-out;
-	font-size: 20px;
-}
-.fa-check {
-	font-size: 20px;
-}
-.code {
-	padding: 5px;
-	border-radius: 5px;
-	cursor: pointer;
-}
+		.buttons-container {
+			margin-top: auto;
+			display: flex;
+			width: inherit;
+			justify-content: space-evenly;
+			border-top: 1px solid rgba(0, 0, 0, 0.156);
+		}
 
-.code:hover .fa-clipboard {
-	visibility: visible;
-	opacity: 1;
-}
-.view-container {
-	display: flex;
-	flex-direction: column;
-	height: inherit;
-	width: inherit;
-}
-.code:hover {
-	background-color: #4b4b4b3a;
-	transition: 0.2s ease-in-out;
-}
-.notification-wrapper {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-}
-.code span {
-	font-weight: bold;
+		.btn {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			padding: 0 15px;
+
+			&:hover,
+			&.selected {
+				background-color: rgba(211, 211, 211, 0.8);
+			}
+		}
+
+		.new-messages {
+			color: white;
+			background-color: red;
+			width: 17px;
+			border-radius: 5px;
+			text-align: center;
+			bottom: 8px;
+			left: 248px;
+			position: absolute;
+		}
+
+		.code {
+			padding: 5px;
+			border-radius: 5px;
+			cursor: pointer;
+
+			span {
+				font-weight: bold;
+			}
+
+			&:hover {
+				background-color: #4b4b4b3a;
+				transition: 0.2s ease-in-out;
+
+				.fa-clipboard {
+					visibility: visible;
+					opacity: 1;
+				}
+			}
+		}
+
+		.fa-clipboard {
+			visibility: hidden;
+			opacity: 0;
+			transition: opacity 0.2s ease-in-out;
+			font-size: 20px;
+		}
+
+		.fa-check {
+			font-size: 20px;
+		}
+	}
+
+	.info {
+		font-size: 18px;
+		margin: 15px;
+	}
+
+	p {
+		display: block;
+		text-align: center;
+	}
 }
 </style>

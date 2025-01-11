@@ -117,48 +117,6 @@ onMounted(async () => {
 });
 </script>
 <style scoped>
-.bio {
-	margin-top: 10px;
-	height: 250px;
-	width: 250px;
-	cursor: pointer;
-	box-sizing: border-box;
-	padding: 5px;
-	border: 1px solid transparent;
-}
-
-.bio:hover,
-.bio-edit textarea:focus {
-	border: 1px solid rgba(0, 0, 0, 0.099);
-}
-
-.bio-edit textarea {
-	margin-top: 10px;
-	height: 250px;
-	width: 250px;
-	box-sizing: border-box; /* Ensures consistent sizing with borders */
-	border: 1px solid transparent; /* Default border, so there's no shift */
-	outline: none; /* Prevents additional outline on focus */
-}
-
-.username:hover {
-	background-color: #4b4b4b3a;
-	transition: 0.2s ease-in-out;
-}
-.username:hover .fa-pen-to-square {
-	visibility: visible;
-}
-
-.username {
-	border-radius: 5px;
-	padding: 0 5px;
-}
-
-.fa-pen-to-square {
-	visibility: hidden;
-	font-size: 16px;
-	cursor: pointer;
-}
 .card {
 	display: flex;
 	align-items: center;
@@ -166,47 +124,91 @@ onMounted(async () => {
 	color: black;
 	line-height: 30px;
 	width: inherit;
+
+	img {
+		margin: 20px;
+		height: 200px;
+		width: 200px;
+		border-radius: 50%;
+		box-shadow: 0px 0px 9px 4px #8d8d8d;
+		cursor: pointer;
+	}
+
+	.dropdown {
+		position: absolute;
+		top: 180px;
+		left: 200px;
+		background-color: #e8e8e8;
+		border-radius: 5px;
+
+		button,
+		label {
+			display: block;
+			width: 100%;
+			padding: 5px;
+			background: none;
+			border: none;
+			cursor: pointer;
+			text-align: center;
+
+			&:hover {
+				background-color: #8d8d8d;
+				color: white;
+			}
+		}
+	}
+
+	.username {
+		border-radius: 5px;
+		padding: 0 5px;
+
+		&:hover {
+			background-color: #4b4b4b3a;
+			transition: 0.2s ease-in-out;
+
+			.fa-pen-to-square {
+				visibility: visible;
+			}
+		}
+
+		.fa-pen-to-square {
+			visibility: hidden;
+			font-size: 16px;
+			cursor: pointer;
+		}
+	}
+
+	.bio {
+		margin-top: 10px;
+		height: 250px;
+		width: 250px;
+		cursor: pointer;
+		box-sizing: border-box;
+		padding: 5px;
+		border: 1px solid transparent;
+
+		&:hover {
+			border: 1px solid rgba(0, 0, 0, 0.099);
+		}
+
+		&-edit {
+			textarea {
+				margin-top: 10px;
+				height: 250px;
+				width: 250px;
+				box-sizing: border-box;
+				border: 1px solid transparent;
+				outline: none;
+
+				&:focus {
+					border: 1px solid rgba(0, 0, 0, 0.099);
+				}
+			}
+		}
+	}
 }
 
 span {
 	font-size: 18px;
-}
-
-img {
-	margin: 20px;
-	height: 200px;
-	width: 200px;
-	border-radius: 50%;
-	box-shadow: 0px 0px 9px 4px #8d8d8d;
-	cursor: pointer;
-}
-
-.dropdown {
-	position: absolute;
-	top: 180px;
-	left: 200px;
-	background-color: #e8e8e8;
-	border-radius: 5px;
-}
-button {
-	display: block;
-	width: 100%;
-	padding: 5px;
-}
-button:hover {
-	background-color: #8d8d8d;
-}
-label {
-	display: block;
-	padding: 5px;
-	background: none;
-	border: none;
-	cursor: pointer;
-	text-align: center;
-}
-
-label:hover {
-	background-color: #8d8d8d;
-	color: white;
 }
 </style>

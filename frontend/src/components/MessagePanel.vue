@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import StatusIcon from "./StatusIcon.vue";
 
 const input = ref("");
@@ -9,10 +9,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["input"]);
-
-const isValid = computed(() => {
-	return input.value.length > 0;
-});
 
 const onSubmit = () => {
 	emit("input", input.value);
@@ -104,16 +100,16 @@ i {
 	background: #f1f1f1;
 	word-wrap: break-word;
 	margin: 10px;
-}
 
-.message.self {
-	align-self: flex-end;
-	background: #d1e7dd;
-}
+	&.self {
+		align-self: flex-end;
+		background: #d1e7dd;
+	}
 
-.sender {
-	font-weight: bold;
-	margin-top: 5px;
+	.sender {
+		font-weight: bold;
+		margin-top: 5px;
+	}
 }
 
 .form {
@@ -139,9 +135,9 @@ i {
 	border-radius: 5px;
 	border: 1px solid transparent;
 	outline: none;
-}
 
-.input:focus {
-	border: 1px solid rgba(0, 0, 0, 0.342);
+	&:focus {
+		border: 1px solid rgba(0, 0, 0, 0.342);
+	}
 }
 </style>

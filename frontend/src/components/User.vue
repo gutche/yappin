@@ -44,21 +44,45 @@ const status = computed(() => {
 </template>
 
 <style scoped>
-.button-container {
-	margin-left: auto;
-	display: none;
-	justify-content: space-evenly;
-	width: 150px;
-}
+.user {
+	padding: 10px;
+	display: flex;
+	align-items: center;
 
-.user:hover .button-container,
-.user.selected .button-container {
-	display: flex; /* Show for hovered or selected users */
-}
+	&:hover,
+	&.selected {
+		background-color: rgba(211, 211, 211, 0.8);
 
-.user:hover,
-.selected {
-	background-color: rgba(211, 211, 211, 0.8);
+		.button-container {
+			display: flex; /* Show for hovered or selected users */
+		}
+	}
+
+	.button-container {
+		margin-left: auto;
+		display: none;
+		justify-content: space-evenly;
+		width: 150px;
+	}
+
+	.name {
+		font-size: 16px;
+	}
+
+	.description {
+		display: inline-block;
+	}
+
+	.status {
+		color: black;
+	}
+
+	img {
+		height: 40px;
+		width: 40px;
+		border-radius: 50%;
+		margin-right: 10px;
+	}
 }
 
 .fa-regular,
@@ -67,36 +91,10 @@ const status = computed(() => {
 	cursor: pointer;
 	padding: 5px;
 	border-radius: 5px;
-}
 
-.fa-regular:hover,
-.fa-solid:hover {
-	background-color: rgb(174, 173, 173);
-}
-
-img {
-	height: 40px;
-	width: 40px;
-	border-radius: 50%;
-	margin-right: 10px;
-}
-
-.name {
-	font-size: 16px;
-}
-
-.user {
-	padding: 10px;
-	display: flex;
-	align-items: center;
-}
-
-.description {
-	display: inline-block;
-}
-
-.status {
-	color: black;
+	&:hover {
+		background-color: rgb(174, 173, 173);
+	}
 }
 
 .new-messages {

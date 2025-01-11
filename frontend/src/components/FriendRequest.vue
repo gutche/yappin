@@ -92,24 +92,24 @@ button {
 	transition: all 0.3s ease 0s;
 	cursor: pointer;
 	outline: none;
-}
 
-button:hover {
-	color: #fff;
-	transform: translateY(-7px);
-}
+	&:hover {
+		color: #fff;
+		transform: translateY(-7px);
+	}
 
-.accept:hover {
-	background-color: #2aa876;
-	box-shadow: 0px 15px 20px rgba(42, 168, 118, 0.4);
-}
+	.accept:hover {
+		background-color: #2aa876;
+		box-shadow: 0px 15px 20px rgba(42, 168, 118, 0.4);
+	}
 
-.decline:hover {
-	background-color: #a8323c;
-	box-shadow: 0px 15px 20px rgba(168, 50, 60, 0.4);
-}
+	.decline:hover {
+		background-color: #a8323c;
+		box-shadow: 0px 15px 20px rgba(168, 50, 60, 0.4);
+	}
 
-button:active {
-	transform: translateY(-1px);
+	&:active {
+		transform: translateY(-1px);
+	}
 }
 </style>
