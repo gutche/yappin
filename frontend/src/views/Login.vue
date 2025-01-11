@@ -81,7 +81,7 @@ const submitForm = async () => {
 }
 
 form {
-	width: 400px;
+	width: 300px;
 	border: 3px solid #f1f1f1;
 	border-radius: 10px;
 }

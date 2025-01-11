@@ -108,7 +108,7 @@ const validateEmail = (email) => {
 }
 
 form {
-	width: 400px;
+	width: 300px;
 	border: 3px solid #f1f1f1;
 	border-radius: 10px;
 }
@@ -155,10 +155,9 @@ hr {
 	cursor: pointer;
 	width: 100%;
 	opacity: 0.9;
-}
-
-.registerbtn:hover {
-	opacity: 1;
+	&:hover {
+		opacity: 1;
+	}
 }
 
 a {
