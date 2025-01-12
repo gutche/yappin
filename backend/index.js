@@ -19,6 +19,8 @@ import {
 	removeProfilePicture,
 	getUserMessages,
 	updateUserBio,
+	saveMessage,
+	getUserMessagesCount,
 } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
@@ -102,8 +104,20 @@ io.on("connection", async (socket) => {
 
 	// fetch existing messages from DB and/or Redis
 	const cachedMessages = await messageStore.findMessagesForUser(userID);
+	let userMessages = [];
 	const activeChats = new Map();
-	if (cachedMessages.length > 0) {
+	if (cachedMessages.length < 30) {
+		try {
+			const dbMessages = await getUserMessages(
+				userID,
+				cachedMessages.length
+			);
+			userMessages = [...cachedMessages, ...dbMessages];
+		} catch (error) {
+			console.log(error);
+		}
+	}
+	if (userMessages.length > 0) {
 		// save different users. group chat name will be saved as a user
 		for (const message of cachedMessages) {
 			const { from, to } = message;
@@ -128,13 +142,6 @@ io.on("connection", async (socket) => {
 			}
 		}
 		socket.emit("active chats", Array.from(activeChats.entries()));
-	} else {
-		try {
-			const dbMessages = await getUserMessages(userID);
-			//console.log(dbMessages);
-		} catch (error) {
-			console.log(error);
-		}
 	}
 	// notify existing users
 	socket.broadcast.emit("user connected", {
@@ -145,13 +152,14 @@ io.on("connection", async (socket) => {
 	});
 
 	// forward the private message to the right recipient
-	socket.on("private message", ({ content, to }) => {
+	socket.on("private message", async ({ content, to }) => {
 		const message = {
 			content,
 			from: userID,
 			to,
 		};
 		socket.to(to).to(userID).emit("private message", message);
+		await saveMessage(message);
 		messageStore.saveMessage(message);
 	});
 
@@ -375,6 +383,19 @@ app.post("/update-bio", async (req, res) => {
 	try {
 		const success = await updateUserBio(req.user.id, req.body.bio);
 		if (success) res.sendStatus(200);
+	} catch (error) {
+		console.log(error);
+	}
+});
+
+app.get("/messages", async (req, res) => {
+	try {
+		const { id } = req.user;
+		const { offset } = req.body;
+		const messages = await getUserMessages(id, offset);
+		const userTotalMessages = await getUserMessagesCount(id);
+		const hasMore = offset + 20 < userTotalMessages;
+		if (messages) res.status(200).json({ messages, hasMore });
 	} catch (error) {
 		console.log(error);
 	}

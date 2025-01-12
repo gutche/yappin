@@ -257,11 +257,11 @@ export const removeProfilePicture = (user_id) => {
 	});
 };
 
-export const getUserMessages = (userID) => {
+export const getUserMessages = (userID, offset) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			`SELECT * FROM messages WHERE recipient_id = $1 LIMIT 20`,
-			[userID],
+			`SELECT * FROM messages WHERE recipient_id = $1 ORDER BY sent_at DESC  LIMIT 20 OFFSET $2`,
+			[userID, offset],
 			async (err, results) => {
 				if (err) reject(err);
 				resolve(results.rows || []);
@@ -278,6 +278,31 @@ export const updateUserBio = (id, bio) => {
 			async (err, results) => {
 				if (err) reject(err);
 				resolve(true);
+			}
+		);
+	});
+};
+export const saveMessage = ({ from, to, content }) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			`INSERT INTO messages (sender_id, recipient_id, content) VALUES ($1, $2, $3)`,
+			[from, to, content],
+			async (err, results) => {
+				if (err) reject(err);
+				resolve(true);
+			}
+		);
+	});
+};
+export const getUserMessagesCount = (id) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			`SELECT COUNT(*) FROM messages WHERE id = $1`,
+			[id],
+			async (err, results) => {
+				if (err) reject(err);
+				const { count } = results.rows[0];
+				resolve(count);
 			}
 		);
 	});

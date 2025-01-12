@@ -156,8 +156,9 @@ socket.on("active chats", (chats) => {
 		id,
 		{ messages, connected, username, profile_picture },
 	] of chats) {
-		messages.forEach((message) => {
+		messages.forEach((message, index) => {
 			message.fromSelf = message.from === currentUser.value.id;
+			message.id = index;
 		});
 		const chat = {
 			id,
