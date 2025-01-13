@@ -39,13 +39,16 @@ const isPanelAbsolute = computed(() => {
 
 const onMessageSent = (content) => {
 	if (selectedChat) {
+		const sent_at = new Date().toISOString();
 		socket.emit("private message", {
 			content,
 			to: selectedChat.value.id,
+			sent_at,
 		});
 		selectedChat.value.messages.push({
 			content,
 			fromSelf: true,
+			sent_at,
 		});
 	}
 };
@@ -194,35 +197,41 @@ socket.on("friend-request", (user) => {
 	}
 });
 
-socket.on("private message", async ({ content, from, to }) => {
-	const fromSelf = currentUser.value.id === from;
-	const id = fromSelf ? to : from;
-	let targetUser = activeChats.value.find((user) => user.id === id);
-	if (!targetUser) {
-		try {
-			const user = await api.get("/user", {
-				id,
-			});
-			const { username, profile_picture, connected } = await user.json();
-			targetUser = {
-				id,
-				username,
-				profile_picture,
-				connected,
-				messages: [],
-			};
-			activeChats.value.push(targetUser);
-		} catch (error) {
-			console.log(error);
+socket.on(
+	"private message",
+	async ({ content, sender_id, recipient_id, sent_at }) => {
+		const fromSelf = currentUser.value.id === sender_id;
+		const id = fromSelf ? recipient_id : sender_id;
+		let targetUser = activeChats.value.find((user) => user.id === id);
+		if (!targetUser) {
+			try {
+				console.log(id);
+				const user = await api.get("/user", {
+					id,
+				});
+				const { username, profile_picture, connected } =
+					await user.json();
+				targetUser = {
+					id,
+					username,
+					profile_picture,
+					connected,
+					messages: [],
+				};
+				activeChats.value.push(targetUser);
+			} catch (error) {
+				console.log(error);
+			}
 		}
-	}
-	targetUser.messages.push({
-		content,
-		fromSelf,
-	});
+		targetUser.messages.push({
+			content,
+			fromSelf,
+			sent_at,
+		});
 
-	if (targetUser !== selectedChat.value) targetUser.hasNewMessages = true;
-});
+		if (targetUser !== selectedChat.value) targetUser.hasNewMessages = true;
+	}
+);
 
 onBeforeUnmount(() => {
 	socket.off("connect");

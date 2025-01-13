@@ -14,8 +14,6 @@ const { user } = defineProps({
 	user: Object,
 });
 
-console.log(user.messages);
-
 const emit = defineEmits(["input"]);
 
 const onSubmit = () => {

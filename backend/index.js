@@ -154,11 +154,12 @@ io.on("connection", async (socket) => {
 	});
 
 	// forward the private message to the right recipient
-	socket.on("private message", async ({ content, to }) => {
+	socket.on("private message", async ({ content, to, sent_at }) => {
 		const message = {
 			content,
 			sender_id: userID,
 			recipient_id: to,
+			sent_at,
 		};
 		socket.to(to).to(userID).emit("private message", message);
 		await saveMessage(message);
