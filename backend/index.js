@@ -105,13 +105,14 @@ io.on("connection", async (socket) => {
 	// fetch existing messages from DB and/or Redis
 	const cachedMessages = await messageStore.findMessagesForUser(userID);
 	let userMessages = [];
+	let hasMoreMessages = false;
 	const activeChats = new Map();
-	if (cachedMessages.length < 30) {
+	const offset = cachedMessages.length;
+	if (offset < 30) {
 		try {
-			const dbMessages = await getUserMessages(
-				userID,
-				cachedMessages.length
-			);
+			const dbMessages = await getUserMessages(userID, offset);
+			const userTotalMessages = await getUserMessagesCount(userID);
+			hasMoreMessages = offset + 20 < userTotalMessages;
 			userMessages = [...cachedMessages, ...dbMessages];
 		} catch (error) {
 			console.log(error);
@@ -119,9 +120,9 @@ io.on("connection", async (socket) => {
 	}
 	if (userMessages.length > 0) {
 		// save different users. group chat name will be saved as a user
-		for (const message of cachedMessages) {
-			const { from, to } = message;
-			const otherUser = userID === from ? to : from;
+		for (const message of userMessages) {
+			const { sender_id, recipient_id } = message;
+			const otherUser = userID === sender_id ? recipient_id : sender_id;
 			if (activeChats.has(otherUser)) {
 				activeChats.get(otherUser).messages.push(message);
 			} else {
@@ -138,6 +139,7 @@ io.on("connection", async (socket) => {
 						: false,
 					username,
 					profile_picture,
+					hasMoreMessages,
 				});
 			}
 		}
@@ -155,8 +157,8 @@ io.on("connection", async (socket) => {
 	socket.on("private message", async ({ content, to }) => {
 		const message = {
 			content,
-			from: userID,
-			to,
+			sender_id: userID,
+			recipient_id: to,
 		};
 		socket.to(to).to(userID).emit("private message", message);
 		await saveMessage(message);
@@ -394,8 +396,8 @@ app.get("/messages", async (req, res) => {
 		const { offset } = req.body;
 		const messages = await getUserMessages(id, offset);
 		const userTotalMessages = await getUserMessagesCount(id);
-		const hasMore = offset + 20 < userTotalMessages;
-		if (messages) res.status(200).json({ messages, hasMore });
+		const hasMoreMessages = offset + 20 < userTotalMessages;
+		if (messages) res.status(200).json({ messages, hasMoreMessages });
 	} catch (error) {
 		console.log(error);
 	}

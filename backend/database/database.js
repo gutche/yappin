@@ -282,11 +282,11 @@ export const updateUserBio = (id, bio) => {
 		);
 	});
 };
-export const saveMessage = ({ from, to, content }) => {
+export const saveMessage = ({ sender_id, recipient_id, content }) => {
 	return new Promise((resolve, reject) => {
 		db.query(
 			`INSERT INTO messages (sender_id, recipient_id, content) VALUES ($1, $2, $3)`,
-			[from, to, content],
+			[sender_id, recipient_id, content],
 			async (err, results) => {
 				if (err) reject(err);
 				resolve(true);

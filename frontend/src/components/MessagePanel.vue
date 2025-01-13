@@ -8,11 +8,13 @@ import api from "@/api/api";
 const input = ref("");
 const el = ref(null);
 const isFetching = ref(false);
-const userHasMoreMessages = ref(true);
+const hasMoreMessages = ref(false);
 
 const { user } = defineProps({
 	user: Object,
 });
+
+console.log(user.messages);
 
 const emit = defineEmits(["input"]);
 
@@ -47,7 +49,7 @@ const { reset } = useInfiniteScroll(
 					offset: user.messages.length,
 				})
 				.then((response) => response.json());
-			userHasMoreMessages.value = data.hasMore;
+			hasMoreMessages.value = data.hasMoreMessages;
 			user.messages.unshift(...data.messages);
 			try {
 			} catch (error) {
@@ -61,7 +63,7 @@ const { reset } = useInfiniteScroll(
 		distance: 50,
 		interval: 2000,
 		canLoadMore: () => {
-			return userHasMoreMessages.value;
+			return hasMoreMessages.value;
 		},
 		direction: "top",
 	}
@@ -71,6 +73,22 @@ const scrollToBottom = () => {
 	if (el.value) {
 		el.value.scrollTop = el.value.scrollHeight;
 	}
+};
+
+const isNewDate = (message, index) => {
+	if (index === 0) return true;
+	const prevDate = new Date(user.messages[index - 1].sent_at).toDateString();
+	const currDate = new Date(message.sent_at).toDateString();
+	return prevDate !== currDate;
+};
+
+const formatDate = (date) => {
+	return new Date(date).toLocaleDateString(undefined, {
+		weekday: "long",
+		year: "numeric",
+		month: "long",
+		day: "numeric",
+	});
 };
 
 onMounted(() => {
@@ -87,14 +105,17 @@ onMounted(() => {
 	<main class="body">
 		<span v-if="isFetching" class="loader"></span>
 		<div ref="el" class="messages">
+			<div class="start">Start of conversation</div>
 			<div
 				v-for="(message, index) in user.messages"
 				:key="index"
-				:class="['message', { self: message.fromSelf }]">
-				<div v-if="displaySender(message, index)" class="sender">
-					{{ message.fromSelf ? "" : user.username }}
+				class="message-container">
+				<div v-if="isNewDate(message, index)" class="date-divider">
+					{{ formatDate(message.sent_at) }}
 				</div>
-				{{ message.content }}
+				<div :class="['message', { self: message.fromSelf }]">
+					{{ message.content }}
+				</div>
 			</div>
 		</div>
 
@@ -110,6 +131,18 @@ onMounted(() => {
 </template>
 
 <style>
+.message-container {
+	display: flex;
+	flex-direction: column;
+}
+.date-divider {
+	text-align: center;
+	margin: 10px 0;
+	font-size: 14px;
+	font-weight: bold;
+	color: #888;
+}
+
 img {
 	height: 40px;
 	width: 40px;
@@ -169,8 +202,10 @@ i {
 	align-items: center;
 	justify-content: center;
 	bottom: 0;
-	width: inherit;
+	width: 100%;
 	margin: 10px;
+	position: absolute;
+	flex-grow: 1;
 }
 
 .body {
@@ -207,6 +242,15 @@ i {
 	left: 50%;
 	transform: translateX(-50%);
 	margin-top: 10px;
+}
+
+.start {
+	margin: 20px 0px;
+	align-self: center;
+	background-color: rgb(219, 204, 156);
+	border-radius: 5px;
+	padding: 5px;
+	font-weight: bold;
 }
 
 @keyframes rotation {

@@ -154,16 +154,17 @@ socket.on("active chats", (chats) => {
 	// init properties of every user
 	for (const [
 		id,
-		{ messages, connected, username, profile_picture },
+		{ messages, connected, username, profile_picture, hasMoreMessages },
 	] of chats) {
 		messages.forEach((message, index) => {
-			message.fromSelf = message.from === currentUser.value.id;
+			message.fromSelf = message.sender_id === currentUser.value.id;
 			message.id = index;
 		});
 		const chat = {
 			id,
 			username,
 			profile_picture,
+			hasMoreMessages,
 		};
 		initReactiveProperties(chat);
 		chat.messages = messages;
