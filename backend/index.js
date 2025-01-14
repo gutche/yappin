@@ -108,16 +108,17 @@ io.on("connection", async (socket) => {
 	let hasMoreMessages = false;
 	const activeChats = new Map();
 	const offset = cachedMessages.length;
+	let dbMessages = [];
 	if (offset < 30) {
 		try {
-			const dbMessages = await getUserMessages(userID, offset);
+			dbMessages = await getUserMessages(userID, offset);
 			const userTotalMessages = await getUserMessagesCount(userID);
 			hasMoreMessages = offset + 20 < userTotalMessages;
-			userMessages = [...cachedMessages, ...dbMessages];
 		} catch (error) {
 			console.log(error);
 		}
 	}
+	userMessages = [...cachedMessages, ...dbMessages];
 	if (userMessages.length > 0) {
 		// save different users. group chat name will be saved as a user
 		for (const message of userMessages) {

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref, watch } from "vue";
 import StatusIcon from "./StatusIcon.vue";
 import { useInfiniteScroll } from "@vueuse/core";
 import { useFetch } from "@vueuse/core";
@@ -17,8 +17,10 @@ const { user } = defineProps({
 const emit = defineEmits(["input"]);
 
 const onSubmit = () => {
-	emit("input", input.value);
-	input.value = "";
+	if (input.value) {
+		emit("input", input.value);
+		input.value = "";
+	}
 };
 
 const displaySender = (message, index) => {
@@ -66,10 +68,18 @@ const { reset } = useInfiniteScroll(
 		direction: "top",
 	}
 );
+
 // Scroll to the latest message
-const scrollToBottom = () => {
+const scrollToBottom = (behavior) => {
 	if (el.value) {
-		el.value.scrollTop = el.value.scrollHeight;
+		const lastChild = el.value.lastElementChild;
+		if (lastChild) {
+			// Scroll the container to the last child's bottom position
+			lastChild.scrollIntoView({
+				behavior,
+				block: "end",
+			});
+		}
 	}
 };
 
@@ -91,8 +101,17 @@ const formatDate = (date) => {
 
 onMounted(() => {
 	reset();
-	scrollToBottom();
+	scrollToBottom("instant");
 });
+
+watch(
+	() => user.messages.length,
+	async () => {
+		// Wait for the prop to update before scrolling
+		await nextTick();
+		scrollToBottom("smooth");
+	}
+);
 </script>
 
 <template>
@@ -172,9 +191,9 @@ i {
 	padding: 0;
 	flex-direction: column;
 	overflow-y: auto;
-	flex-grow: 1;
 	scrollbar-width: none;
-	max-height: 760px;
+	max-height: 785px;
+	flex: 1;
 }
 
 .message {
@@ -199,11 +218,9 @@ i {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	bottom: 0;
 	width: 100%;
-	margin: 10px;
-	position: absolute;
-	flex-grow: 1;
+	margin-top: auto;
+	margin-bottom: 10px;
 }
 
 .body {
