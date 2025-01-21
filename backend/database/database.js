@@ -185,6 +185,7 @@ export const acceptFriendRequest = (id) => {
 			resolve(true);
 		} catch (err) {
 			await db.query("ROLLBACK"); // Rollback on error
+			console.error("db: error accepting friend request");
 			reject(err);
 		}
 	});
@@ -257,14 +258,18 @@ export const removeProfilePicture = (user_id) => {
 	});
 };
 
-export const getUserMessages = (userID, offset) => {
+export const loadMoreMessages = (conv_id, offset) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			`SELECT * FROM messages WHERE recipient_id = $1 ORDER BY sent_at DESC  LIMIT 20 OFFSET $2`,
-			[userID, offset],
+			`SELECT sender_id, conversation_id, content, sent_at
+				FROM messages
+				WHERE conv_id = $1 
+				ORDER BY sent_at DESC
+				LIMIT 20 OFFSET $2`,
+			[conv_id, offset],
 			async (err, results) => {
 				if (err) reject(err);
-				resolve(results.rows || []);
+				resolve(results?.rows || []);
 			}
 		);
 	});
@@ -283,26 +288,66 @@ export const updateUserBio = (id, bio) => {
 	});
 };
 export const saveMessage = ({ sender_id, recipient_id, content, sent_at }) => {
-	return new Promise((resolve, reject) => {
-		db.query(
-			`INSERT INTO messages (sender_id, recipient_id, content, sent_at) VALUES ($1, $2, $3, $4)`,
-			[sender_id, recipient_id, content, sent_at],
-			async (err, results) => {
-				if (err) reject(err);
-				resolve(true);
-			}
-		);
+	return new Promise(async (resolve, reject) => {
+		try {
+			await db.query("BEGIN");
+			const { id } = db.query(
+				`
+				INSERT INTO conversations (user_one_id, user_two_id)
+				VALUES (LEAST($1, $2), GREATEST($1, $2))
+				ON CONFLICT (user_one_id, user_two_id) DO NOTHING
+				RETURNING id
+			`,
+				[sender_id, recipient_id]
+			);
+
+			const convId =
+				id ||
+				(await db.query(
+					`
+				SELECT id FROM conversations 
+				WHERE participant_1 = LEAST($1, $2) AND participant_2 = GREATEST($1, $2)
+				`,
+					[sender_id, recipient_id]
+				).rows[0].id);
+
+			const results = db.query(
+				`INSERT INTO messages (sender_id, conversation_id, content, sent_at) VALUES ($1, $2, $3, $4)`,
+				[sender_id, convId, content, sent_at]
+			);
+			await db.query("COMMIT");
+			if (results.rowCount > 0) resolve(convId);
+		} catch (error) {
+			await db.query("ROLLBACK");
+			console.error("db: error saving message");
+			reject(error);
+		}
 	});
 };
-export const getUserMessagesCount = (id) => {
+export const getUserMessagesCount = (conv_id) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			`SELECT COUNT(*) FROM messages WHERE id = $1`,
-			[id],
+			`SELECT COUNT(*) FROM messages WHERE conversation_id = $1`,
+			[conv_id],
 			async (err, results) => {
 				if (err) reject(err);
 				const { count } = results.rows[0];
 				resolve(count);
+			}
+		);
+	});
+};
+export const getConversationIds = (userID) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			`SELECT DISTINCT conversation_id FROM messages WHERE sender_id = $1`,
+			[userID],
+			async (err, results) => {
+				if (err) {
+					console.error("Error getting conversation ids");
+					reject(err);
+				}
+				resolve(results?.rows || []);
 			}
 		);
 	});

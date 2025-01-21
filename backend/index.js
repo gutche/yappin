@@ -17,10 +17,11 @@ import {
 	getFriends,
 	setProfilePicture,
 	removeProfilePicture,
-	getUserMessages,
+	loadMoreMessages,
 	updateUserBio,
 	saveMessage,
 	getUserMessagesCount,
+	getConversationIds,
 } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
@@ -102,16 +103,22 @@ io.on("connection", async (socket) => {
 	// join the "userID" room
 	socket.join(userID);
 
-	// fetch existing messages from DB and/or Redis
-	const cachedMessages = await messageStore.findMessagesForUser(userID);
+	// fetch user messages
 	let userMessages = [];
+	let dbMessages = [];
 	let hasMoreMessages = false;
 	const activeChats = new Map();
+
+	// check redis first
+	const cachedMessages = await messageStore.findMessagesForUser(userID);
+
 	const offset = cachedMessages.length;
-	let dbMessages = [];
-	if (offset < 30) {
+	if (offset < 20) {
 		try {
-			dbMessages = await getUserMessages(userID, offset);
+			const convIds = await getConversationIds(userID);
+			for (const convId of convIds) {
+				dbMessages = await loadMoreMessages(userID, convId, offset);
+			}
 			const userTotalMessages = await getUserMessagesCount(userID);
 			hasMoreMessages = offset + 20 < userTotalMessages;
 		} catch (error) {
@@ -163,7 +170,8 @@ io.on("connection", async (socket) => {
 			sent_at,
 		};
 		socket.to(to).to(userID).emit("private message", message);
-		await saveMessage(message);
+		const convID = await saveMessage(message);
+		message.conversation_id = convID;
 		messageStore.saveMessage(message);
 	});
 
