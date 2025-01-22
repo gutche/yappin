@@ -307,10 +307,9 @@ export const saveMessage = ({ sender_id, recipient_id, content, sent_at }) => {
 					Math.max(sender_id, recipient_id),
 				]
 			);
-			const id = rows[0]?.id;
-			const convId =
-				id ||
-				(await db.query(
+			let convID;
+			if (!rows.length) {
+				const result = await db.query(
 					`
 				SELECT id FROM private_messages 
 				WHERE user_one_id = $1 AND user_two_id = $2
@@ -319,14 +318,18 @@ export const saveMessage = ({ sender_id, recipient_id, content, sent_at }) => {
 						Math.min(sender_id, recipient_id),
 						Math.max(sender_id, recipient_id),
 					]
-				).rows[0].id);
+				);
+				convID = result.rows[0].id;
+			} else {
+				convID = rows[0].id;
+			}
 
 			const results = await db.query(
 				`INSERT INTO messages (sender_id, conversation_id, content, sent_at) VALUES ($1, $2, $3, $4)`,
-				[sender_id, convId, content, sent_at]
+				[sender_id, convID, content, sent_at]
 			);
 			await db.query("COMMIT");
-			if (results.rowCount > 0) resolve(convId);
+			if (results.rowCount > 0) resolve(convID);
 		} catch (error) {
 			await db.query("ROLLBACK");
 			console.error("db: error saving message");
