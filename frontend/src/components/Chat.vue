@@ -72,7 +72,6 @@ img {
 	width: 20px;
 	border-radius: 5px;
 	text-align: center;
-	float: right;
-	margin-top: 10px;
+	margin-left: auto;
 }
 </style>
