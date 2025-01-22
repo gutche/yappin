@@ -116,8 +116,12 @@ io.on("connection", async (socket) => {
 	if (offset < 20) {
 		try {
 			const convIds = await getConversationIds(userID);
-			for (const convId of convIds) {
-				dbMessages = await loadMoreMessages(userID, convId, offset);
+			for (const { conversation_id } of convIds) {
+				dbMessages = await loadMoreMessages(
+					userID,
+					conversation_id,
+					offset
+				);
 			}
 			const userTotalMessages = await getUserMessagesCount(userID);
 			hasMoreMessages = offset + 20 < userTotalMessages;

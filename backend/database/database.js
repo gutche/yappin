@@ -263,12 +263,15 @@ export const loadMoreMessages = (conv_id, offset) => {
 		db.query(
 			`SELECT sender_id, conversation_id, content, sent_at
 				FROM messages
-				WHERE conv_id = $1 
+				WHERE conversation_id = $1 
 				ORDER BY sent_at DESC
 				LIMIT 20 OFFSET $2`,
 			[conv_id, offset],
 			async (err, results) => {
-				if (err) reject(err);
+				if (err) {
+					console.error("Error loading more messages");
+					reject(err);
+				}
 				resolve(results?.rows || []);
 			}
 		);
@@ -304,7 +307,7 @@ export const saveMessage = ({ sender_id, recipient_id, content, sent_at }) => {
 					Math.max(sender_id, recipient_id),
 				]
 			);
-			const id = rows[0].id;
+			const id = rows[0]?.id;
 			const convId =
 				id ||
 				(await db.query(
