@@ -8,18 +8,20 @@ import api from "@/api/api";
 const input = ref("");
 const el = ref(null);
 const isFetching = ref(false);
-const hasMoreMessages = ref(false);
 
 const { user } = defineProps({
 	user: Object,
 });
+const hasMoreMessages = ref(user.hasMoreMessages);
 
 const emit = defineEmits(["input"]);
 
-const onSubmit = () => {
+const onSubmit = async () => {
 	if (input.value) {
 		emit("input", input.value);
 		input.value = "";
+		await nextTick();
+		scrollToBottom("smooth");
 	}
 };
 
@@ -47,9 +49,13 @@ const { reset } = useInfiniteScroll(
 			const data = await api
 				.get("/messages", {
 					offset: user.messages.length,
+					conversation_id: user.messages[0].conversation_id,
 				})
 				.then((response) => response.json());
 			hasMoreMessages.value = data.hasMoreMessages;
+			data.messages.forEach((message) => {
+				message.fromSelf = message.sender_id === user.id;
+			});
 			user.messages.unshift(...data.messages);
 			try {
 			} catch (error) {
@@ -60,8 +66,7 @@ const { reset } = useInfiniteScroll(
 		}
 	},
 	{
-		distance: 50,
-		interval: 2000,
+		interval: 1000,
 		canLoadMore: () => {
 			return hasMoreMessages.value;
 		},
@@ -103,15 +108,6 @@ onMounted(() => {
 	reset();
 	scrollToBottom("instant");
 });
-
-watch(
-	() => user.messages.length,
-	async () => {
-		// Wait for the prop to update before scrolling
-		await nextTick();
-		scrollToBottom("smooth");
-	}
-);
 </script>
 
 <template>
@@ -122,7 +118,9 @@ watch(
 	<main class="body">
 		<span v-if="isFetching" class="loader"></span>
 		<div ref="el" class="messages">
-			<div class="start">Start of conversation</div>
+			<div v-if="!hasMoreMessages" class="start">
+				Start of conversation
+			</div>
 			<div
 				v-for="(message, index) in user.messages"
 				:key="index"

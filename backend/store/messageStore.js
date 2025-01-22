@@ -33,7 +33,9 @@ export class RedisMessageStore extends MessageStore {
 		this.redisClient
 			.multi()
 			.rpush(`messages:${message.sender_id}`, value)
+			.ltrim(`messages:${message.sender_id}`, -20, -1)
 			.rpush(`messages:${message.recipient_id}`, value)
+			.ltrim(`messages:${message.recipient_id}`, -20, -1)
 			.expire(`messages:${message.sender_id}`, CONVERSATION_TTL)
 			.expire(`messages:${message.recipient_id}`, CONVERSATION_TTL)
 			.exec();
