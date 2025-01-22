@@ -287,31 +287,38 @@ export const updateUserBio = (id, bio) => {
 		);
 	});
 };
+
 export const saveMessage = ({ sender_id, recipient_id, content, sent_at }) => {
 	return new Promise(async (resolve, reject) => {
 		try {
 			await db.query("BEGIN");
-			const { id } = db.query(
+			const { rows } = await db.query(
 				`
-				INSERT INTO conversations (user_one_id, user_two_id)
-				VALUES (LEAST($1, $2), GREATEST($1, $2))
+				INSERT INTO private_messages (user_one_id, user_two_id)
+				VALUES ($1, $2)
 				ON CONFLICT (user_one_id, user_two_id) DO NOTHING
 				RETURNING id
 			`,
-				[sender_id, recipient_id]
+				[
+					Math.min(sender_id, recipient_id),
+					Math.max(sender_id, recipient_id),
+				]
 			);
-
+			const id = rows[0].id;
 			const convId =
 				id ||
 				(await db.query(
 					`
-				SELECT id FROM conversations 
-				WHERE participant_1 = LEAST($1, $2) AND participant_2 = GREATEST($1, $2)
+				SELECT id FROM private_messages 
+				WHERE user_one_id = $1 AND user_two_id = $2
 				`,
-					[sender_id, recipient_id]
+					[
+						Math.min(sender_id, recipient_id),
+						Math.max(sender_id, recipient_id),
+					]
 				).rows[0].id);
 
-			const results = db.query(
+			const results = await db.query(
 				`INSERT INTO messages (sender_id, conversation_id, content, sent_at) VALUES ($1, $2, $3, $4)`,
 				[sender_id, convId, content, sent_at]
 			);

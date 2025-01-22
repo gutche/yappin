@@ -13,15 +13,15 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS private_messages (
     id SERIAL PRIMARY KEY,
-    user_one_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    user_two_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_one_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_two_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE (user_one_id, user_two_id) -- Prevent duplicate conversations
 );
 
 CREATE TABLE IF NOT EXISTS messages (
     id SERIAL PRIMARY KEY,
-    conversation_id INT NOT NULL REFERENCES private_messages(id) ON DELETE CASCADE,
-    sender_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    conversation_id INTEGER NOT NULL REFERENCES private_messages(id) ON DELETE CASCADE,
+    sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
