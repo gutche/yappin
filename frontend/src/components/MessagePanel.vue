@@ -66,7 +66,7 @@ const { reset } = useInfiniteScroll(
 		}
 	},
 	{
-		interval: 1000,
+		interval: 2000,
 		canLoadMore: () => {
 			return hasMoreMessages.value;
 		},
