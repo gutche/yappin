@@ -16,27 +16,24 @@ const hasMoreMessages = ref(user.hasMoreMessages);
 
 const emit = defineEmits(["input"]);
 
-const onSubmit = async () => {
-	if (input.value) {
-		emit("input", input.value);
-		input.value = "";
-		await nextTick();
-		scrollToBottom("smooth");
-	}
-};
-
-const displaySender = (message, index) => {
+// Will be needed when group chats are implemented
+/* const displaySender = (message, index) => {
 	return (
 		(index === 0 ||
 			user.messages[index - 1].fromSelf !==
 				user.messages[index].fromSelf) &&
 		user.isGroup
 	);
-};
-const handleKeydown = (event) => {
+}; */
+const handleKeydown = async (event) => {
 	if (event.key === "Enter" && !event.shiftKey) {
 		event.preventDefault(); // Prevents adding a new line
-		onSubmit();
+		if (input.value) {
+			emit("input", input.value);
+			input.value = "";
+			await nextTick();
+			scrollToBottom("smooth");
+		}
 	}
 };
 
@@ -133,7 +130,6 @@ onMounted(() => {
 				</div>
 			</div>
 		</div>
-
 		<form class="form">
 			<textarea
 				v-model="input"
@@ -183,6 +179,15 @@ i {
 .message.self {
 	background-color: #d1e7dd;
 }
+
+.form {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	margin-bottom: 10px;
+}
+
 .messages {
 	margin: 0;
 	display: flex;
@@ -190,7 +195,6 @@ i {
 	flex-direction: column;
 	overflow-y: auto;
 	scrollbar-width: none;
-	max-height: 785px;
 	flex: 1;
 }
 
@@ -212,20 +216,11 @@ i {
 	}
 }
 
-.form {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 100%;
-	margin-top: auto;
-	margin-bottom: 10px;
-}
-
 .body {
 	display: flex;
 	flex-direction: column;
 	margin: 0 30px;
-	flex-grow: 1;
+	height: calc(100vh - 60px);
 	position: relative;
 }
 
