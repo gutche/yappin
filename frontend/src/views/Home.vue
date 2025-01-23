@@ -69,6 +69,8 @@ const onSelectUser = (chat) => {
 	} else {
 		selectedChat.value = chat;
 		chat.hasNewMessages = false;
+		isLeftPanelCollapsed.value =
+			window.matchMedia("(max-width: 768px)").matches;
 	}
 };
 
@@ -451,6 +453,13 @@ onBeforeUnmount(() => {
 	p {
 		display: block;
 		text-align: center;
+	}
+}
+
+@media (max-width: 425px) {
+	.left-panel.collapsed .buttons-container .btn {
+		justify-content: start;
+		padding: 0 5px;
 	}
 }
 </style>
