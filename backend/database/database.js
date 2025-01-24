@@ -94,6 +94,13 @@ export const sendFriendRequest = (sender_id, friend_code) => {
                 `,
 				[friend_code]
 			);
+
+			if (!rows.length) {
+				await db.query("ROLLBACK"); // Rollback if no user found
+				console.log(rows);
+				return reject({ code: 400, message: "User not found" });
+			}
+
 			const { id: recipient_id } = rows[0];
 			// Step 2: Insert fr into fr table
 			const result = await db.query(
@@ -107,9 +114,17 @@ export const sendFriendRequest = (sender_id, friend_code) => {
 					Math.max(sender_id, recipient_id),
 				]
 			);
-			await db.query("COMMIT"); // Commit the transaction
-			if (result.rowCount > 0) resolve(rows[0]);
-			reject({ code: "400" });
+
+			if (!result.rowCount) {
+				await db.query("ROLLBACK");
+				return reject({
+					code: 400,
+					message: "Already friends",
+				});
+			}
+
+			await db.query("COMMIT");
+			resolve(rows[0]);
 		} catch (err) {
 			await db.query("ROLLBACK"); // Rollback on error
 			reject(err);

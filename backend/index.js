@@ -123,7 +123,7 @@ io.on("connection", async (socket) => {
 		}
 	}
 	userMessages = [...cachedMessages, ...dbMessages];
-	console.log(userMessages);
+
 	const messageCountsByConversation = {}; // Track messages fetched per conversation
 	if (userMessages.length > 0) {
 		// save different users. group chat name will be saved as a user
@@ -283,19 +283,18 @@ app.post("/friend-request", async (req, res) => {
 			});
 		io.to(targetUser.id).emit("friend-request", targetUser);
 	} catch (error) {
+		console.log("error sending friend request", error);
+
 		let errorMessage;
 		switch (error.code) {
 			case "23505":
 				errorMessage = "Friend request already exists";
 				break;
-			case "23502":
-				errorMessage = "User not found";
-				break;
 			case "23514":
 				errorMessage = "You can't add yourself :)";
 				break;
-			case "400":
-				errorMessage = "Already friends";
+			case 400:
+				errorMessage = error.message;
 				break;
 			default:
 				errorMessage = "An unknown error occurred";

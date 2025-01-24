@@ -1,39 +1,33 @@
 import { createFetch } from "@vueuse/core";
 
-const useApi = createFetch({
+const useFetch = createFetch({
 	baseUrl: "http://localhost:3000",
 	options: {
-		credentials: "include", // Include cookies for cross-origin requests
-	},
-	fetchOptions: {
-		headers: {
-			// Default headers, overridden when using FormData
-			"Content-Type": "application/json",
+		beforeFetch({ url, options, cancel }) {
+			// Handle FormData
+			if (options.body instanceof FormData) {
+				// Remove the default Content-Type header for FormData
+				delete options.headers["Content-Type"];
+			}
+
+			// Add query parameters if searchParams is provided
+			if (options.searchParams) {
+				const queryString = new URLSearchParams(
+					options.searchParams
+				).toString();
+				url += `?${queryString}`;
+				delete options.searchParams; // Remove it from options to avoid conflicts
+			}
+
+			return { url, options };
 		},
 	},
-}).extend({
-	// Extend to add custom logic
-	beforeFetch({ url, options, cancel }) {
-		// Handle FormData
-		if (options.body instanceof FormData) {
-			// Remove the default Content-Type header for FormData
-			delete options.headers["Content-Type"];
-		}
-
-		// Add query parameters if searchParams is provided
-		if (options.searchParams) {
-			const queryString = new URLSearchParams(
-				options.searchParams
-			).toString();
-			url += `?${queryString}`;
-			delete options.searchParams; // Remove it from options to avoid conflicts
-		}
-
-		return { url, options };
+	fetchOptions: {
+		credentials: "include",
 	},
 });
 
-export default useApi;
+export default useFetch;
 
 /* const { data, isFetching, error } = useApi("/messages")
 	.get({

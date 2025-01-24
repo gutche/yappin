@@ -1,38 +1,42 @@
 <template>
-	<p v-if="friends.length === 0" class="info">You do not have friends</p>
-	<User
-		v-for="friend in friends"
-		:key="friend.id"
-		:user="friend"
-		:selected="selectedFriend === friend"
-		@message="onMessageUser(friend)"
-		@select="onSelectFriend(friend)" />
-	<div class="add-container">
-		<label for="friendCode"
-			>To add a new friend, simply enter their code:</label
-		>
-		<div class="input-wrapper">
-			<input
-				id="friendCode"
-				v-model="friendCode"
-				placeholder="example: 123456"
-				type="text" />
-			<button @click="addFriend">
-				<i class="fa-solid fa-plus"></i>
-			</button>
+	<p v-if="isFetching" class="info">Loading friends...</p>
+	<template v-else>
+		<p v-if="friends.length === 0" class="info">You do not have friends</p>
+		<User
+			v-for="friend in friends"
+			:key="friend.id"
+			:user="friend"
+			:selected="selectedFriend === friend"
+			@message="onMessageUser(friend)"
+			@select="onSelectFriend(friend)" />
+		<div class="add-container">
+			<label for="friendCode"
+				>To add a new friend, simply enter their code:</label
+			>
+			<div class="input-wrapper">
+				<input
+					id="friendCode"
+					v-model="friendCode"
+					placeholder="example: 123456"
+					type="text" />
+				<button @click="addFriend">
+					<i class="fa-solid fa-plus"></i>
+				</button>
+			</div>
+			<p>{{ message }}</p>
 		</div>
-		<p>{{ message }}</p>
-	</div>
+	</template>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
-import api from "@/api/api";
-import User from "./User.vue";
+import useFetch from "@/api/useFetch";
+import User from "@/components/User.vue";
 
 const friendCode = ref("");
 const message = ref("");
 const friends = ref([]);
+const isFetching = ref(false);
 const selectedFriend = ref(null);
 const emit = defineEmits(["message"]);
 
@@ -49,33 +53,33 @@ const onMessageUser = (friend) => {
 };
 
 const addFriend = async () => {
+	message.value = "";
 	if (!friendCode.value || friendCode.value.length < 6) {
 		message.value = "Code must be 6 digits";
 		return;
 	}
-	try {
-		const response = await api.post("/friend-request", {
+	const { response, error } = await useFetch("/friend-request")
+		.post({
 			friendCode: friendCode.value,
-		});
+		})
+		.json();
 
-		if (response.ok) {
-			message.value = "You friend request was sent successfully!";
-		} else {
-			const { message: errorMessage } = await response.json();
-			message.value = errorMessage;
-		}
-	} catch (error) {
-		message.value = error.message;
-	}
+	if (error) message.value = error.value;
+	const { message: errorMessage } = await response.value.json();
+	message.value = response.value.ok
+		? "You friend request was sent successfully!"
+		: errorMessage;
 };
 
 onMounted(async () => {
-	try {
-		const _friends = await api.get("/friends");
-		friends.value = await _friends.json();
-	} catch (error) {
-		console.log(error);
-	}
+	const {
+		data,
+		isFetching: fetchState,
+		error,
+	} = await useFetch("/friends").get().json();
+	isFetching.value = fetchState.value;
+	friends.value = data.value;
+	message.value = error.value;
 });
 </script>
 <style scoped>
