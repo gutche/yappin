@@ -261,7 +261,7 @@ export const removeProfilePicture = (user_id) => {
 export const loadMoreMessages = (conv_id, offset) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			`SELECT sender_id, conversation_id, content, sent_at
+			`SELECT sender_id, recipient_id, conversation_id, content, sent_at
 				FROM messages
 				WHERE conversation_id = $1 
 				ORDER BY sent_at DESC
@@ -325,8 +325,8 @@ export const saveMessage = ({ sender_id, recipient_id, content, sent_at }) => {
 			}
 
 			const results = await db.query(
-				`INSERT INTO messages (sender_id, conversation_id, content, sent_at) VALUES ($1, $2, $3, $4)`,
-				[sender_id, convID, content, sent_at]
+				`INSERT INTO messages (sender_id, recipient_id, conversation_id, content, sent_at) VALUES ($1, $2, $3, $4, $5)`,
+				[sender_id, recipient_id, convID, content, sent_at]
 			);
 			await db.query("COMMIT");
 			if (results.rowCount > 0) resolve(convID);

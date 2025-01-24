@@ -116,18 +116,14 @@ io.on("connection", async (socket) => {
 		try {
 			const convIds = await getConversationIds(userID);
 			for (const { conversation_id } of convIds) {
-				dbMessages = await loadMoreMessages(
-					userID,
-					conversation_id,
-					offset
-				);
+				dbMessages = await loadMoreMessages(conversation_id, offset);
 			}
 		} catch (error) {
 			console.log(error);
 		}
 	}
 	userMessages = [...cachedMessages, ...dbMessages];
-
+	console.log(userMessages);
 	const messageCountsByConversation = {}; // Track messages fetched per conversation
 	if (userMessages.length > 0) {
 		// save different users. group chat name will be saved as a user
