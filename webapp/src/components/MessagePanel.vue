@@ -2,7 +2,6 @@
 import { nextTick, onMounted, ref } from "vue";
 import StatusIcon from "./StatusIcon.vue";
 import { useInfiniteScroll } from "@vueuse/core";
-import api from "@/api/api";
 import useFetch from "@/api/useFetch";
 
 const input = ref("");
