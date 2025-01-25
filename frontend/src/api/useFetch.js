@@ -28,29 +28,3 @@ const useFetch = createFetch({
 });
 
 export default useFetch;
-
-/* const { data, isFetching, error } = useApi("/messages")
-	.get({
-		searchParams: {
-			userId: 123,
-			limit: 10,
-		},
-	})
-	.json();
-const formData = new FormData();
-formData.append("file", myFile);
-formData.append("description", "File upload");
-
-const { data, isFetching, error } = useApi("/upload")
-	.post({
-		body: formData,
-	})
-	.json();
-const { data, isFetching, error } = useApi("/messages")
-	.post({
-		body: {
-			content: "Hello, world!",
-			userId: 123,
-		},
-	})
-	.json(); */

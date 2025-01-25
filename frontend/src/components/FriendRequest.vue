@@ -1,5 +1,5 @@
 <template>
-	<div class="grid-container">
+	<div v-if="user.status !== 'rejected'" class="grid-container">
 		<img class="item1" src="/no-profile.png" alt="User's profile picture" />
 		<p v-if="user.status === 'accepted'" class="item2">
 			You are now friends with {{ user.username }}
@@ -15,32 +15,24 @@
 	</div>
 </template>
 <script setup>
-import api from "@/api/api";
+import useFetch from "@/api/useFetch";
 
 const props = defineProps({
 	user: Object,
 });
 const accept = async () => {
-	try {
-		const response = await api.post("/accept-friend-request", {
-			id: props.user.id,
-		});
+	const { response } = await useFetch("/accept-friend-request").post({
+		id: props.user.id,
+	});
 
-		if (response.ok) props.user.status = "accepted";
-	} catch (error) {
-		console.log(error);
-	}
+	if (response.value.ok) props.user.status = "accepted";
 };
 
 const decline = async () => {
-	try {
-		const response = await fetch("/decline-friend-request", {
-			id: props.user.request_id,
-		});
-		if (response.ok) props.user.status = "rejected";
-	} catch (error) {
-		console.log(error);
-	}
+	const { response } = await useFetch("/decline-friend-request").post({
+		id: props.user.id,
+	});
+	if (response.value.ok) props.user.status = "rejected";
 };
 </script>
 <style scoped>
@@ -94,22 +86,17 @@ button {
 	outline: none;
 
 	&:hover {
-		color: #fff;
-		transform: translateY(-7px);
+		transform: translateY(-3px);
 	}
 
-	.accept:hover {
+	&.accept:hover {
 		background-color: #2aa876;
 		box-shadow: 0px 15px 20px rgba(42, 168, 118, 0.4);
 	}
 
-	.decline:hover {
+	&.decline:hover {
 		background-color: #a8323c;
 		box-shadow: 0px 15px 20px rgba(168, 50, 60, 0.4);
-	}
-
-	&:active {
-		transform: translateY(-1px);
 	}
 }
 </style>

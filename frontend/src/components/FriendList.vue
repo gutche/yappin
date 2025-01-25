@@ -52,7 +52,9 @@ const onMessageUser = (friend) => {
 	emit("message", friend);
 };
 
+let clearMessage;
 const addFriend = async () => {
+	clearTimeout(clearMessage);
 	message.value = "";
 	if (!friendCode.value || friendCode.value.length < 6) {
 		message.value = "Code must be 6 digits";
@@ -63,12 +65,15 @@ const addFriend = async () => {
 			friendCode: friendCode.value,
 		})
 		.json();
-
-	if (error) message.value = error.value;
+	message.value = error.value;
 	const { message: errorMessage } = await response.value.json();
 	message.value = response.value.ok
 		? "You friend request was sent successfully!"
 		: errorMessage;
+
+	clearMessage = setTimeout(() => {
+		message.value = "";
+	}, 5000);
 };
 
 onMounted(async () => {
@@ -78,8 +83,8 @@ onMounted(async () => {
 		error,
 	} = await useFetch("/friends").get().json();
 	isFetching.value = fetchState.value;
-	friends.value = data.value;
 	message.value = error.value;
+	friends.value = data.value;
 });
 </script>
 <style scoped>

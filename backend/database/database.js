@@ -97,7 +97,6 @@ export const sendFriendRequest = (sender_id, friend_code) => {
 
 			if (!rows.length) {
 				await db.query("ROLLBACK"); // Rollback if no user found
-				console.log(rows);
 				return reject({ code: 400, message: "User not found" });
 			}
 
@@ -209,7 +208,17 @@ export const acceptFriendRequest = (id) => {
 export const declineFriendRequest = (id) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			"UPDATE friend_requests SET status = 'rejected' WHERE id = $1",
+			`WITH selected_request AS (
+                SELECT sender_id, recipient_id
+                FROM friend_requests
+                WHERE id = $1
+            )
+            DELETE FROM friend_requests
+            WHERE (sender_id, recipient_id) IN (
+                SELECT sender_id, recipient_id FROM selected_request
+            ) OR (sender_id, recipient_id) IN (
+                SELECT recipient_id, sender_id FROM selected_request
+            )`,
 			[id],
 			async (err, results) => {
 				if (err) reject(err);

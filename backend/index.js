@@ -279,7 +279,11 @@ app.post("/friend-request", async (req, res) => {
 			res.status(200).json({
 				message: "Friend request sent successfully",
 			});
-		io.to(targetUser.id).emit("friend-request", targetUser);
+		io.to(targetUser.id).emit("friend-request", {
+			id: user.id,
+			username: user.username,
+			profile_picture: user.profile_picture,
+		});
 	} catch (error) {
 		console.log("error sending friend request", error);
 
