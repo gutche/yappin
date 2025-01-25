@@ -1,17 +1,13 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
-import api from "@/api/api";
+import useFetch from "@/api/useFetch";
 
 export const useNotificationStore = defineStore("notification", () => {
 	const notifications = ref([]);
 
 	const fetchNotification = async () => {
-		try {
-			const response = await api.get("/friend-requests");
-			notifications.value = await response.json();
-		} catch (error) {
-			console.error("Error fetching notifications:", error);
-		}
+		const { data } = await useFetch("/friend-requests").get().json();
+		notifications.value = data.value;
 	};
 
 	const addNotification = (notification) => {

@@ -1,23 +1,14 @@
 import { ref } from "vue";
 import { defineStore } from "pinia";
-import api from "@/api/api";
+import useFetch from "@/api/useFetch";
 
 export const useAuthStore = defineStore("auth", () => {
 	const isAuthenticated = ref(null);
 
 	const fetchSession = async () => {
-		try {
-			const response = await api.get("/get-session");
-
-			if (response.ok) {
-				isAuthenticated.value = true;
-			} else {
-				isAuthenticated.value = false;
-			}
-		} catch (error) {
-			console.error("Error fetching session status:", error);
-			isAuthenticated.value = false; // Assume unauthenticated on failure
-		}
+		const { response, error } = await useFetch("/get-session").get().json();
+		if (error) isAuthenticated.value = false;
+		isAuthenticated.value = response.value.ok;
 	};
 
 	return {
