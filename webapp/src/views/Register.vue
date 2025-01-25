@@ -1,38 +1,34 @@
 <script setup>
 import { ref } from "vue";
-import router from "../router/index";
-import api from "@/api/api.js";
+import router from "@/router/index";
+import useFetch from "@/api/useFetch";
 
 const email = ref("");
 const password = ref("");
 const repeatedPassword = ref("");
 
-const error = ref("");
+const errorMessage = ref("");
 
 const sendForm = async () => {
 	if (!validateEmail(email.value)) {
-		error.value = "Invalid email";
+		errorMessage.value = "Invalid email";
 		return;
 	}
 
 	if (password.value !== repeatedPassword.value) {
-		error.value = "Passwords don't match";
+		errorMessage.value = "Passwords don't match";
 		return;
 	}
-
-	try {
-		const response = await api.post("/register", {
-			email: email.value,
-			password: password.value,
-		});
-		if (!response.ok) {
-			const { error: err } = await response.json();
-			error.value = err;
-		} else {
-			router.push("/");
-		}
-	} catch (error) {
-		console.error(error);
+	const { response, error } = await useFetch("/register").post({
+		email: email.value,
+		password: password.value,
+	});
+	if (error) console.error(error.value);
+	if (!response.value.ok) {
+		const { error } = await response.value.json();
+		errorMessage.value = error;
+	} else {
+		router.push("/");
 	}
 };
 
@@ -57,7 +53,7 @@ const validateEmail = (email) => {
 					name="email"
 					id="email"
 					v-model="email"
-					:class="error === 'Invalid email' ? 'error' : ''"
+					:class="errorMessage === 'Invalid email' ? 'error' : ''"
 					required />
 				<label for="psw"><b>Password</b></label>
 				<input
@@ -66,7 +62,9 @@ const validateEmail = (email) => {
 					name="psw"
 					id="psw"
 					v-model="password"
-					:class="error === 'Passwords don\'t match' ? 'error' : ''"
+					:class="
+						errorMessage === 'Passwords don\'t match' ? 'error' : ''
+					"
 					required />
 
 				<label for="psw-repeat"><b>Repeat Password</b></label>
@@ -76,11 +74,13 @@ const validateEmail = (email) => {
 					name="psw-repeat"
 					id="psw-repeat"
 					v-model="repeatedPassword"
-					:class="error === 'Passwords don\'t match' ? 'error' : ''"
+					:class="
+						errorMessage === 'Passwords don\'t match' ? 'error' : ''
+					"
 					required />
 				<hr />
-				<p v-if="error" style="color: red">
-					{{ error }}
+				<p v-if="errorMessage" style="color: red">
+					{{ errorMessage }}
 				</p>
 				<p>
 					By creating an account you agree to our

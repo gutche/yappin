@@ -1,12 +1,12 @@
 <script setup>
-import MessagePanel from "../components/MessagePanel.vue";
-import Profile from "../components/Profile.vue";
-import FriendList from "../components/FriendList.vue";
-import Notification from "../components/Notification.vue";
+import MessagePanel from "@/components/MessagePanel.vue";
+import Profile from "@/components/Profile.vue";
+import FriendList from "@/components/FriendList.vue";
+import Notification from "@/components/Notification.vue";
 import ButtonIcon from "@/components/ButtonIcon.vue";
-import socket from "../socket/socket";
+import socket from "@/socket/socket";
 import { ref, onBeforeUnmount, computed, onMounted } from "vue";
-import api from "@/api/api";
+import useFetch from "@/api/useFetch";
 import router from "@/router/index";
 import Chat from "@/components/Chat.vue";
 import { useNotificationStore } from "@/stores/notificationStore";
@@ -123,17 +123,12 @@ const initReactiveProperties = (chat) => {
 };
 
 const logout = async () => {
-	try {
-		const response = await api.delete("/logout");
-
-		if (response.ok) {
-			socket.disconnect();
-			router.push("/login");
-		} else {
-			console.error("Failed to log out:", response.status);
-		}
-	} catch (error) {
-		console.error("Error during logout:", error);
+	const { response, error } = await useFetch("/logout").delete().json();
+	if (response.value.ok) {
+		socket.disconnect();
+		router.push("/login");
+	} else {
+		console.error("Failed to log out:", error.value);
 	}
 };
 
@@ -206,24 +201,21 @@ socket.on(
 		const id = fromSelf ? recipient_id : sender_id;
 		let targetUser = activeChats.value.find((user) => user.id === id);
 		if (!targetUser) {
-			try {
-				console.log(id);
-				const user = await api.get("/user", {
+			const { data, error } = await useFetch("/user")
+				.get({
 					id,
-				});
-				const { username, profile_picture, connected } =
-					await user.json();
-				targetUser = {
-					id,
-					username,
-					profile_picture,
-					connected,
-					messages: [],
-				};
-				activeChats.value.push(targetUser);
-			} catch (error) {
-				console.log(error);
-			}
+				})
+				.json();
+			if (error) console.error(error.value);
+			const { username, profile_picture, connected } = data.value;
+			targetUser = {
+				id,
+				username,
+				profile_picture,
+				connected,
+				messages: [],
+			};
+			activeChats.value.push(targetUser);
 		}
 		targetUser.messages.push({
 			content,

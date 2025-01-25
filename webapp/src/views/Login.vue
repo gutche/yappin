@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
-import router from "../router";
-import api from "@/api/api.js";
+import router from "@/router";
+import useFetch from "@/api/useFetch";
 
 const email = ref("");
 const password = ref("");
@@ -9,20 +9,21 @@ const rememberUser = ref(false);
 const serverError = ref("");
 
 const submitForm = async () => {
-	try {
-		const response = await api.post("/login", {
+	const { response, error } = await useFetch("/login")
+		.post({
 			email: email.value,
 			password: password.value,
 			rememberUser: rememberUser.value,
-		});
-		if (response.status === 404) {
-			serverError.value = "Email or password is incorrect!";
-		}
-		if (response.ok) router.push("/");
-	} catch (error) {
-		console.error(error);
-		serverError.value = error.message;
+		})
+		.json();
+	if (error) {
+		console.error(error.value);
+		serverError.value = error.value;
 	}
+	if (response.value.status === 404) {
+		serverError.value = "Email or password is incorrect!";
+	}
+	if (response.value.ok) router.push("/");
 };
 </script>
 <template>
