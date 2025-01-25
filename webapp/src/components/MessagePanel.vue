@@ -1,9 +1,9 @@
 <script setup>
-import { nextTick, onMounted, ref, watch } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 import StatusIcon from "./StatusIcon.vue";
 import { useInfiniteScroll } from "@vueuse/core";
-import { useFetch } from "@vueuse/core";
 import api from "@/api/api";
+import useFetch from "@/api/useFetch";
 
 const input = ref("");
 const el = ref(null);
@@ -43,23 +43,18 @@ const { reset } = useInfiniteScroll(
 		if (el.value.scrollTop === 0 && !isFetching.value) {
 			isFetching.value = true;
 			// Only load more messages when scrolled to the top
-			const data = await api
-				.get("/messages", {
-					offset: user.messages.length,
-					conversation_id: user.messages[0].conversation_id,
-				})
-				.then((response) => response.json());
-			hasMoreMessages.value = data.hasMoreMessages;
-			data.messages.forEach((message) => {
+			const params = new URLSearchParams({
+				offset: user.messages.length,
+				conversation_id: user.messages[0].conversation_id,
+			}).toString();
+			const { data } = await useFetch(`/messages?${params}`).get().json();
+			hasMoreMessages.value = data.value.hasMoreMessages;
+			data.value.messages.forEach((message) => {
 				message.fromSelf = message.sender_id === user.id;
 			});
-			user.messages.unshift(...data.messages);
-			try {
-			} catch (error) {
-				console.log(error);
-			} finally {
-				isFetching.value = false;
-			}
+			user.messages.unshift(...data.value.messages);
+
+			isFetching.value = false;
 		}
 	},
 	{

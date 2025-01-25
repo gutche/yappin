@@ -250,7 +250,7 @@ onBeforeUnmount(() => {
 			<div v-if="!isLeftPanelCollapsed" class="view-name">
 				<span>{{ viewName }}</span>
 				<div @click="copyCode" class="code">
-					# <span>{{ currentUser?.friend_code }}</span>
+					id: <span>{{ currentUser?.friend_code }}</span>
 					<i v-if="!copied" class="fa-regular fa-clipboard"></i>
 					<i v-if="copied" class="fa-solid fa-check"></i>
 				</div>
