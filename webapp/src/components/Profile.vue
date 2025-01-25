@@ -10,12 +10,9 @@
 			<label>
 				Upload photo
 				<form hidden enctype="multipart/form-data">
-					<input
-						type="file"
-						@change="uploadPhoto"
-						name="profilePicture"
-						accept="image/*" /></form
-			></label>
+					<input type="file" name="avatar" @change="uploadPhoto" />
+				</form>
+			</label>
 			<button @click="removePhoto">Remove photo</button>
 		</div>
 		<div class="username">
@@ -36,7 +33,7 @@
 </template>
 <script setup>
 import { ref, onMounted, nextTick } from "vue";
-import api from "@/api/api";
+import useFetch from "@/api/useFetch";
 
 const currentUser = ref(null);
 const showDropdown = ref(false);
@@ -58,16 +55,11 @@ const startEditingBio = async () => {
 const saveBio = async () => {
 	isEditingBio.value = false;
 	if (bioDraft.value === currentUser.value.bio) return; // No change
-
-	try {
-		const response = await api.post("/update-bio", { bio: bioDraft.value });
-		if (response.ok) {
-			currentUser.value.bio = bioDraft.value;
-		} else {
-			console.error("Failed to update bio");
-		}
-	} catch (error) {
-		console.error("Error updating bio:", error);
+	const { response } = await useFetch("/update-bio").post({
+		bio: bioDraft.value,
+	});
+	if (response.value.ok) {
+		currentUser.value.bio = bioDraft.value;
 	}
 };
 
@@ -78,42 +70,29 @@ const uploadPhoto = async (event) => {
 	if (!file) return;
 
 	const formData = new FormData();
-	formData.append("profilePicture", file);
-	try {
-		const result = await api.post("/upload-profile-picture", formData);
-		if (result.ok) {
-			// Convert the uploaded file to Base64 and assign it directly
-			const reader = new FileReader();
-			reader.onload = () => {
-				currentUser.value.profile_picture = reader.result; // Update the profile picture directly
-			};
-			reader.readAsDataURL(file);
-		}
-	} catch (error) {
-		console.log(error);
+	formData.append("avatar", file);
+	const { response } = await useFetch("/avatar").post(formData);
+	if (response.value.ok) {
+		// Convert the uploaded file to Base64 and assign it directly
+		const reader = new FileReader();
+		reader.onload = () => {
+			currentUser.value.profile_picture = reader.result; // Update the profile picture directly
+		};
+		reader.readAsDataURL(file);
 	}
 };
 const removePhoto = async () => {
-	try {
-		await api.post("/remove-profile-picture");
-		currentUser.value.profile_picture = null;
-	} catch (error) {
-		console.log(error);
-	}
+	await useFetch("/remove-profile-picture").post();
+	currentUser.value.profile_picture = null;
 };
 
 onMounted(async () => {
-	try {
-		const result = await api.get("/profile");
-		currentUser.value = await result.json();
-		// Construct Base64 image source
-		const { profile_picture } = currentUser.value;
-		currentUser.value.profile_picture = profile_picture
-			? `data:image/png;base64,${profile_picture}`
-			: null;
-	} catch (error) {
-		console.log(error);
-	}
+	const { data, isFetching } = await useFetch("/profile").get().json();
+	currentUser.value = data.value;
+	const { profile_picture } = currentUser.value;
+	currentUser.value.profile_picture = profile_picture
+		? `data:image/png;base64,${profile_picture}`
+		: null;
 });
 </script>
 <style scoped>
@@ -150,6 +129,7 @@ onMounted(async () => {
 			border: none;
 			cursor: pointer;
 			text-align: center;
+			box-sizing: border-box;
 
 			&:hover {
 				background-color: #8d8d8d;
@@ -190,19 +170,18 @@ onMounted(async () => {
 		&:hover {
 			border: 1px solid rgba(0, 0, 0, 0.099);
 		}
+	}
+	.bio-edit {
+		textarea {
+			margin-top: 10px;
+			height: 250px;
+			width: 250px;
+			box-sizing: border-box;
+			border: 1px solid transparent;
+			outline: none;
 
-		&-edit {
-			textarea {
-				margin-top: 10px;
-				height: 250px;
-				width: 250px;
-				box-sizing: border-box;
-				border: 1px solid transparent;
-				outline: none;
-
-				&:focus {
-					border: 1px solid rgba(0, 0, 0, 0.099);
-				}
+			&:focus {
+				border: 1px solid rgba(0, 0, 0, 0.315);
 			}
 		}
 	}

@@ -353,21 +353,17 @@ app.get("/friends", async (req, res) => {
 	}
 });
 
-app.post(
-	"/upload-profile-picture",
-	upload.single("profilePicture"),
-	async (req, res) => {
-		try {
-			const { id } = req.user;
-			const profilePicture = req.file.buffer; // Binary data
-			const success = await setProfilePicture(id, profilePicture);
-			if (success) res.sendStatus(200);
-		} catch (error) {
-			console.error("Error saving profile picture:", error);
-			res.status(500).send("Internal server error");
-		}
+app.post("/avatar", upload.single("avatar"), async (req, res) => {
+	try {
+		const { id } = req.user;
+		const profilePicture = req.file.buffer; // Binary data
+		const success = await setProfilePicture(id, profilePicture);
+		if (success) res.sendStatus(200);
+	} catch (error) {
+		console.error("Error saving profile picture:", error);
+		res.status(500).send("Internal server error");
 	}
-);
+});
 
 app.get("/profile", async (req, res) => {
 	try {
