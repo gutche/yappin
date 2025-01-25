@@ -110,7 +110,6 @@ io.on("connection", async (socket) => {
 
 	// check redis first
 	const cachedMessages = await messageStore.findMessagesForUser(userID);
-
 	const offset = cachedMessages.length;
 	if (offset < 20) {
 		try {
@@ -122,8 +121,7 @@ io.on("connection", async (socket) => {
 			console.log(error);
 		}
 	}
-	userMessages = [...cachedMessages, ...dbMessages];
-
+	userMessages = [...dbMessages, ...cachedMessages];
 	const messageCountsByConversation = {}; // Track messages fetched per conversation
 	if (userMessages.length > 0) {
 		// save different users. group chat name will be saved as a user
@@ -327,8 +325,8 @@ app.post("/accept-friend-request", async (req, res) => {
 
 app.post("/decline-friend-request", async (req, res) => {
 	try {
-		const declined = await declineFriendRequest(req.body.id);
-		if (declined) res.sendStatus(200);
+		const success = await declineFriendRequest(req.body.id);
+		if (success) res.sendStatus(200);
 	} catch (error) {
 		console.log(error);
 	}
