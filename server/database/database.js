@@ -390,4 +390,23 @@ export const getConversationIds = (userID) => {
 	});
 };
 
+export const unfriendUser = (sender_id, recipient_id) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			`DELETE from friendships WHERE user_one_id = $1 AND user_two_id = $2`,
+			[
+				Math.min(sender_id, recipient_id),
+				Math.max(sender_id, recipient_id),
+			],
+			async (err, results) => {
+				if (err) {
+					console.error("Error unfriending user");
+					reject(err);
+				}
+				if (results.rowCount > 0) resolve(true);
+			}
+		);
+	});
+};
+
 export default db;

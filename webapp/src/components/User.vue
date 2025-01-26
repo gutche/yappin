@@ -1,6 +1,7 @@
 <script setup>
 import StatusIcon from "./StatusIcon.vue";
 import { computed } from "vue";
+import useFetch from "@/api/useFetch";
 
 const onClick = () => {
 	emit("select");
@@ -15,11 +16,18 @@ const props = defineProps({
 	selected: Boolean,
 });
 
-const emit = defineEmits(["select", "message"]);
+const emit = defineEmits(["select", "message", "unfriend"]);
 
 const status = computed(() => {
 	return props.user.connected ? "online" : "offline";
 });
+
+const unfriendUser = async () => {
+	const { response } = await useFetch("/unfriend")
+		.post({ id: props.user.id })
+		.json();
+	if (response.value.ok) emit("unfriend");
+};
 </script>
 
 <template>
@@ -38,7 +46,7 @@ const status = computed(() => {
 		<div class="button-container">
 			<i @click="messageUser" class="fa-regular fa-message"></i>
 			<i class="fa-regular fa-user"></i>
-			<i class="fa-solid fa-x"></i>
+			<i @click="unfriendUser" class="fa-solid fa-x"></i>
 		</div>
 	</div>
 </template>

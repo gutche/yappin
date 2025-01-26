@@ -8,6 +8,7 @@
 			:user="friend"
 			:selected="selectedFriend === friend"
 			@message="onMessageUser(friend)"
+			@unfriend="removeUser(friend)"
 			@select="onSelectFriend(friend)" />
 		<div class="add-container">
 			<label for="friendCode"
@@ -50,6 +51,10 @@ const onSelectFriend = (friend) => {
 
 const onMessageUser = (friend) => {
 	emit("message", friend);
+};
+
+const removeUser = (friend) => {
+	friends.value = friends.value.filter((f) => f.id === friend.id);
 };
 
 let clearMessage;

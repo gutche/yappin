@@ -22,6 +22,7 @@ import {
 	saveMessage,
 	getUserMessagesCount,
 	getConversationIds,
+	unfriendUser,
 } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
@@ -330,6 +331,15 @@ app.post("/accept-friend-request", async (req, res) => {
 app.post("/decline-friend-request", async (req, res) => {
 	try {
 		const success = await declineFriendRequest(req.body.id);
+		if (success) res.sendStatus(200);
+	} catch (error) {
+		console.log(error);
+	}
+});
+
+app.post("/unfriend", async (req, res) => {
+	try {
+		const success = await unfriendUser(req.user.id, req.body.id);
 		if (success) res.sendStatus(200);
 	} catch (error) {
 		console.log(error);
