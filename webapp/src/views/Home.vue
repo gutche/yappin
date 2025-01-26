@@ -10,8 +10,10 @@ import useFetch from "@/api/useFetch";
 import router from "@/router/index";
 import Chat from "@/components/Chat.vue";
 import { useNotificationStore } from "@/stores/notificationStore";
+import { useFriendStore } from "@/stores/friendStore";
 
 const notificationStore = useNotificationStore();
+const friendStore = useFriendStore();
 
 const selectedChat = ref(null);
 const currentUser = ref(null);
@@ -183,14 +185,23 @@ socket.on("user connected", (user) => {
 socket.on("user disconnected", (id) => {
 	const user = activeChats.value.find((user) => user.id === id);
 	if (user) user.connected = false;
+
+	const friend = friendStore.friends.find((user) => user.id === id);
+	if (friend) friend.connected = false;
 });
 
-socket.on("friend-request", (user) => {
+socket.on("friend request", (user) => {
 	if (leftPanelView.value !== "notifications") {
 		currentUser.value.hasNewNotifications = true;
 	} else {
 		user.status = "pending";
 		notificationStore.addNotification(user);
+	}
+});
+
+socket.on("new friend", (user) => {
+	if (leftPanelView.value === "friends") {
+		friendStore.add(user);
 	}
 });
 
@@ -235,6 +246,8 @@ onBeforeUnmount(() => {
 	socket.off("user disconnected");
 	socket.off("private message");
 	socket.off("connect_error");
+	socket.off("new friend");
+	socket.off("friend request");
 	window.removeEventListener("resize", updatePanelState);
 });
 </script>

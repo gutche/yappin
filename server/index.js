@@ -273,17 +273,18 @@ app.get("/get-session", (req, res) => {
 
 app.post("/friend-request", async (req, res) => {
 	const { friendCode } = req.body;
-	const { user } = req;
+	const { id, username, profile_picture } = req.user;
+
 	try {
-		const targetUser = await sendFriendRequest(user.id, friendCode);
+		const targetUser = await sendFriendRequest(id, friendCode);
 		if (targetUser)
 			res.status(200).json({
 				message: "Friend request sent successfully",
 			});
-		io.to(targetUser.id).emit("friend-request", {
-			id: user.id,
-			username: user.username,
-			profile_picture: user.profile_picture,
+		io.to(targetUser.id).emit("friend request", {
+			id,
+			username,
+			profile_picture,
 		});
 	} catch (error) {
 		console.log("error sending friend request", error);
@@ -321,8 +322,16 @@ app.get("/friend-requests", async (req, res) => {
 
 app.post("/accept-friend-request", async (req, res) => {
 	try {
-		const accepted = await acceptFriendRequest(req.body.id);
-		if (accepted) res.sendStatus(200);
+		const sender_id = await acceptFriendRequest(req.body.id);
+		if (sender_id) res.sendStatus(200);
+		const { id, username, profile_picture, bio } = req.user;
+		io.to(sender_id).emit("new friend", {
+			id,
+			username,
+			profile_picture,
+			bio,
+			connected: true,
+		});
 	} catch (error) {
 		console.log(error);
 	}
@@ -421,6 +430,14 @@ app.get("/messages", async (req, res) => {
 		const userTotalMessages = await getUserMessagesCount(conversation_id);
 		const hasMoreMessages = offset + 20 < userTotalMessages;
 		if (messages) res.status(200).json({ messages, hasMoreMessages });
+	} catch (error) {
+		console.log(error);
+	}
+});
+
+app.get("/user", async (req, res) => {
+	try {
+		const { id } = req.query;
 	} catch (error) {
 		console.log(error);
 	}

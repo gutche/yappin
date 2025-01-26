@@ -196,7 +196,7 @@ export const acceptFriendRequest = (id) => {
 			);
 
 			await db.query("COMMIT"); // Commit the transaction
-			resolve(true);
+			resolve(sender_id);
 		} catch (err) {
 			await db.query("ROLLBACK"); // Rollback on error
 			console.error("db: error accepting friend request");
@@ -391,21 +391,33 @@ export const getConversationIds = (userID) => {
 };
 
 export const unfriendUser = (sender_id, recipient_id) => {
-	return new Promise((resolve, reject) => {
-		db.query(
-			`DELETE from friendships WHERE user_one_id = $1 AND user_two_id = $2`,
-			[
-				Math.min(sender_id, recipient_id),
-				Math.max(sender_id, recipient_id),
-			],
-			async (err, results) => {
-				if (err) {
-					console.error("Error unfriending user");
-					reject(err);
-				}
-				if (results.rowCount > 0) resolve(true);
-			}
-		);
+	return new Promise(async (resolve, reject) => {
+		try {
+			db.query("BEGIN");
+
+			// Delete the friendship between the two users
+			await db.query(
+				`DELETE from friendships WHERE user_one_id = $1 AND user_two_id = $2`,
+				[
+					Math.min(sender_id, recipient_id),
+					Math.max(sender_id, recipient_id),
+				]
+			);
+
+			// As well as the friend requests
+			// This would allow either one to able to send friend requests again
+			await db.query(
+				`DELETE from friend_requests WHERE (sender_id = $1 AND recipient_id = $2) OR (sender_id = $2 AND recipient_id = $1)`,
+				[sender_id, recipient_id]
+			);
+
+			db.query("COMMIT");
+			resolve(true);
+		} catch (error) {
+			db.query("ROLLBACK");
+			console.error("error unfriending user");
+			reject(error);
+		}
 	});
 };
 

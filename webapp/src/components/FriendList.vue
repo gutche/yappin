@@ -33,6 +33,7 @@
 import { ref, onMounted } from "vue";
 import useFetch from "@/api/useFetch";
 import User from "@/components/User.vue";
+import { useFriendStore } from "@/stores/friendStore";
 
 const friendCode = ref("");
 const message = ref("");
@@ -40,6 +41,8 @@ const friends = ref([]);
 const isFetching = ref(false);
 const selectedFriend = ref(null);
 const emit = defineEmits(["message"]);
+
+const friendStore = useFriendStore();
 
 const onSelectFriend = (friend) => {
 	if (selectedFriend.value === friend) {
@@ -54,7 +57,7 @@ const onMessageUser = (friend) => {
 };
 
 const removeUser = (friend) => {
-	friends.value = friends.value.filter((f) => f.id === friend.id);
+	friends.value = friends.value.filter((f) => f.id !== friend.id);
 };
 
 let clearMessage;
@@ -82,14 +85,8 @@ const addFriend = async () => {
 };
 
 onMounted(async () => {
-	const {
-		data,
-		isFetching: fetchState,
-		error,
-	} = await useFetch("/friends").get().json();
-	isFetching.value = fetchState.value;
-	message.value = error.value;
-	friends.value = data.value;
+	await friendStore.fetchFriends();
+	friends.value = friendStore.friends;
 });
 </script>
 <style scoped>
