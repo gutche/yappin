@@ -112,10 +112,12 @@ const uploadPhoto = async (event) => {
 		};
 		reader.readAsDataURL(file);
 	}
+	toggleDropdown();
 };
 const removePhoto = async () => {
 	await useFetch("/remove-profile-picture").post();
 	currentUser.value.profile_picture = null;
+	toggleDropdown();
 };
 
 onMounted(async () => {
