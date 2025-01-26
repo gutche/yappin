@@ -11,11 +11,11 @@ try {
 	process.exit(1);
 }
 
-export const insertUser = (email, hashedPassword) => {
+export const insertUser = (email, hashedPassword, username) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			"INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email, friend_code, username, last_active, created_at",
-			[email, hashedPassword],
+			"INSERT INTO users (email, password, username) VALUES ($1, $2, $3) RETURNING id, email, friend_code, username, last_active, created_at",
+			[email, hashedPassword, username],
 			(err, result) => {
 				if (err) {
 					return reject(err);
@@ -418,6 +418,22 @@ export const unfriendUser = (sender_id, recipient_id) => {
 			console.error("error unfriending user");
 			reject(error);
 		}
+	});
+};
+
+export const updateUsername = (id, username) => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			"UPDATE users SET username = $2 WHERE id = $1",
+			[id, username],
+			(err, results) => {
+				if (err) {
+					console.error("error updating username");
+					reject(err);
+				}
+				if (results.rowCount > 0) resolve(true);
+			}
+		);
 	});
 };
 

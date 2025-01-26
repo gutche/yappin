@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) NOT NULL UNIQUE,
     friend_code VARCHAR(10) UNIQUE NOT NULL DEFAULT
     LPAD(TRUNC(RANDOM() * 1000000)::TEXT, 6, '0'),
-    username VARCHAR(255) GENERATED ALWAYS AS (split_part(email, '@', 1)) STORED,
+    username VARCHAR(255) NOT NULL DEFAULT '',
     password VARCHAR(512) NOT NULL,
     profile_picture BYTEA,
     bio TEXT,

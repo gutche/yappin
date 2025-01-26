@@ -23,6 +23,7 @@ import {
 	getUserMessagesCount,
 	getConversationIds,
 	unfriendUser,
+	updateUsername,
 } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
@@ -217,7 +218,8 @@ app.post("/register", isNotAuthenticated, async (req, res, next) => {
 	try {
 		const saltRounds = 10;
 		const hashedPassword = await bcrypt.hash(password, saltRounds);
-		const newUser = await insertUser(email, hashedPassword);
+		const username = email.split("@")[0];
+		const newUser = await insertUser(email, hashedPassword, username);
 		req.login(newUser, (err) => {
 			if (err) {
 				console.error("Login error after registration:", err);
@@ -435,9 +437,11 @@ app.get("/messages", async (req, res) => {
 	}
 });
 
-app.get("/user", async (req, res) => {
+app.post("/update-username", async (req, res) => {
 	try {
-		const { id } = req.query;
+		const { username } = req.body;
+		const success = await updateUsername(req.user.id, username);
+		if (success) res.sendStatus(200);
 	} catch (error) {
 		console.log(error);
 	}

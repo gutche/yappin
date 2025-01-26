@@ -15,9 +15,19 @@
 			</label>
 			<button @click="removePhoto">Remove photo</button>
 		</div>
-		<div class="username">
+		<div class="username" v-if="!isEditingUsername">
 			<span>{{ currentUser?.username }}</span
-			><i class="fa-regular fa-pen-to-square"></i>
+			><i
+				class="fa-regular fa-pen-to-square"
+				@click="startEditingUsername"></i>
+		</div>
+		<div class="username-edit" v-else>
+			<textarea
+				v-model="usernameDraft"
+				spellcheck="false"
+				ref="usernameInput"
+				@keydown.enter.stop.prevent="saveUsername"
+				@blur="saveUsername"></textarea>
 		</div>
 		<div class="bio" @click="startEditingBio" v-if="!isEditingBio">
 			{{ currentUser?.bio || "Click to add a bio" }}
@@ -41,8 +51,30 @@ const isEditingBio = ref(false);
 const bioDraft = ref("");
 const bioInput = ref(null);
 
+const isEditingUsername = ref(false);
+const usernameDraft = ref("");
+const usernameInput = ref(null);
+
 const toggleDropdown = () => {
 	showDropdown.value = !showDropdown.value;
+};
+
+const saveUsername = async () => {
+	isEditingUsername.value = false;
+	if (usernameDraft.value === currentUser.value.username) return; // No change
+	const { response } = await useFetch("/update-username").post({
+		username: usernameDraft.value,
+	});
+	if (response.value.ok) {
+		currentUser.value.username = usernameDraft.value;
+	}
+};
+
+const startEditingUsername = async () => {
+	isEditingUsername.value = true;
+	usernameDraft.value = currentUser.value.username || "";
+	await nextTick(); // Wait for the DOM to update
+	usernameInput.value.focus(); // Automatically focus the input
 };
 
 const startEditingBio = async () => {
@@ -158,6 +190,22 @@ onMounted(async () => {
 		}
 	}
 
+	.username-edit {
+		textarea {
+			box-sizing: border-box;
+			border: 1px solid transparent;
+			outline: none;
+			resize: none;
+			height: 28px;
+			font-size: 18px;
+			border-radius: 5px;
+			text-align: center;
+			&:focus {
+				border: 1px solid rgba(0, 0, 0, 0.315);
+			}
+		}
+	}
+
 	.bio {
 		margin-top: 10px;
 		height: 250px;
@@ -166,6 +214,7 @@ onMounted(async () => {
 		box-sizing: border-box;
 		padding: 5px;
 		border: 1px solid transparent;
+		border-radius: 5px;
 
 		&:hover {
 			border: 1px solid rgba(0, 0, 0, 0.099);
@@ -179,6 +228,8 @@ onMounted(async () => {
 			box-sizing: border-box;
 			border: 1px solid transparent;
 			outline: none;
+			border-radius: 5px;
+			resize: none;
 
 			&:focus {
 				border: 1px solid rgba(0, 0, 0, 0.315);
