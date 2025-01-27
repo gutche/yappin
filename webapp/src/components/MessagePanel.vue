@@ -103,7 +103,10 @@ onMounted(() => {
 
 <template>
 	<div class="header">
-		<img :src="user.profile || '/no-profile.png'" alt="User profile" />
+		<img
+			class="profile-pic"
+			:src="user.profile || '/no-profile.png'"
+			alt="User profile" />
 		{{ user.username }}<StatusIcon :connected="user.connected" />
 	</div>
 	<main class="body">
@@ -148,7 +151,7 @@ onMounted(() => {
 	color: #888;
 }
 
-img {
+.profile-pic {
 	height: 40px;
 	width: 40px;
 	border-radius: 50%;

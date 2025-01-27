@@ -3,6 +3,7 @@
 		<img
 			:src="currentUser?.profile_picture || '/no-profile.png'"
 			alt="user's profile picture"
+			class="avatar"
 			@click="toggleDropdown" />
 		<div class="dropdown" v-if="showDropdown">
 			<button @click="viewPhoto">View photo</button>
@@ -40,6 +41,10 @@
 				@blur="saveBio"></textarea>
 		</div>
 	</div>
+	<div v-if="showPhotoModal" class="photo-modal">
+		<i @click="closePhotoModal" class="fa-solid fa-x"></i>
+		<img :src="currentUser?.profile_picture" alt="User's photo" />
+	</div>
 </template>
 <script setup>
 import { ref, onMounted, nextTick } from "vue";
@@ -54,6 +59,18 @@ const bioInput = ref(null);
 const isEditingUsername = ref(false);
 const usernameDraft = ref("");
 const usernameInput = ref(null);
+
+const showPhotoModal = ref(false);
+
+const viewPhoto = () => {
+	if (currentUser.value.profile_picture) {
+		showPhotoModal.value = true;
+	}
+};
+
+const closePhotoModal = () => {
+	showPhotoModal.value = false;
+};
 
 const toggleDropdown = () => {
 	showDropdown.value = !showDropdown.value;
@@ -95,7 +112,6 @@ const saveBio = async () => {
 	}
 };
 
-const viewPhoto = () => {};
 const takePhoto = () => {};
 const uploadPhoto = async (event) => {
 	const file = event.target.files[0];
@@ -130,6 +146,33 @@ onMounted(async () => {
 });
 </script>
 <style scoped>
+.photo-modal {
+	z-index: 9999999;
+	position: absolute;
+	display: flex;
+	justify-content: center;
+	background-color: rgba(240, 248, 255, 0.224);
+	align-items: center;
+	img {
+		height: 80%;
+		width: 80%;
+		padding: 10px;
+	}
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	.fa-x {
+		position: absolute;
+		right: 0;
+		top: 0;
+		background-color: #f4f4f4;
+		border-radius: 5px;
+		font-size: 14px;
+		padding: 10px;
+		margin: 10px;
+		cursor: pointer;
+	}
+}
 .card {
 	display: flex;
 	align-items: center;
@@ -138,7 +181,7 @@ onMounted(async () => {
 	line-height: 30px;
 	width: inherit;
 
-	img {
+	.avatar {
 		margin: 20px;
 		height: 200px;
 		width: 200px;
