@@ -156,7 +156,7 @@ socket.on("active chats", (chats) => {
 	// init properties of every user
 	for (const [
 		id,
-		{ messages, connected, username, profile_picture, hasMoreMessages },
+		{ messages, connected, username, avatar, hasMoreMessages },
 	] of chats) {
 		messages.forEach((message, index) => {
 			message.fromSelf = message.sender_id === currentUser.value.id;
@@ -165,7 +165,7 @@ socket.on("active chats", (chats) => {
 		const chat = {
 			id,
 			username,
-			profile_picture,
+			avatar,
 			hasMoreMessages,
 		};
 		initReactiveProperties(chat);
@@ -218,11 +218,11 @@ socket.on(
 				})
 				.json();
 			if (error) console.error(error.value);
-			const { username, profile_picture, connected } = data.value;
+			const { username, avatar, connected } = data.value;
 			targetUser = {
 				id,
 				username,
-				profile_picture,
+				avatar,
 				connected,
 				messages: [],
 			};

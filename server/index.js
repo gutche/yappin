@@ -15,7 +15,7 @@ import {
 	declineFriendRequest,
 	getFriendRequests,
 	getFriends,
-	setProfilePicture,
+	setAvatar,
 	removeProfilePicture,
 	loadMoreMessages,
 	updateUserBio,
@@ -30,7 +30,33 @@ import session from "express-session";
 import passport from "passport";
 import { initPassportConfig } from "./auth/passport-config.js";
 import bcrypt from "bcrypt";
+import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
+
+const {
+	SESSION_SECRET_KEY,
+	CLOUDINARY_CLOUD_NAME,
+	CLOUDINARY_API_KEY,
+	CLOUDINARY_API_SECRET,
+} = process.env;
+
+// Configuration
+cloudinary.config({
+	cloud_name: CLOUDINARY_CLOUD_NAME,
+	api_key: CLOUDINARY_API_KEY,
+	api_secret: CLOUDINARY_API_SECRET,
+});
+
+// Optimize delivery by resizing and applying auto-format and auto-quality
+// Transform the image: auto-crop to square aspect_ratio
+cloudinary.url("user-profile-pictures", {
+	crop: "auto",
+	gravity: "auto",
+	width: 500,
+	height: 500,
+	fetch_format: "auto",
+	quality: "auto",
+});
 
 const app = express();
 const httpServer = createServer(app);
@@ -39,20 +65,23 @@ const redisClient = new Redis();
 const messageStore = new RedisMessageStore(redisClient);
 const upload = multer();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
 const corsOptions = {
 	origin: "http://localhost:5173",
 	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 	credentials: true,
 };
+
 app.use(cors(corsOptions));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
 const io = new Server(httpServer, {
 	cors: corsOptions,
 });
+
 const sessionMiddleware = session({
-	secret: process.env.SECRET_KEY,
+	secret: SESSION_SECRET_KEY,
 	store: new RedisStore({ client: redisClient }),
 	resave: false,
 	saveUninitialized: false,
@@ -62,7 +91,9 @@ const sessionMiddleware = session({
 		maxAge: 24 * 60 * 60 * 1000, // 1 day
 	},
 });
+
 app.use(sessionMiddleware);
+app.use(passport.initialize());
 app.use(passport.session());
 
 initPassportConfig(passport, getUserByEmail, getUserById);
@@ -139,9 +170,7 @@ io.on("connection", async (socket) => {
 			if (activeChats.has(otherUser)) {
 				activeChats.get(otherUser).messages.push(message);
 			} else {
-				const { username, profile_picture } = await getUserById(
-					otherUser
-				);
+				const { username, avatar } = await getUserById(otherUser);
 				activeChats.set(otherUser, {
 					messages: [message],
 					connected: (await redisClient.sismember(
@@ -151,7 +180,7 @@ io.on("connection", async (socket) => {
 						? true
 						: false,
 					username,
-					profile_picture,
+					avatar,
 					hasMoreMessages:
 						(await getUserMessagesCount(conversation_id)) >
 						messageCountsByConversation[conversation_id],
@@ -275,7 +304,7 @@ app.get("/get-session", (req, res) => {
 
 app.post("/friend-request", async (req, res) => {
 	const { friendCode } = req.body;
-	const { id, username, profile_picture } = req.user;
+	const { id, username, avatar } = req.user;
 
 	try {
 		const targetUser = await sendFriendRequest(id, friendCode);
@@ -286,7 +315,7 @@ app.post("/friend-request", async (req, res) => {
 		io.to(targetUser.id).emit("friend request", {
 			id,
 			username,
-			profile_picture,
+			avatar,
 		});
 	} catch (error) {
 		console.log("error sending friend request", error);
@@ -326,11 +355,11 @@ app.post("/accept-friend-request", async (req, res) => {
 	try {
 		const sender_id = await acceptFriendRequest(req.body.id);
 		if (sender_id) res.sendStatus(200);
-		const { id, username, profile_picture, bio } = req.user;
+		const { id, username, avatar, bio } = req.user;
 		io.to(sender_id).emit("new friend", {
 			id,
 			username,
-			profile_picture,
+			avatar,
 			bio,
 			connected: true,
 		});
@@ -376,10 +405,29 @@ app.get("/friends", async (req, res) => {
 
 app.post("/avatar", upload.single("avatar"), async (req, res) => {
 	try {
-		const { id } = req.user;
-		const profilePicture = req.file.buffer; // Binary data
-		const success = await setProfilePicture(id, profilePicture);
-		if (success) res.sendStatus(200);
+		// Delete the previous avatar from the cloud if it exists
+		if (req.user.avatar) {
+			const lastPart = req.user.avatar.split("/").pop();
+			const publicId = lastPart.split(".")[0];
+			await cloudinary.uploader.destroy(publicId);
+		}
+		await cloudinary.uploader
+			.upload_stream({ resource_type: "auto" }, async (error, result) => {
+				if (error) {
+					console.error("Error uploading to Cloudinary:", error);
+					return res
+						.status(500)
+						.send("Failed to upload to Cloudinary");
+				}
+				// Save the profile picture URL to the database
+				const success = await setAvatar(req.user.id, result.secure_url);
+				if (success) {
+					res.json({ url: result.secure_url });
+				} else {
+					res.status(500).send("Failed to save profile picture");
+				}
+			})
+			.end(req.file.buffer); // Stream the file buffer to Cloudinary
 	} catch (error) {
 		console.error("Error saving profile picture:", error);
 		res.status(500).send("Internal server error");
@@ -395,8 +443,14 @@ app.get("/profile", async (req, res) => {
 	}
 });
 
-app.post("/remove-profile-picture", async (req, res) => {
+app.post("/remove-avatar", async (req, res) => {
 	try {
+		const { publicId } = req.body;
+		const reponse = await cloudinary.uploader.destroy(publicId);
+
+		if (!reponse.result === "ok")
+			res.status(404).send("Image not found or already deleted");
+
 		const success = await removeProfilePicture(req.user.id);
 		if (success) res.sendStatus(200);
 	} catch (error) {

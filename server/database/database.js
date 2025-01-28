@@ -48,19 +48,13 @@ export const getUserByFriendCode = (friendCode) => {
 export const getUserById = (id) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			"SELECT id, email, friend_code, username, profile_picture, bio, last_active, created_at FROM users WHERE id = $1",
+			"SELECT id, email, friend_code, username, avatar, bio, last_active, created_at FROM users WHERE id = $1",
 			[id],
 			(err, results) => {
 				if (err) {
 					return reject(err);
 				}
 				const user = results.rows[0];
-				// If profile_picture is binary, encode it as Base64
-				if (user && user.profile_picture) {
-					user.profile_picture = Buffer.from(
-						user.profile_picture
-					).toString("base64");
-				}
 				resolve(user);
 			}
 		);
@@ -90,7 +84,7 @@ export const sendFriendRequest = (sender_id, friend_code) => {
 			// Step 1: Get the user's id
 			const { rows } = await db.query(
 				`
-               SELECT id, username, profile_picture FROM users WHERE friend_code = $1;
+               SELECT id, username, avatar FROM users WHERE friend_code = $1;
                 `,
 				[friend_code]
 			);
@@ -134,7 +128,7 @@ export const sendFriendRequest = (sender_id, friend_code) => {
 export const getFriendRequests = (user_id) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			`SELECT fr.status as status, fr.id as id, u.username as username, u.profile_picture as profile_picture
+			`SELECT fr.status as status, fr.id as id, u.username as username, u.avatar as avatar
 				FROM friend_requests AS fr
 				JOIN users AS u ON fr.sender_id = u.id
 				WHERE fr.recipient_id = $1 AND fr.status = 'pending'
@@ -235,7 +229,7 @@ export const getFriends = (user_id) => {
 				u.id,
 				u.username,
 				u.last_active,
-				u.profile_picture,
+				u.avatar,
 				u.bio
 			FROM friendships f
 			JOIN users u ON u.id = 
@@ -254,11 +248,11 @@ export const getFriends = (user_id) => {
 	});
 };
 
-export const setProfilePicture = (user_id, profilePicture) => {
+export const setAvatar = (user_id, profilePicture) => {
 	return new Promise((resolve, reject) => {
 		db.query(
 			`
-			UPDATE users SET profile_picture = $2 WHERE id = $1
+			UPDATE users SET avatar = $2 WHERE id = $1
 			`,
 			[user_id, profilePicture],
 			async (err, results) => {
@@ -272,7 +266,7 @@ export const setProfilePicture = (user_id, profilePicture) => {
 export const removeProfilePicture = (user_id) => {
 	return new Promise((resolve, reject) => {
 		db.query(
-			`UPDATE users SET profile_picture = null WHERE id = $1`,
+			`UPDATE users SET avatar = null WHERE id = $1`,
 			[user_id],
 			async (err, results) => {
 				if (err) reject(err);

@@ -1,7 +1,7 @@
 <template>
 	<div class="card">
 		<img
-			:src="currentUser?.profile_picture || '/no-profile.png'"
+			:src="currentUser?.avatar || '/no-profile.png'"
 			alt="user's profile picture"
 			class="avatar"
 			@click="toggleDropdown" />
@@ -43,7 +43,7 @@
 	</div>
 	<div v-if="showPhotoModal" class="photo-modal">
 		<i @click="closePhotoModal" class="fa-solid fa-x"></i>
-		<img :src="currentUser?.profile_picture" alt="User's photo" />
+		<img :src="currentUser?.avatar" alt="User's photo" />
 	</div>
 </template>
 <script setup>
@@ -63,7 +63,7 @@ const usernameInput = ref(null);
 const showPhotoModal = ref(false);
 
 const viewPhoto = () => {
-	if (currentUser.value.profile_picture) {
+	if (currentUser.value.avatar) {
 		showPhotoModal.value = true;
 	}
 };
@@ -119,30 +119,22 @@ const uploadPhoto = async (event) => {
 
 	const formData = new FormData();
 	formData.append("avatar", file);
-	const { response } = await useFetch("/avatar").post(formData);
-	if (response.value.ok) {
-		// Convert the uploaded file to Base64 and assign it directly
-		const reader = new FileReader();
-		reader.onload = () => {
-			currentUser.value.profile_picture = reader.result; // Update the profile picture directly
-		};
-		reader.readAsDataURL(file);
-	}
+	const { response } = await useFetch("/avatar").post(formData).json();
+	if (response.value.ok) currentUser.value.avatar = response.value.url;
 	toggleDropdown();
 };
 const removePhoto = async () => {
-	await useFetch("/remove-profile-picture").post();
-	currentUser.value.profile_picture = null;
+	if (!currentUser.value.avatar) return;
+	const lastPart = currentUser.value.avatar.split("/").pop();
+	const publicId = lastPart.split(".")[0];
+	await useFetch("/remove-avatar").post({ publicId });
+	currentUser.value.avatar = null;
 	toggleDropdown();
 };
 
 onMounted(async () => {
-	const { data, isFetching } = await useFetch("/profile").get().json();
+	const { data } = await useFetch("/profile").get().json();
 	currentUser.value = data.value;
-	const { profile_picture } = currentUser.value;
-	currentUser.value.profile_picture = profile_picture
-		? `data:image/png;base64,${profile_picture}`
-		: null;
 });
 </script>
 <style scoped>

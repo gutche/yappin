@@ -105,7 +105,7 @@ onMounted(() => {
 	<div class="header">
 		<img
 			class="profile-pic"
-			:src="user.profile || '/no-profile.png'"
+			:src="user.avatar || '/no-profile.png'"
 			alt="User profile" />
 		{{ user.username }}<StatusIcon :connected="user.connected" />
 	</div>

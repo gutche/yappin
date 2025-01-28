@@ -32,7 +32,7 @@ const unfriendUser = async () => {
 
 <template>
 	<div class="user" @click="onClick" :class="{ selected: selected }">
-		<img :src="user.profile || '/no-profile.png'" alt="User profile" />
+		<img :src="user.avatar || '/no-profile.png'" alt="User profile" />
 		<div class="description">
 			<div class="name">
 				{{ user.username }}

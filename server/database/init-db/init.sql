@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     LPAD(TRUNC(RANDOM() * 1000000)::TEXT, 6, '0'),
     username VARCHAR(255) NOT NULL DEFAULT '',
     password VARCHAR(512) NOT NULL,
-    profile_picture BYTEA,
+    avatar VARCHAR(512),
     bio TEXT,
     last_active TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
