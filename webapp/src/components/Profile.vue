@@ -119,8 +119,8 @@ const uploadPhoto = async (event) => {
 
 	const formData = new FormData();
 	formData.append("avatar", file);
-	const { response } = await useFetch("/avatar").post(formData).json();
-	if (response.value.ok) currentUser.value.avatar = response.value.url;
+	const { response, data } = await useFetch("/avatar").post(formData).json();
+	if (response.value.ok) currentUser.value.avatar = data.value.url;
 	toggleDropdown();
 };
 const removePhoto = async () => {
