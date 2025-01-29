@@ -19,7 +19,7 @@ const sendForm = async () => {
 		errorMessage.value = "Passwords don't match";
 		return;
 	}
-	const { response, error } = await useFetch("/register").post({
+	const { response, error } = await useFetch("/api/auth/register").post({
 		email: email.value,
 		password: password.value,
 	});
