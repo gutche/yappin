@@ -11,10 +11,11 @@ import {
 import cors from "cors";
 import session from "express-session";
 import passport from "passport";
-import { initPassportConfig } from "./configs/passportConfig.js";
+import { initPassportConfig } from "./configs/passport.config.js";
 import routes from "./routes/api.js";
-import { redisClient } from "./configs/redisConfig.js";
-import { configureSockets } from "./configs/socketConfig.js";
+import { redisClient } from "./configs/redis.config.js";
+import { configureSockets } from "./configs/socket.config.js";
+import { onlyForHandshake } from "./middlewares/auth.middleware.js";
 
 const { SESSION_SECRET_KEY, PORT } = process.env;
 
@@ -52,17 +53,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 initPassportConfig(passport, getUserByEmail, getUserById);
-
-function onlyForHandshake(middleware) {
-	return (req, res, next) => {
-		const isHandshake = req._query.sid === undefined;
-		if (isHandshake) {
-			middleware(req, res, next);
-		} else {
-			next();
-		}
-	};
-}
 
 io.engine.use(onlyForHandshake(sessionMiddleware));
 io.engine.use(onlyForHandshake(passport.session()));

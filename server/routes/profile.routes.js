@@ -6,7 +6,7 @@ import {
 	setAvatar,
 	removeProfilePicture,
 } from "../database/database.js";
-import cloudinary from "../configs/cloudinaryConfig.js";
+import cloudinary from "../configs/cloudinary.config.js";
 import multer from "multer";
 
 const router = express.Router();

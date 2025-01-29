@@ -5,7 +5,7 @@ import {
 	getUserMessagesCount,
 	loadMoreMessages,
 } from "../database/database.js";
-import { messageStore, redisClient } from "./redisConfig.js";
+import { messageStore, redisClient } from "./redis.config.js";
 
 export const configureSockets = (io) => {
 	io.on("connection", async (socket) => {

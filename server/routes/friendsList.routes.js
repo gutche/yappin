@@ -7,7 +7,7 @@ import {
 	getFriends,
 	unfriendUser,
 } from "../database/database.js";
-import { redisClient } from "../configs/redisConfig.js";
+import { redisClient } from "../configs/redis.config.js";
 import { io } from "../index.js";
 
 const router = express.Router();

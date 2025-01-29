@@ -1,7 +1,7 @@
 import express from "express";
-import profileRoutes from "./profileRoutes.js";
-import friendsListRoutes from "./friendsListRoutes.js";
-import authRoutes from "./authRoutes.js";
+import profileRoutes from "./profile.routes.js";
+import friendsListRoutes from "./friendsList.routes.js";
+import authRoutes from "./auth.routes.js";
 
 const router = express.Router();
 
