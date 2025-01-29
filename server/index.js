@@ -11,7 +11,7 @@ import {
 import cors from "cors";
 import session from "express-session";
 import passport from "passport";
-import { initPassportConfig } from "./auth/passport-config.js";
+import { initPassportConfig } from "./configs/passportConfig.js";
 import routes from "./routes/api.js";
 import { redisClient } from "./configs/redisConfig.js";
 import { configureSockets } from "./configs/socketConfig.js";
