@@ -2,7 +2,6 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { RedisStore } from "connect-redis";
-import { createAdapter } from "@socket.io/redis-adapter";
 import {
 	getUserByEmail,
 	getUserById,
@@ -17,7 +16,7 @@ import routes from "./routes/api.js";
 import { redisClient } from "./configs/redisConfig.js";
 import { configureSockets } from "./configs/socketConfig.js";
 
-const { SESSION_SECRET_KEY } = process.env;
+const { SESSION_SECRET_KEY, PORT } = process.env;
 
 const app = express();
 const httpServer = createServer(app);
@@ -79,10 +78,6 @@ io.engine.use(
 	})
 );
 
-const pubClient = redisClient.duplicate();
-const subClient = redisClient.duplicate();
-io.adapter(createAdapter(pubClient, subClient));
-
 configureSockets(io);
 
 app.use("/api", routes);
@@ -109,6 +104,12 @@ app.get("/messages", async (req, res) => {
 	} catch (error) {
 		console.log(error);
 	}
+});
+
+const port = PORT || 3000;
+
+httpServer.listen(port, () => {
+	console.log(`server listening at http://localhost:${port}`);
 });
 
 export { io };
