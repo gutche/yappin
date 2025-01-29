@@ -1,6 +1,6 @@
 <script setup>
 import { nextTick, onMounted, ref } from "vue";
-import StatusIcon from "./StatusIcon.vue";
+import StatusIcon from "./shared/StatusIcon.vue";
 import { useInfiniteScroll } from "@vueuse/core";
 import useFetch from "@/api/useFetch";
 

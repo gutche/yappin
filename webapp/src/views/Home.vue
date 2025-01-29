@@ -3,7 +3,7 @@ import MessagePanel from "@/components/MessagePanel.vue";
 import Profile from "@/components/Profile.vue";
 import FriendsList from "@/components/FriendsList.vue";
 import Notification from "@/components/Notification.vue";
-import ButtonIcon from "@/components/ButtonIcon.vue";
+import ButtonIcon from "@/components/shared/ButtonIcon.vue";
 import socket from "@/socket/socket";
 import { ref, onBeforeUnmount, computed, onMounted } from "vue";
 import useFetch from "@/api/useFetch";

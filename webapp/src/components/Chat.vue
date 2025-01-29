@@ -1,5 +1,5 @@
 <script setup>
-import StatusIcon from "./StatusIcon.vue";
+import StatusIcon from "./shared/StatusIcon.vue";
 import { computed } from "vue";
 
 const onClick = () => {
