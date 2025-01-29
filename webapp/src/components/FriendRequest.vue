@@ -21,7 +21,9 @@ const props = defineProps({
 	user: Object,
 });
 const accept = async () => {
-	const { response } = await useFetch("/accept-friend-request").post({
+	const { response } = await useFetch(
+		"/api/friendsList/accept-friend-request"
+	).post({
 		id: props.user.id,
 	});
 
@@ -29,7 +31,9 @@ const accept = async () => {
 };
 
 const decline = async () => {
-	const { response } = await useFetch("/decline-friend-request").post({
+	const { response } = await useFetch(
+		"/api/friendsList/decline-friend-request"
+	).post({
 		id: props.user.id,
 	});
 	if (response.value.ok) props.user.status = "rejected";

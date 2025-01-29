@@ -1,7 +1,7 @@
 <script setup>
 import MessagePanel from "@/components/MessagePanel.vue";
 import Profile from "@/components/Profile.vue";
-import FriendList from "@/components/FriendList.vue";
+import FriendsList from "@/components/FriendsList.vue";
 import Notification from "@/components/Notification.vue";
 import ButtonIcon from "@/components/ButtonIcon.vue";
 import socket from "@/socket/socket";
@@ -287,7 +287,7 @@ onBeforeUnmount(() => {
 				</div>
 
 				<Profile v-if="leftPanelView === 'profile'" />
-				<FriendList
+				<FriendsList
 					v-if="leftPanelView === 'friends'"
 					@message="onUserMessage" />
 				<Notification v-if="leftPanelView === 'notifications'" />
