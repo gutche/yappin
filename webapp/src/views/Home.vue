@@ -125,7 +125,9 @@ const initReactiveProperties = (chat) => {
 };
 
 const logout = async () => {
-	const { response, error } = await useFetch("/logout").delete().json();
+	const { response, error } = await useFetch("/api/auth/logout")
+		.delete()
+		.json();
 	if (response.value.ok) {
 		socket.disconnect();
 		router.push("/login");
