@@ -1,14 +1,12 @@
 # Yappin 🗣 🗣 🗣
-Yappin is an experimental modern messaging app built with the **Vue framework** for educational purposes. It uses the **Socket.IO** library for bidirectional and low-latency communication.
 
-The backend leverages **Node.js clustering** for load balancing and uses **Redis** as an adapter to propagate events across workers and cache recent messages.
+Yappin is an experimental modern messaging app built with the **Vue framework** for educational purposes. It uses the **Socket.IO** library for bidirectional and low-latency communication.
 
 ---
 
 ## Features
 
 -   **Real-time messaging** with low latency
--   **Scalable backend** using Node.js clusters
 -   **Redis caching** for recent messages and event propagation
 
 ---
@@ -17,14 +15,12 @@ The backend leverages **Node.js clustering** for load balancing and uses **Redis
 
 Here’s a preview of how Yappin looks:
 
-![Yappin screenshot](screenshots/yappin.png)
+![Yappin screenshot](screenshots/image.png)
 
 ---
 
 ## What's Next
 
--   **User authentication**: Secure login with JWT or OAuth.
--   **Database integration**: Add PostgreSQL for storing archived messages.
 -   **Production deployment**: Host on a cloud platform like AWS, Azure, or Heroku.
 
 ---
@@ -34,7 +30,6 @@ Here’s a preview of how Yappin looks:
 -   **Frontend**: Vue.js, Vite
 -   **Backend**: Express, Socket.IO
 -   **Database**: Redis (current), PostgreSQL (future)
--   **Load Balancing**: Node.js cluster
 -   **Containerization**: Docker
 
 ---
