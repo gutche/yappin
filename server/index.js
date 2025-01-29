@@ -15,23 +15,18 @@ import {
 	declineFriendRequest,
 	getFriendRequests,
 	getFriends,
-	setAvatar,
-	removeProfilePicture,
 	loadMoreMessages,
-	updateUserBio,
 	saveMessage,
 	getUserMessagesCount,
 	getConversationIds,
 	unfriendUser,
-	updateUsername,
 } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
 import passport from "passport";
 import { initPassportConfig } from "./auth/passport-config.js";
 import bcrypt from "bcrypt";
-import multer from "multer";
-import cloudinary from "./configs/cloudinaryConfig.js";
+import routes from "./routes/api.js";
 
 const { SESSION_SECRET_KEY } = process.env;
 
@@ -40,7 +35,6 @@ const httpServer = createServer(app);
 
 const redisClient = new Redis();
 const messageStore = new RedisMessageStore(redisClient);
-const upload = multer();
 
 const corsOptions = {
 	origin: "http://localhost:5173",
@@ -207,6 +201,8 @@ const isNotAuthenticated = (req, res, next) => {
 	}
 	res.status(403).json({ message: "You must logout before proceeding" });
 };
+
+app.use("/api", routes);
 
 app.delete("/logout", function (req, res, next) {
 	req.logout(function (err) {
@@ -379,61 +375,6 @@ app.get("/friends", async (req, res) => {
 	}
 });
 
-app.post("/avatar", upload.single("avatar"), async (req, res) => {
-	try {
-		// Delete the previous avatar from the cloud if it exists
-		if (req.user.avatar) {
-			const lastPart = req.user.avatar.split("/").pop();
-			const publicId = lastPart.split(".")[0];
-			await cloudinary.uploader.destroy(publicId);
-		}
-		await cloudinary.uploader
-			.upload_stream({ resource_type: "auto" }, async (error, result) => {
-				if (error) {
-					console.error("Error uploading to Cloudinary:", error);
-					return res
-						.status(500)
-						.send("Failed to upload to Cloudinary");
-				}
-				// Save the profile picture URL to the database
-				const success = await setAvatar(req.user.id, result.secure_url);
-				if (success) {
-					res.json({ url: result.secure_url });
-				} else {
-					res.status(500).send("Failed to save profile picture");
-				}
-			})
-			.end(req.file.buffer); // Stream the file buffer to Cloudinary
-	} catch (error) {
-		console.error("Error saving profile picture:", error);
-		res.status(500).send("Internal server error");
-	}
-});
-
-app.get("/profile", async (req, res) => {
-	try {
-		const user = await getUserById(req.user.id);
-		res.status(200).json(user);
-	} catch (error) {
-		console.log(error);
-	}
-});
-
-app.post("/remove-avatar", async (req, res) => {
-	try {
-		const { publicId } = req.body;
-		const reponse = await cloudinary.uploader.destroy(publicId);
-
-		if (!reponse.result === "ok")
-			res.status(404).send("Image not found or already deleted");
-
-		const success = await removeProfilePicture(req.user.id);
-		if (success) res.sendStatus(200);
-	} catch (error) {
-		console.log(error);
-	}
-});
-
 app.get("/user", async (req, res) => {
 	try {
 		const user = await getUserById(+req.query.id);
@@ -446,15 +387,6 @@ app.get("/user", async (req, res) => {
 	}
 });
 
-app.post("/update-bio", async (req, res) => {
-	try {
-		const success = await updateUserBio(req.user.id, req.body.bio);
-		if (success) res.sendStatus(200);
-	} catch (error) {
-		console.log(error);
-	}
-});
-
 app.get("/messages", async (req, res) => {
 	try {
 		const { offset, conversation_id } = req.query;
@@ -462,16 +394,6 @@ app.get("/messages", async (req, res) => {
 		const userTotalMessages = await getUserMessagesCount(conversation_id);
 		const hasMoreMessages = offset + 20 < userTotalMessages;
 		if (messages) res.status(200).json({ messages, hasMoreMessages });
-	} catch (error) {
-		console.log(error);
-	}
-});
-
-app.post("/update-username", async (req, res) => {
-	try {
-		const { username } = req.body;
-		const success = await updateUsername(req.user.id, username);
-		if (success) res.sendStatus(200);
 	} catch (error) {
 		console.log(error);
 	}
