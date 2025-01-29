@@ -79,7 +79,7 @@ const toggleDropdown = () => {
 const saveUsername = async () => {
 	isEditingUsername.value = false;
 	if (usernameDraft.value === currentUser.value.username) return; // No change
-	const { response } = await useFetch("api/profile/username").post({
+	const { response } = await useFetch("/profile/username").post({
 		username: usernameDraft.value,
 	});
 	if (response.value.ok) {
@@ -104,7 +104,7 @@ const startEditingBio = async () => {
 const saveBio = async () => {
 	isEditingBio.value = false;
 	if (bioDraft.value === currentUser.value.bio) return; // No change
-	const { response } = await useFetch("/api/profile/bio").post({
+	const { response } = await useFetch("/profile/bio").post({
 		bio: bioDraft.value,
 	});
 	if (response.value.ok) {
@@ -119,7 +119,7 @@ const uploadPhoto = async (event) => {
 
 	const formData = new FormData();
 	formData.append("avatar", file);
-	const { response, data } = await useFetch("/api/profile/avatar")
+	const { response, data } = await useFetch("/profile/avatar")
 		.post(formData)
 		.json();
 	if (response.value.ok) currentUser.value.avatar = data.value.url;
@@ -129,13 +129,13 @@ const removePhoto = async () => {
 	if (!currentUser.value.avatar) return;
 	const lastPart = currentUser.value.avatar.split("/").pop();
 	const publicId = lastPart.split(".")[0];
-	await useFetch("/api/profile/remove-avatar").post({ publicId });
+	await useFetch("/profile/remove-avatar").post({ publicId });
 	currentUser.value.avatar = null;
 	toggleDropdown();
 };
 
 onMounted(async () => {
-	const { data } = await useFetch("/api/profile").get().json();
+	const { data } = await useFetch("/profile").get().json();
 	currentUser.value = data.value;
 });
 </script>

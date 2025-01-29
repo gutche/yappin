@@ -23,7 +23,7 @@ const status = computed(() => {
 });
 
 const unfriendUser = async () => {
-	const { response } = await useFetch("/api/friendsList/unfriend")
+	const { response } = await useFetch("/friendsList/unfriend")
 		.post({ id: props.user.id })
 		.json();
 	if (response.value.ok) emit("unfriend");

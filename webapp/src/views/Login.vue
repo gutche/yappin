@@ -9,7 +9,7 @@ const rememberUser = ref(false);
 const serverError = ref("");
 
 const submitForm = async () => {
-	const { response, error } = await useFetch("/api/auth/login")
+	const { response, error } = await useFetch("/auth/login")
 		.post({
 			email: email.value,
 			password: password.value,

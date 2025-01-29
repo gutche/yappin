@@ -6,7 +6,7 @@ export const useNotificationStore = defineStore("notification", () => {
 	const notifications = ref([]);
 
 	const fetchNotification = async () => {
-		const { data } = await useFetch("/api/friendsList/friend-requests")
+		const { data } = await useFetch("/friendsList/friend-requests")
 			.get()
 			.json();
 		notifications.value = data.value;

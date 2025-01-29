@@ -68,9 +68,7 @@ const addFriend = async () => {
 		message.value = "Code must be 6 digits";
 		return;
 	}
-	const { response, error } = await useFetch(
-		"/api/friendsList/friend-request"
-	)
+	const { response, error } = await useFetch("/friendsList/friend-request")
 		.post({
 			friendCode: friendCode.value,
 		})

@@ -6,7 +6,7 @@ export const useFriendStore = defineStore("friend", () => {
 	const friends = ref([]);
 
 	const fetchFriends = async () => {
-		const { data } = await useFetch("api/friendsList/friends").get().json();
+		const { data } = await useFetch("/friendsList/friends").get().json();
 		friends.value = data.value;
 	};
 

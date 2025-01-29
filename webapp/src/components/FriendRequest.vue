@@ -22,7 +22,7 @@ const props = defineProps({
 });
 const accept = async () => {
 	const { response } = await useFetch(
-		"/api/friendsList/accept-friend-request"
+		"/friendsList/accept-friend-request"
 	).post({
 		id: props.user.id,
 	});
@@ -32,7 +32,7 @@ const accept = async () => {
 
 const decline = async () => {
 	const { response } = await useFetch(
-		"/api/friendsList/decline-friend-request"
+		"/friendsList/decline-friend-request"
 	).post({
 		id: props.user.id,
 	});
