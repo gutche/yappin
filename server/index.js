@@ -2,7 +2,6 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { RedisStore } from "connect-redis";
-import { setupWorker } from "@socket.io/sticky";
 import { createAdapter } from "@socket.io/redis-adapter";
 import {
 	getUserByEmail,
@@ -85,7 +84,6 @@ const subClient = redisClient.duplicate();
 io.adapter(createAdapter(pubClient, subClient));
 
 configureSockets(io);
-setupWorker(io);
 
 app.use("/api", routes);
 
