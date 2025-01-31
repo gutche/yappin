@@ -14,7 +14,10 @@ const upload = multer();
 
 router.get("/", async (req, res) => {
 	try {
-		const user = await getUserById(req.user.id);
+		const user =
+			req.query.id !== "undefined"
+				? await getUserById(req.query.id)
+				: await getUserById(req.user.id);
 		res.status(200).json(user);
 	} catch (error) {
 		console.log(error);

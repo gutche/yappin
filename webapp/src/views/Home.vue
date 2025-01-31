@@ -22,6 +22,7 @@ const activeChats = ref([]);
 const copied = ref(false);
 const isLeftPanelCollapsed = ref(false);
 const leftPanelRef = ref(null);
+const currentProfile = ref(null);
 
 socket.connect();
 
@@ -63,6 +64,12 @@ const onUserMessage = (user) => {
 	}
 	leftPanelView.value = "chats";
 	selectedChat.value = targetUser || user;
+};
+
+const onProfileVisit = (profile) => {
+	profile.isCurrentUser = false;
+	currentProfile.value = profile;
+	leftPanelView.value = "profile";
 };
 
 const onSelectUser = (chat) => {
@@ -135,7 +142,9 @@ const logout = async () => {
 };
 
 socket.on("current user", (user) => {
+	user.isCurrentUser = true;
 	currentUser.value = user;
+	currentProfile.value = user;
 });
 
 socket.on("connect", () => {
@@ -286,9 +295,13 @@ onBeforeUnmount(() => {
 					</p>
 				</div>
 
-				<Profile v-if="leftPanelView === 'profile'" />
+				<Profile
+					v-if="leftPanelView === 'profile'"
+					@back="currentProfile = currentUser"
+					:user="currentProfile" />
 				<FriendsList
 					v-if="leftPanelView === 'friends'"
+					@visit="onProfileVisit"
 					@message="onUserMessage" />
 				<Notification v-if="leftPanelView === 'notifications'" />
 			</div>
@@ -312,13 +325,13 @@ onBeforeUnmount(() => {
 					title="Notifications"
 					:class="{ selected: leftPanelView === 'notifications' }"
 					iconClass="fa-regular fa-bell"
-					@click="toggleLeftPanelView('notifications')"
-					><div
+					@click="toggleLeftPanelView('notifications')">
+					<div
 						v-if="currentUser?.hasNewNotifications"
 						class="new-messages">
 						!
-					</div></ButtonIcon
-				>
+					</div>
+				</ButtonIcon>
 				<ButtonIcon
 					title="Logout"
 					iconClass="fa-solid fa-right-from-bracket"

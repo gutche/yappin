@@ -1,7 +1,11 @@
 <template>
 	<div class="card">
+		<i
+			v-if="!user.isCurrentUser"
+			@click="back"
+			class="fi fi-rr-arrow-small-left"></i>
 		<img
-			:src="currentUser?.avatar || '/no-profile.png'"
+			:src="user.avatar || '/no-profile.png'"
 			alt="user's profile picture"
 			class="avatar"
 			@click="toggleDropdown" />
@@ -17,7 +21,7 @@
 			<button @click="removePhoto">Remove photo</button>
 		</div>
 		<div class="username" v-if="!isEditingUsername">
-			<span>{{ currentUser?.username }}</span
+			<span>{{ user.username }}</span
 			><i
 				class="fa-regular fa-pen-to-square"
 				@click="startEditingUsername"></i>
@@ -31,7 +35,7 @@
 				@blur="saveUsername"></textarea>
 		</div>
 		<div class="bio" @click="startEditingBio" v-if="!isEditingBio">
-			{{ currentUser?.bio || "Click to add a bio" }}
+			{{ user.bio || "Click to add a bio" }}
 		</div>
 		<div class="bio-edit" v-else>
 			<textarea
@@ -43,14 +47,17 @@
 	</div>
 	<div v-if="showPhotoModal" class="photo-modal">
 		<i @click="closePhotoModal" class="fa-solid fa-x"></i>
-		<img :src="currentUser?.avatar" alt="User's photo" />
+		<img :src="user.avatar" alt="User's photo" />
 	</div>
 </template>
 <script setup>
-import { ref, onMounted, nextTick } from "vue";
+import { ref, nextTick } from "vue";
 import useFetch from "@/api/useFetch";
 
-const currentUser = ref(null);
+const { user } = defineProps({
+	user: Object,
+});
+
 const showDropdown = ref(false);
 const isEditingBio = ref(false);
 const bioDraft = ref("");
@@ -62,8 +69,10 @@ const usernameInput = ref(null);
 
 const showPhotoModal = ref(false);
 
+const emit = defineEmits(["back"]);
+
 const viewPhoto = () => {
-	if (currentUser.value.avatar) {
+	if (user.avatar) {
 		showPhotoModal.value = true;
 	}
 };
@@ -72,43 +81,47 @@ const closePhotoModal = () => {
 	showPhotoModal.value = false;
 };
 
+const back = () => {
+	emit("back");
+};
+
 const toggleDropdown = () => {
 	showDropdown.value = !showDropdown.value;
 };
 
 const saveUsername = async () => {
 	isEditingUsername.value = false;
-	if (usernameDraft.value === currentUser.value.username) return; // No change
+	if (usernameDraft.value === user.username) return; // No change
 	const { response } = await useFetch("/profile/username").post({
 		username: usernameDraft.value,
 	});
 	if (response.value.ok) {
-		currentUser.value.username = usernameDraft.value;
+		user.username = usernameDraft.value;
 	}
 };
 
 const startEditingUsername = async () => {
 	isEditingUsername.value = true;
-	usernameDraft.value = currentUser.value.username || "";
+	usernameDraft.value = user.username || "";
 	await nextTick(); // Wait for the DOM to update
 	usernameInput.value.focus(); // Automatically focus the input
 };
 
 const startEditingBio = async () => {
 	isEditingBio.value = true;
-	bioDraft.value = currentUser.value.bio || "";
+	bioDraft.value = user.bio || "";
 	await nextTick(); // Wait for the DOM to update
 	bioInput.value.focus(); // Automatically focus the input
 };
 
 const saveBio = async () => {
 	isEditingBio.value = false;
-	if (bioDraft.value === currentUser.value.bio) return; // No change
+	if (bioDraft.value === user.bio) return; // No change
 	const { response } = await useFetch("/profile/bio").post({
 		bio: bioDraft.value,
 	});
 	if (response.value.ok) {
-		currentUser.value.bio = bioDraft.value;
+		user.bio = bioDraft.value;
 	}
 };
 
@@ -122,22 +135,17 @@ const uploadPhoto = async (event) => {
 	const { response, data } = await useFetch("/profile/avatar")
 		.post(formData)
 		.json();
-	if (response.value.ok) currentUser.value.avatar = data.value.url;
+	if (response.value.ok) user.avatar = data.value.url;
 	toggleDropdown();
 };
 const removePhoto = async () => {
-	if (!currentUser.value.avatar) return;
-	const lastPart = currentUser.value.avatar.split("/").pop();
+	if (!user.avatar) return;
+	const lastPart = user.avatar.split("/").pop();
 	const publicId = lastPart.split(".")[0];
 	await useFetch("/profile/remove-avatar").post({ publicId });
-	currentUser.value.avatar = null;
+	user.avatar = null;
 	toggleDropdown();
 };
-
-onMounted(async () => {
-	const { data } = await useFetch("/profile").get().json();
-	currentUser.value = data.value;
-});
 </script>
 <style scoped>
 .photo-modal {
@@ -175,6 +183,20 @@ onMounted(async () => {
 	line-height: 30px;
 	width: inherit;
 
+	.fi-rr-arrow-small-left {
+		position: absolute;
+		left: 5px;
+		margin-top: 5px;
+		cursor: pointer;
+		font-size: 30px;
+	}
+
+	.return-btn {
+		background-color: rgba(255, 55, 55, 0.865);
+		border-radius: 5px;
+		padding: 5px;
+		color: white;
+	}
 	.avatar {
 		margin: 20px;
 		height: 200px;

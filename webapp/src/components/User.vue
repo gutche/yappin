@@ -16,7 +16,7 @@ const props = defineProps({
 	selected: Boolean,
 });
 
-const emit = defineEmits(["select", "message", "unfriend"]);
+const emit = defineEmits(["select", "message", "unfriend", "visit"]);
 
 const status = computed(() => {
 	return props.user.connected ? "online" : "offline";
@@ -27,6 +27,10 @@ const unfriendUser = async () => {
 		.post({ id: props.user.id })
 		.json();
 	if (response.value.ok) emit("unfriend");
+};
+
+const visitProfile = () => {
+	emit("visit", props.user);
 };
 </script>
 
@@ -45,7 +49,7 @@ const unfriendUser = async () => {
 		<div v-if="user.hasNewMessages" class="new-messages">!</div>
 		<div class="button-container">
 			<i @click="messageUser" class="fa-regular fa-message"></i>
-			<i class="fa-regular fa-user"></i>
+			<i @click="visitProfile" class="fa-regular fa-user"></i>
 			<i @click="unfriendUser" class="fa-solid fa-x"></i>
 		</div>
 	</div>

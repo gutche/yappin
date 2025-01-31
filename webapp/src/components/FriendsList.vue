@@ -7,6 +7,7 @@
 			:key="friend.id"
 			:user="friend"
 			:selected="selectedFriend === friend"
+			@visit="onProfileVisit(friend)"
 			@message="onMessageUser(friend)"
 			@unfriend="removeUser(friend)"
 			@select="onSelectFriend(friend)" />
@@ -40,7 +41,7 @@ const message = ref("");
 const friends = ref([]);
 const isFetching = ref(false);
 const selectedFriend = ref(null);
-const emit = defineEmits(["message"]);
+const emit = defineEmits(["message", "visit"]);
 
 const friendStore = useFriendStore();
 
@@ -82,6 +83,10 @@ const addFriend = async () => {
 	clearMessage = setTimeout(() => {
 		message.value = "";
 	}, 5000);
+};
+
+const onProfileVisit = (friend) => {
+	emit("visit", friend);
 };
 
 onMounted(async () => {
