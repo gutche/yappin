@@ -22,7 +22,7 @@
 					placeholder="example: 123456"
 					type="text" />
 				<button @click="addFriend">
-					<i class="fa-solid fa-plus"></i>
+					<i class="fi fi-rr-square-plus"></i>
 				</button>
 			</div>
 			<p>{{ message }}</p>

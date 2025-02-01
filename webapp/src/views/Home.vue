@@ -309,22 +309,22 @@ onBeforeUnmount(() => {
 				<ButtonIcon
 					title="Chats"
 					:class="{ selected: leftPanelView === 'chats' }"
-					iconClass="fa-regular fa-message"
+					iconClass="fi fi-rr-comment-alt"
 					@click="toggleLeftPanelView('chats')" />
 				<ButtonIcon
 					:class="{ selected: leftPanelView === 'profile' }"
-					iconClass="fa-regular fa-user"
+					iconClass="fi fi-rr-user"
 					title="Profile"
 					@click="toggleLeftPanelView('profile')" />
 				<ButtonIcon
 					:class="{ selected: leftPanelView === 'friends' }"
-					iconClass="fa-solid fa-user-group"
+					iconClass="fi fi-rr-users"
 					title="Friends"
 					@click="toggleLeftPanelView('friends')" />
 				<ButtonIcon
 					title="Notifications"
 					:class="{ selected: leftPanelView === 'notifications' }"
-					iconClass="fa-regular fa-bell"
+					iconClass="fi fi-rr-bell"
 					@click="toggleLeftPanelView('notifications')">
 					<div
 						v-if="currentUser?.hasNewNotifications"
@@ -334,7 +334,7 @@ onBeforeUnmount(() => {
 				</ButtonIcon>
 				<ButtonIcon
 					title="Logout"
-					iconClass="fa-solid fa-right-from-bracket"
+					iconClass="fi fi-rr-exit"
 					@click="logout" />
 			</div>
 		</div>

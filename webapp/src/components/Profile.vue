@@ -183,7 +183,7 @@ const removePhoto = async () => {
 	line-height: 30px;
 	width: inherit;
 
-	.fi-rr-arrow-small-left {
+	.fi {
 		position: absolute;
 		left: 5px;
 		margin-top: 5px;

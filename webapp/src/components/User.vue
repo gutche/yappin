@@ -48,9 +48,9 @@ const visitProfile = () => {
 		</div>
 		<div v-if="user.hasNewMessages" class="new-messages">!</div>
 		<div class="button-container">
-			<i @click="messageUser" class="fa-regular fa-message"></i>
-			<i @click="visitProfile" class="fa-regular fa-user"></i>
-			<i @click="unfriendUser" class="fa-solid fa-x"></i>
+			<i @click="messageUser" class="fi fi-rr-comment-alt"></i>
+			<i @click="visitProfile" class="fi fi-rr-user"></i>
+			<i @click="unfriendUser" class="fi fi-rr-cross"></i>
 		</div>
 	</div>
 </template>
@@ -97,8 +97,7 @@ const visitProfile = () => {
 	}
 }
 
-.fa-regular,
-.fa-solid {
+.fi {
 	font-size: 18px;
 	cursor: pointer;
 	padding: 5px;
