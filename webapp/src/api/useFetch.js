@@ -1,7 +1,7 @@
 import { createFetch } from "@vueuse/core";
 
 const useFetch = createFetch({
-	baseUrl: "http://localhost:3000/api",
+	baseUrl: "yappin.up.railway.app:8080/api",
 	fetchOptions: {
 		credentials: "include",
 	},
