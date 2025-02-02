@@ -3,7 +3,7 @@ import fs from "fs";
 
 const db = new pg.Pool({
 	ssl: {
-		ca: fs.readFileSync("configs/ca.pem").toString(),
+		ca: Buffer.from(process.env.DATABASE_CA, "base64").toString(),
 	},
 });
 
