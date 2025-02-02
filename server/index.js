@@ -99,7 +99,7 @@ app.get("/messages", async (req, res) => {
 const port = PORT || 3000;
 
 httpServer.listen(port, () => {
-	console.log(`server listening at http://localhost:${port}`);
+	console.log(`Running on port ${port}`);
 });
 
 export { io };

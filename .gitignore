@@ -31,3 +31,5 @@ frontend/.vscode/*
 *.tsbuildinfo
 
 .env
+.env.development
+.env.production

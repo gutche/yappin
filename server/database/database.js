@@ -1,7 +1,11 @@
 import pg from "pg";
 import "dotenv/config";
 
-const db = new pg.Pool();
+const db = new pg.Pool({
+	ssl: {
+		rejectUnauthorized: false,
+	},
+});
 
 try {
 	await db.connect();
