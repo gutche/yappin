@@ -101,14 +101,6 @@ onMounted(async () => {
 	display: block;
 	text-align: center;
 }
-.fa-plus {
-	padding: 5px;
-	background-color: green;
-	font-size: 15px;
-	border-radius: 5px;
-	cursor: pointer;
-	color: white;
-}
 
 .request-container {
 	display: flex;
