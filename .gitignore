@@ -33,3 +33,7 @@ frontend/.vscode/*
 .env
 .env.development
 .env.production
+
+
+/server/configs/*.pem
+/server/configs/*.cert

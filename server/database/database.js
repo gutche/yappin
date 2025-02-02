@@ -1,15 +1,26 @@
 import pg from "pg";
-import "dotenv/config";
+import fs from "fs";
 
 const db = new pg.Pool({
 	ssl: {
-		rejectUnauthorized: false,
+		ca: fs.readFileSync("configs/ca.pem").toString(),
 	},
 });
 
+const initDB = async () => {
+	try {
+		const sql = fs.readFileSync("database/init-db/init.sql", "utf8");
+		await db.query(sql);
+		console.log("✅ Database initialized successfully");
+	} catch (error) {
+		console.error("❌ Error initializing database:", error);
+	}
+};
+
 try {
 	await db.connect();
-	console.log("Connected to the database successfully!");
+	console.log("✅ Connected to the database successfully!");
+	initDB();
 } catch (err) {
 	console.error("Error connecting to the database", err);
 	process.exit(1);
