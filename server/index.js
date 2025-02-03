@@ -43,8 +43,8 @@ const sessionMiddleware = session({
 	saveUninitialized: false,
 	cookie: {
 		httpOnly: true,
-		secure: true,
-		sameSite: "lax",
+		secure: NODE_ENV === "production",
+		sameSite: "none",
 		maxAge: 24 * 60 * 60 * 1000, // 1 day
 	},
 });
