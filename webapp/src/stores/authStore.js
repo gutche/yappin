@@ -6,7 +6,7 @@ export const useAuthStore = defineStore("auth", () => {
 	const isAuthenticated = ref(null);
 
 	const fetchSession = async () => {
-		const { response, error } = await useFetch("/auth/get-session")
+		const { response, error } = await useFetch("/auth/session")
 			.get()
 			.json();
 		if (error) isAuthenticated.value = false;

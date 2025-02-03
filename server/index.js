@@ -17,13 +17,13 @@ import { redisClient } from "./configs/redis.config.js";
 import { configureSockets } from "./configs/socket.config.js";
 import { onlyForHandshake } from "./middlewares/auth.middleware.js";
 
-const { SESSION_SECRET_KEY, PORT } = process.env;
+const { SESSION_SECRET_KEY, PORT, CLIENT_URL } = process.env;
 
 const app = express();
 const httpServer = createServer(app);
 
 const corsOptions = {
-	origin: "http://localhost:5173",
+	origin: CLIENT_URL,
 	credentials: true,
 };
 

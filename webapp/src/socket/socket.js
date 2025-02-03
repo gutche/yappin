@@ -1,4 +1,4 @@
-const socket = io("http://localhost:3000", {
+const socket = io(import.meta.env.VITE_API_URL, {
 	autoConnect: false,
 	withCredentials: true,
 });

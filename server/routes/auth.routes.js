@@ -74,7 +74,7 @@ router.post("/login", isNotAuthenticated, (req, res, next) => {
 	})(req, res, next);
 });
 
-router.get("/get-session", (req, res) => {
+router.get("/session", (req, res) => {
 	if (req.isAuthenticated()) {
 		return res.sendStatus(200);
 	} else {
