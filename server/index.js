@@ -45,6 +45,7 @@ const sessionMiddleware = session({
 		httpOnly: true,
 		secure: NODE_ENV === "production",
 		sameSite: "none",
+		domain: CLIENT_URL,
 		maxAge: 24 * 60 * 60 * 1000, // 1 day
 	},
 });
