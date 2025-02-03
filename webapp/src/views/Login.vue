@@ -17,7 +17,6 @@ const submitForm = async () => {
 		})
 		.json();
 	if (error) {
-		console.error(error.value);
 		serverError.value = error.value;
 	}
 	if (response.value.status === 404) {

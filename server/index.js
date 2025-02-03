@@ -17,7 +17,7 @@ import { redisClient } from "./configs/redis.config.js";
 import { configureSockets } from "./configs/socket.config.js";
 import { onlyForHandshake } from "./middlewares/auth.middleware.js";
 
-const { SESSION_SECRET_KEY, PORT, CLIENT_URL } = process.env;
+const { SESSION_SECRET_KEY, PORT, CLIENT_URL, NODE_ENV } = process.env;
 
 const app = express();
 const httpServer = createServer(app);
@@ -43,7 +43,7 @@ const sessionMiddleware = session({
 	saveUninitialized: false,
 	cookie: {
 		httpOnly: true,
-		secure: false,
+		secure: NODE_ENV === "production",
 		maxAge: 24 * 60 * 60 * 1000, // 1 day
 	},
 });
