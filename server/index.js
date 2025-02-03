@@ -53,7 +53,7 @@ const sessionMiddleware = session({
 app.use(sessionMiddleware);
 app.use(passport.initialize());
 app.use(passport.session());
-
+app.set("trust proxy", 1);
 initPassportConfig(passport, getUserByEmail, getUserById);
 
 io.engine.use(onlyForHandshake(sessionMiddleware));
