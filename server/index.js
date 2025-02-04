@@ -2,12 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { RedisStore } from "connect-redis";
-import {
-	getUserByEmail,
-	getUserById,
-	loadMoreMessages,
-	getUserMessagesCount,
-} from "./database/database.js";
+import { getUserByEmail, getUserById } from "./database/database.js";
 import cors from "cors";
 import session from "express-session";
 import passport from "passport";

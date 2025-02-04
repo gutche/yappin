@@ -92,7 +92,7 @@ const copyCode = () => {
 };
 
 const toggleLeftPanelView = (viewSelected) => {
-	isLeftPanelCollapsed.value = false;
+	isLeftPanelCollapsed.value = !isLeftPanelCollapsed.value;
 	if (leftPanelView.value !== viewSelected) {
 		leftPanelView.value = viewSelected;
 		if (viewSelected === "chats") {
@@ -371,7 +371,6 @@ onBeforeUnmount(() => {
 
 		&.collapsed {
 			width: 50px;
-
 			.buttons-container {
 				flex-direction: column;
 				margin-top: 0;
