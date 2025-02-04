@@ -367,6 +367,7 @@ onBeforeUnmount(() => {
 		background-color: #f4f4f4;
 		border-right: 1px solid rgba(0, 0, 0, 0.144);
 		transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
+		box-sizing: border-box !important;
 
 		&.collapsed {
 			width: 50px;
@@ -401,14 +402,13 @@ onBeforeUnmount(() => {
 		.buttons-container {
 			margin-top: auto;
 			display: flex;
-			width: inherit;
+			width: 100%;
 			justify-content: space-evenly;
 			border-top: 1px solid rgba(0, 0, 0, 0.156);
 		}
 
 		.btn {
 			display: flex;
-			justify-content: center;
 			align-items: center;
 			padding: 0 15px;
 
@@ -473,9 +473,13 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 425px) {
-	.left-panel.collapsed .buttons-container .btn {
-		justify-content: start;
-		padding: 0 5px;
+	.wrapper .left-panel.collapsed {
+		.buttons-container {
+			align-items: center;
+			.btn {
+				padding: 10px;
+			}
+		}
 	}
 }
 </style>
