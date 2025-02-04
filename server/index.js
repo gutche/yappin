@@ -46,15 +46,15 @@ const sessionMiddleware = session({
 	cookie: {
 		httpOnly: true,
 		secure: NODE_ENV === "production",
-		sameSite: "none",
+		sameSite: NODE_ENV === "production" ? "none" : "lax",
 		maxAge: 24 * 60 * 60 * 1000, // 1 day
 	},
 });
 
+app.set("trust proxy", 1);
 app.use(sessionMiddleware);
 app.use(passport.initialize());
 app.use(passport.session());
-app.set("trust proxy", 1);
 initPassportConfig(passport, getUserByEmail, getUserById);
 
 io.engine.use(onlyForHandshake(sessionMiddleware));
@@ -74,30 +74,6 @@ io.engine.use(
 configureSockets(io);
 
 app.use("/api", routes);
-
-app.get("/user", async (req, res) => {
-	try {
-		const user = await getUserById(+req.query.id);
-		user.connected = (await redisClient.sismember("onlineUsers", user.id))
-			? true
-			: false;
-		if (user) res.status(200).json(user);
-	} catch (error) {
-		console.log(error);
-	}
-});
-
-app.get("/messages", async (req, res) => {
-	try {
-		const { offset, conversation_id } = req.query;
-		const messages = await loadMoreMessages(conversation_id, offset);
-		const userTotalMessages = await getUserMessagesCount(conversation_id);
-		const hasMoreMessages = offset + 20 < userTotalMessages;
-		if (messages) res.status(200).json({ messages, hasMoreMessages });
-	} catch (error) {
-		console.log(error);
-	}
-});
 
 const port = PORT || 3000;
 

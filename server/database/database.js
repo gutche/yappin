@@ -1,10 +1,15 @@
 import pg from "pg";
 import fs from "fs";
 
+const { DATABASE_CA } = process.env;
+
 const db = new pg.Pool({
-	ssl: {
-		ca: Buffer.from(process.env.DATABASE_CA, "base64").toString(),
-	},
+	// Disable ssl for local development
+	ssl: DATABASE_CA
+		? {
+				ca: Buffer.from(DATABASE_CA, "base64").toString(),
+		  }
+		: false,
 });
 
 const initDB = async () => {

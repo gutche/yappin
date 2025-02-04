@@ -221,10 +221,8 @@ socket.on(
 		const id = fromSelf ? recipient_id : sender_id;
 		let targetUser = activeChats.value.find((user) => user.id === id);
 		if (!targetUser) {
-			const { data, error } = await useFetch("/user")
-				.get({
-					id,
-				})
+			const { data, error } = await useFetch(`/user?id=${id}`)
+				.get()
 				.json();
 			if (error) console.error(error.value);
 			const { username, avatar, connected } = data.value;
