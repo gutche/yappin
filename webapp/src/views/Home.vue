@@ -367,7 +367,6 @@ onBeforeUnmount(() => {
 		background-color: #f4f4f4;
 		border-right: 1px solid rgba(0, 0, 0, 0.144);
 		transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
-		box-sizing: border-box !important;
 
 		&.collapsed {
 			width: 50px;
@@ -409,6 +408,8 @@ onBeforeUnmount(() => {
 		.btn {
 			display: flex;
 			align-items: center;
+			justify-content: center;
+			width: 100%;
 			padding: 0 15px;
 
 			&:hover,
