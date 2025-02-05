@@ -4,11 +4,7 @@ Yappin is an modern messaging app built with the **Vue framework**. It uses the 
 
 ## Purpose
 
--   Demonstrate to visitors, possible recruiters (pls hire me or I'm gonna be homeless soon 🥲) that I am not a fraud and that I can actually code.
-
--   It's simply just fun trying out different technologies and building something from scratch.
-
--   Satisfy my nerdy curiosities☝️🤓. I didn't know how messaging apps worked before under the hood, now I have at least an idea.
+This app is being developed solely for educational purposes. I'm just trying out different frameworks and sockets (Vue and SocektIO) and figuring out how messaging apps work.
 
 ## Live demo
 
@@ -18,13 +14,13 @@ Since anonymous logins have not been implemented yet, you'll have to "create" an
 
 Account creation takes two simple steps:
 
-1. Invent a fake email with a valid format (you can use a real one if you're feeling brave). For example, acb@email.com
+1. Invent a fake email with a valid format. For example, acb@email.com
 
-2. Think up of a password. One character will suffice (obviously prone to brute force attacks but hey I don't want this to be tedious). Oh btw the password is encrypted, I'm not stupid luckily 😏
+2. Think up of a password. One character will suffice (obviously prone to brute force attacks but hey I don't want this to be tedious). Oh btw passwords are encrypted, I'm not stupid luckily 😏
 
 That's it, you're good to go 😁👍
 
-Tip: the id on the left panel is what your friend would need, to add you as a friend. You don't have friends? I thought so, loser 🤣. In that case, once you've created an account -- open a private window to create another account.
+Tip: the id on the left panel is what your friend would need, to add you as a friend. To test the messaging features by yourself, you'll have to open the app in a private window and register another account. This way you are logged in as two different users.
 
 Please note that every cloud service needed to run this app is running on free tier so I'll have to wipe its data once in a while.
 
