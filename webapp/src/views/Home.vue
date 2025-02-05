@@ -92,7 +92,19 @@ const copyCode = () => {
 };
 
 const toggleLeftPanelView = (viewSelected) => {
-	isLeftPanelCollapsed.value = !isLeftPanelCollapsed.value;
+	if (
+		window.matchMedia("(max-width: 768px)").matches &&
+		leftPanelView.value === viewSelected
+	)
+		isLeftPanelCollapsed.value = !isLeftPanelCollapsed.value;
+
+	if (
+		window.matchMedia("(max-width: 768px)").matches &&
+		isLeftPanelCollapsed.value &&
+		leftPanelView.value !== viewSelected
+	)
+		isLeftPanelCollapsed.value = !isLeftPanelCollapsed.value;
+
 	if (leftPanelView.value !== viewSelected) {
 		leftPanelView.value = viewSelected;
 		if (viewSelected === "chats") {
@@ -265,7 +277,6 @@ onBeforeUnmount(() => {
 			class="left-panel"
 			:class="{
 				collapsed: isLeftPanelCollapsed,
-				absolute: isPanelAbsolute,
 			}">
 			<div v-if="!isLeftPanelCollapsed" class="view-name">
 				<span>{{ viewName }}</span>
@@ -338,7 +349,7 @@ onBeforeUnmount(() => {
 		</div>
 		<div class="middle-panel">
 			<MessagePanel
-				v-if="selectedChat"
+				v-if="selectedChat && isLeftPanelCollapsed"
 				:user="selectedChat"
 				@input="onMessageSent" />
 		</div>
@@ -374,11 +385,6 @@ onBeforeUnmount(() => {
 				flex-direction: column;
 				margin-top: 0;
 			}
-		}
-
-		&.absolute {
-			position: absolute;
-			z-index: 9999;
 		}
 
 		.view-container {
