@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) UNIQUE,
     friend_code VARCHAR(10) UNIQUE NOT NULL DEFAULT
     LPAD(TRUNC(RANDOM() * 1000000)::TEXT, 6, '0'),
     username VARCHAR(255) NOT NULL DEFAULT '',
-    password VARCHAR(512) NOT NULL,
+    password VARCHAR(512),
     avatar VARCHAR(512),
     bio TEXT,
     last_active TIMESTAMP DEFAULT NULL,
