@@ -7,6 +7,7 @@ const email = ref("");
 const password = ref("");
 const rememberUser = ref(false);
 const serverError = ref("");
+const showAuthModal = ref(true);
 
 const submitForm = async () => {
 	const { response, error } = await useFetch("/auth/login")
@@ -24,9 +25,27 @@ const submitForm = async () => {
 	}
 	if (response.value.ok) router.push("/");
 };
+
+const loginAsGuest = async () => {
+	showAuthModal.value = false;
+	const { response } = await useFetch("/auth/register").post({
+		is_anonymou: true,
+	});
+	if (response.value.ok) router.push("/");
+};
 </script>
+
 <template>
-	<div class="form-container">
+	<div v-if="showAuthModal" class="modal-overlay">
+		<div class="modal">
+			<h2>Select Login Option</h2>
+			<button @click="showAuthModal = false">Login</button>
+			<hr />
+			<button @click="loginAsGuest">Login as Guest</button>
+		</div>
+	</div>
+
+	<div class="form-container" v-if="!showAuthModal">
 		<form @submit.prevent="submitForm">
 			<div class="img-container">
 				<img
@@ -65,14 +84,38 @@ const submitForm = async () => {
 				<RouterLink to="/register"
 					><button type="button" class="cancelbtn">
 						Create an account
-					</button></RouterLink
-				>
+					</button>
+				</RouterLink>
 				<span class="psw"><a href="#">Forgot password?</a></span>
 			</div>
 		</form>
 	</div>
 </template>
+
 <style scoped>
+.modal-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.modal {
+	background: white;
+	padding: 20px;
+	border-radius: 10px;
+	text-align: center;
+}
+
+.modal button {
+	width: 100%;
+}
+
 .form-container {
 	display: flex;
 	justify-content: center;

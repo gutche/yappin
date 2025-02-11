@@ -1,6 +1,6 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import { insertUser } from "../database/database.js";
+import { createUser, createAnonymousUser } from "../database/database.js";
 import { passport } from "../index.js";
 
 const router = express.Router();
@@ -22,13 +22,17 @@ router.delete("/logout", function (req, res, next) {
 });
 
 router.post("/register", isNotAuthenticated, async (req, res, next) => {
-	const { email, password } = req.body;
+	const { email, password, is_anonymous } = req.body;
 
 	try {
-		const saltRounds = 10;
-		const hashedPassword = await bcrypt.hash(password, saltRounds);
-		const username = email.split("@")[0];
-		const newUser = await insertUser(email, hashedPassword, username);
+		let newUser;
+		if (is_anonymous === true) {
+			const saltRounds = 10;
+			const hashedPassword = await bcrypt.hash(password, saltRounds);
+			const username = email.split("@")[0];
+			newUser = await createUser(email, hashedPassword, username);
+		} else newUser = await createAnonymousUser();
+
 		req.login(newUser, (err) => {
 			if (err) {
 				console.error("Login error after registration:", err);

@@ -31,11 +31,28 @@ try {
 	process.exit(1);
 }
 
-export const insertUser = (email, hashedPassword, username) => {
+export const createUser = (email, hashedPassword, username) => {
 	return new Promise((resolve, reject) => {
 		db.query(
 			"INSERT INTO users (email, password, username) VALUES ($1, $2, $3) RETURNING id, email, friend_code, username, last_active, created_at",
 			[email, hashedPassword, username],
+			(err, result) => {
+				if (err) {
+					return reject(err);
+				}
+
+				const newUser = result.rows[0];
+				resolve(newUser);
+			}
+		);
+	});
+};
+
+export const createAnonymousUser = () => {
+	return new Promise((resolve, reject) => {
+		db.query(
+			"INSERT INTO users (is_anonymous) VALUES (TRUE) RETURNING id, email, friend_code, username, last_active, created_at",
+			[],
 			(err, result) => {
 				if (err) {
 					return reject(err);
