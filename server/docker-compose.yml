@@ -14,3 +14,17 @@ services:
             POSTGRES_DB: ${PGDATABASE}
         volumes:
             - ./database/init-db:/docker-entrypoint-initdb.d
+            - postgres_data:/var/lib/postgresql/data
+
+    dbmate:
+        image: amacneil/dbmate
+        depends_on:
+            - db
+        environment:
+            DATABASE_URL: postgres://${PGUSER}:${PGPASSWORD}@db:5432/${PGDATABASE}?sslmode=disable
+        volumes:
+            - ./database/migrations:/db/migrations
+        entrypoint: ["dbmate", "up"]
+
+volumes:
+    postgres_data:
