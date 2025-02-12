@@ -19,12 +19,10 @@ const props = defineProps({
 
 <style scoped>
 i {
-	font-size: 20px;
-	line-height: 50px;
-	text-align: center;
-	display: inline-block;
+	font-size: 18px;
 	cursor: pointer;
 	color: black;
 	margin: 0;
+	padding: 10px;
 }
 </style>

@@ -23,3 +23,8 @@ button {
 	cursor: pointer;
 	outline: inherit;
 }
+
+i {
+	display: flex;
+	justify-content: center;
+}

@@ -33,13 +33,6 @@ const viewName = computed(() => {
 	);
 });
 
-const isPanelAbsolute = computed(() => {
-	return (
-		window.matchMedia("(max-width: 768px)").matches &&
-		!isLeftPanelCollapsed.value
-	);
-});
-
 const onMessageSent = (content) => {
 	if (selectedChat) {
 		const sent_at = new Date().toISOString();
@@ -282,8 +275,8 @@ onBeforeUnmount(() => {
 				<span>{{ viewName }}</span>
 				<div @click="copyCode" class="code">
 					id: <span>{{ currentUser?.friend_code }}</span>
-					<i v-if="!copied" class="fa-regular fa-clipboard"></i>
-					<i v-if="copied" class="fa-solid fa-check"></i>
+					<i v-if="copied" class="fi fi-rr-clipboard-check show"></i>
+					<i v-else class="fi fi-rr-clipboard"></i>
 				</div>
 			</div>
 			<div class="view-container" v-if="!isLeftPanelCollapsed">
@@ -391,7 +384,6 @@ onBeforeUnmount(() => {
 			display: flex;
 			flex-direction: column;
 			height: inherit;
-			width: inherit;
 		}
 
 		.view-name {
@@ -416,7 +408,6 @@ onBeforeUnmount(() => {
 			align-items: center;
 			justify-content: center;
 			width: 100%;
-			padding: 0 15px;
 
 			&:hover,
 			&.selected {
@@ -436,34 +427,36 @@ onBeforeUnmount(() => {
 		}
 
 		.code {
+			display: flex;
 			padding: 5px;
 			border-radius: 5px;
 			cursor: pointer;
 
 			span {
 				font-weight: bold;
+				margin-right: 5px;
 			}
 
 			&:hover {
 				background-color: #4b4b4b3a;
 				transition: 0.2s ease-in-out;
 
-				.fa-clipboard {
+				.fi {
 					visibility: visible;
 					opacity: 1;
 				}
 			}
 		}
 
-		.fa-clipboard {
+		.fi {
 			visibility: hidden;
 			opacity: 0;
 			transition: opacity 0.2s ease-in-out;
-			font-size: 20px;
-		}
 
-		.fa-check {
-			font-size: 20px;
+			&.show {
+				visibility: visible;
+				opacity: 1;
+			}
 		}
 	}
 
@@ -478,14 +471,9 @@ onBeforeUnmount(() => {
 	}
 }
 
-@media (max-width: 425px) {
-	.wrapper .left-panel.collapsed {
-		.buttons-container {
-			align-items: center;
-			.btn {
-				padding: 10px;
-			}
-		}
+@media (max-width: 320px) {
+	.view-container {
+		width: 100vw;
 	}
 }
 </style>

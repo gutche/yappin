@@ -21,9 +21,7 @@
 					v-model="friendCode"
 					placeholder="example: 123456"
 					type="text" />
-				<button @click="addFriend">
-					<i class="fi fi-rr-square-plus"></i>
-				</button>
+				<i class="fi fi-rr-square-plus" @click="addFriend"></i>
 			</div>
 			<p>{{ message }}</p>
 		</div>
@@ -102,6 +100,10 @@ onMounted(async () => {
 	text-align: center;
 }
 
+.fi-rr-square-plus {
+	font-size: 20px;
+}
+
 .request-container {
 	display: flex;
 	align-items: center;
@@ -122,7 +124,8 @@ onMounted(async () => {
 
 input {
 	height: 30px;
-	flex-grow: 1;
+	flex: 1;
+	margin-right: 5px;
 }
 
 input,

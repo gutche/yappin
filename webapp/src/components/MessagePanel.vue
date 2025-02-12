@@ -133,7 +133,6 @@ onMounted(() => {
 				placeholder="Your message..."
 				@keydown="handleKeydown"
 				class="input" />
-			<i class="fa-solid fa-microphone"></i>
 		</form>
 	</main>
 </template>
@@ -156,12 +155,6 @@ onMounted(() => {
 	width: 40px;
 	border-radius: 50%;
 	margin-right: 10px;
-}
-
-i {
-	margin-left: 5px;
-	font-size: 25px;
-	color: rgb(31, 31, 31);
 }
 
 .header {
