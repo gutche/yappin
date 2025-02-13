@@ -71,8 +71,6 @@ const onSelectUser = (chat) => {
 	} else {
 		selectedChat.value = chat;
 		chat.hasNewMessages = false;
-		isLeftPanelCollapsed.value =
-			window.matchMedia("(max-width: 768px)").matches;
 	}
 };
 
@@ -85,16 +83,15 @@ const copyCode = () => {
 };
 
 const toggleLeftPanelView = (viewSelected) => {
+	// hide/show left panel if
+	// user clicks the current view icon
+	// or clicks a different icon and left panel is collapsed
 	if (
-		window.matchMedia("(max-width: 768px)").matches &&
-		leftPanelView.value === viewSelected
-	)
-		isLeftPanelCollapsed.value = !isLeftPanelCollapsed.value;
-
-	if (
-		window.matchMedia("(max-width: 768px)").matches &&
-		isLeftPanelCollapsed.value &&
-		leftPanelView.value !== viewSelected
+		(window.matchMedia("(max-width: 768px)").matches &&
+			leftPanelView.value === viewSelected) ||
+		(window.matchMedia("(max-width: 768px)").matches &&
+			isLeftPanelCollapsed.value &&
+			leftPanelView.value !== viewSelected)
 	)
 		isLeftPanelCollapsed.value = !isLeftPanelCollapsed.value;
 

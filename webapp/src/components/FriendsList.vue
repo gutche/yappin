@@ -102,6 +102,7 @@ onMounted(async () => {
 
 .fi-rr-square-plus {
 	font-size: 20px;
+	cursor: pointer;
 }
 
 .request-container {
