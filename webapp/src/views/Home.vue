@@ -109,14 +109,14 @@ const toggleLeftPanelView = (viewSelected) => {
 };
 
 const updatePanelState = () => {
-	isLeftPanelCollapsed.value = isTabletWidth;
+	isLeftPanelCollapsed.value = isTabletWidth ? false : true;
 };
 
 const handleClickOutside = (event) => {
 	if (
 		leftPanelRef.value &&
 		!leftPanelRef.value.contains(event.target) &&
-		isTabletWidth
+		isTabletWidth.value
 	) {
 		isLeftPanelCollapsed.value = true; // Collapse the panel
 	}
