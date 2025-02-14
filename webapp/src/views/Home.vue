@@ -82,14 +82,17 @@ const copyCode = () => {
 	}, 3000); // Reset after 3 seconds
 };
 
+const isTabletWidth = computed(() => {
+	return window.matchMedia("(max-width: 768px)").matches;
+});
+
 const toggleLeftPanelView = (viewSelected) => {
 	// hide/show left panel if
 	// user clicks the current view icon
 	// or clicks a different icon and left panel is collapsed
 	if (
-		(window.matchMedia("(max-width: 768px)").matches &&
-			leftPanelView.value === viewSelected) ||
-		(window.matchMedia("(max-width: 768px)").matches &&
+		(isTabletWidth && leftPanelView.value === viewSelected) ||
+		(isTabletWidth &&
 			isLeftPanelCollapsed.value &&
 			leftPanelView.value !== viewSelected)
 	)
@@ -106,7 +109,6 @@ const toggleLeftPanelView = (viewSelected) => {
 };
 
 const updatePanelState = () => {
-	const isTabletWidth = window.matchMedia("(max-width: 768px)").matches;
 	isLeftPanelCollapsed.value = isTabletWidth;
 };
 
@@ -114,7 +116,7 @@ const handleClickOutside = (event) => {
 	if (
 		leftPanelRef.value &&
 		!leftPanelRef.value.contains(event.target) &&
-		window.matchMedia("(max-width: 768px)").matches
+		isTabletWidth
 	) {
 		isLeftPanelCollapsed.value = true; // Collapse the panel
 	}
@@ -339,7 +341,10 @@ onBeforeUnmount(() => {
 		</div>
 		<div class="middle-panel">
 			<MessagePanel
-				v-if="selectedChat && isLeftPanelCollapsed"
+				v-if="
+					(selectedChat && !isTabletWidth) ||
+					(selectedChat && isLeftPanelCollapsed && isTabletWidth)
+				"
 				:user="selectedChat"
 				@input="onMessageSent" />
 		</div>
