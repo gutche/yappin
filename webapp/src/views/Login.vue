@@ -29,7 +29,7 @@ const submitForm = async () => {
 const loginAsGuest = async () => {
 	showAuthModal.value = false;
 	const { response } = await useFetch("/auth/register").post({
-		is_anonymou: true,
+		is_anonymous: true,
 	});
 	if (response.value.ok) router.push("/");
 };

@@ -26,7 +26,7 @@ router.post("/register", isNotAuthenticated, async (req, res, next) => {
 
 	try {
 		let newUser;
-		if (is_anonymous === true) {
+		if (!is_anonymous) {
 			const saltRounds = 10;
 			const hashedPassword = await bcrypt.hash(password, saltRounds);
 			const username = email.split("@")[0];
