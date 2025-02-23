@@ -8,15 +8,17 @@ const password = ref("");
 const rememberUser = ref(false);
 const serverError = ref("");
 const showAuthModal = ref(true);
+const loading = ref(false);
 
 const submitForm = async () => {
-	const { response, error } = await useFetch("/auth/login")
+	const { response, error, isFetching } = await useFetch("/auth/login")
 		.post({
 			email: email.value,
 			password: password.value,
 			rememberUser: rememberUser.value,
 		})
 		.json();
+	loading.value = isFetching.value;
 	if (error) {
 		serverError.value = error.value;
 	}
@@ -27,10 +29,10 @@ const submitForm = async () => {
 };
 
 const loginAsGuest = async () => {
-	showAuthModal.value = false;
-	const { response } = await useFetch("/auth/register").post({
+	const { response, isFetching } = await useFetch("/auth/register").post({
 		is_anonymous: true,
 	});
+	loading.value = isFetching.value;
 	if (response.value.ok) router.push("/");
 };
 </script>
@@ -38,10 +40,13 @@ const loginAsGuest = async () => {
 <template>
 	<div v-if="showAuthModal" class="modal-overlay">
 		<div class="modal">
-			<h2>Select Login Option</h2>
-			<button @click="showAuthModal = false">Login</button>
-			<hr />
-			<button @click="loginAsGuest">Login as Guest</button>
+			<div v-if="loading" class="spinner"></div>
+			<div v-else>
+				<h2>Select Login Option</h2>
+				<button @click="showAuthModal = false">Login</button>
+				<hr />
+				<button @click="loginAsGuest">Login as Guest</button>
+			</div>
 		</div>
 	</div>
 
@@ -69,7 +74,7 @@ const loginAsGuest = async () => {
 					v-model="password"
 					required />
 				<p v-if="serverError" style="color: red">{{ serverError }}</p>
-				<button type="submit">Login</button>
+				<button type="submit" :disabled="loading">Login</button>
 				<label>
 					<input
 						type="checkbox"
@@ -110,10 +115,10 @@ const loginAsGuest = async () => {
 	padding: 20px;
 	border-radius: 10px;
 	text-align: center;
-}
 
-.modal button {
-	width: 100%;
+	button {
+		width: 100%;
+	}
 }
 
 .form-container {
@@ -176,6 +181,24 @@ button:hover {
 span.psw {
 	float: right;
 	padding-top: 16px;
+}
+
+.spinner {
+	border: 4px solid rgba(0, 0, 0, 0.1);
+	border-left-color: #04aa6d;
+	border-radius: 50%;
+	width: 50px;
+	height: 50px;
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
 }
 
 @media screen and (max-width: 300px) {
