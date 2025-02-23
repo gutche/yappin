@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
 		flex-grow: 1;
 		display: flex;
 		flex-direction: column;
-		background-image: url("/whatsapp-background-original.png");
+		background-color: #dddddd;
 	}
 
 	.left-panel {
@@ -370,7 +370,7 @@ onBeforeUnmount(() => {
 		color: black;
 		display: flex;
 		flex-direction: column;
-		background-color: #f4f4f4;
+		background-color: #ededed;
 		border-right: 1px solid rgba(0, 0, 0, 0.144);
 		transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
 
