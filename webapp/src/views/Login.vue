@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import router from "@/router";
 import useFetch from "@/api/useFetch";
+import ModalSpinner from "@/components/shared/ModalSpinner.vue";
 
 const email = ref("");
 const password = ref("");
@@ -12,7 +13,6 @@ const loading = ref(false);
 
 const submitForm = async () => {
 	loading.value = true;
-	showAuthModal.value = true;
 	const { response, error } = await useFetch("/auth/login")
 		.post({
 			email: email.value,
@@ -20,7 +20,6 @@ const submitForm = async () => {
 			rememberUser: rememberUser.value,
 		})
 		.json();
-	loading.value = false;
 	if (error) {
 		serverError.value = error.value;
 	}
@@ -32,72 +31,71 @@ const submitForm = async () => {
 
 const loginAsGuest = async () => {
 	loading.value = true;
+	showAuthModal.value = false;
 	const { response } = await useFetch("/auth/register").post({
 		is_anonymous: true,
 	});
-	loading.value = false;
 	if (response.value.ok) router.push("/");
 };
 </script>
 
 <template>
-	<div v-if="showAuthModal" class="modal-overlay">
-		<div class="modal">
-			<div v-if="loading" class="spinner"></div>
-			<div v-else>
+	<ModalSpinner v-if="loading" />
+	<template v-else>
+		<div v-if="showAuthModal" class="modal-overlay">
+			<div class="modal">
 				<h2>Select Login Option</h2>
 				<button @click="showAuthModal = false">Login</button>
 				<hr />
 				<button @click="loginAsGuest">Login as Guest</button>
 			</div>
 		</div>
-	</div>
-
-	<div class="form-container" v-if="!showAuthModal">
-		<form @submit.prevent="submitForm">
-			<div class="img-container">
-				<img
-					src="https://as1.ftcdn.net/v2/jpg/03/16/12/52/1000_F_316125289_3GTL3Yd9JVQz3Nw50uAEEkOpX6GvK0LE.jpg"
-					alt="Login logo" />
-			</div>
-			<div class="container">
-				<label for="email"><b>Email</b></label>
-				<input
-					type="text"
-					placeholder="Enter Email"
-					name="email"
-					v-model="email"
-					required />
-
-				<label for="psw"><b>Password</b></label>
-				<input
-					type="password"
-					placeholder="Enter Password"
-					name="psw"
-					v-model="password"
-					required />
-				<p v-if="serverError" style="color: red">{{ serverError }}</p>
-				<button type="submit" :disabled="loading">Login</button>
-				<label>
+		<div class="form-container" v-else>
+			<form @submit.prevent="submitForm">
+				<div class="img-container">
+					<img src="/no-profile.png" alt="Login logo" />
+				</div>
+				<div class="container">
+					<label for="email"><b>Email</b></label>
 					<input
-						type="checkbox"
-						checked="checked"
-						name="remember"
-						v-model="rememberUser" />
-					Remember me
-				</label>
-			</div>
+						type="text"
+						placeholder="Enter Email"
+						name="email"
+						v-model="email"
+						required />
 
-			<div class="container" style="background-color: #f1f1f1">
-				<RouterLink to="/register"
-					><button type="button" class="cancelbtn">
-						Create an account
-					</button>
-				</RouterLink>
-				<span class="psw"><a href="#">Forgot password?</a></span>
-			</div>
-		</form>
-	</div>
+					<label for="psw"><b>Password</b></label>
+					<input
+						type="password"
+						placeholder="Enter Password"
+						name="psw"
+						v-model="password"
+						required />
+					<p v-if="serverError" style="color: red">
+						{{ serverError }}
+					</p>
+					<button type="submit" :disabled="loading">Login</button>
+					<label>
+						<input
+							type="checkbox"
+							checked="checked"
+							name="remember"
+							v-model="rememberUser" />
+						Remember me
+					</label>
+				</div>
+
+				<div class="container" style="background-color: #f1f1f1">
+					<RouterLink to="/register"
+						><button type="button" class="cancelbtn">
+							Create an account
+						</button>
+					</RouterLink>
+					<span class="psw"><a href="#">Forgot password?</a></span>
+				</div>
+			</form>
+		</div>
+	</template>
 </template>
 
 <style scoped>
@@ -184,24 +182,6 @@ button:hover {
 span.psw {
 	float: right;
 	padding-top: 16px;
-}
-
-.spinner {
-	border: 4px solid rgba(0, 0, 0, 0.1);
-	border-left-color: #04aa6d;
-	border-radius: 50%;
-	width: 50px;
-	height: 50px;
-	animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-	0% {
-		transform: rotate(0deg);
-	}
-	100% {
-		transform: rotate(360deg);
-	}
 }
 
 @media screen and (max-width: 300px) {

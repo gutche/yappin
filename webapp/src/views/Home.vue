@@ -11,6 +11,7 @@ import router from "@/router/index";
 import Chat from "@/components/Chat.vue";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { useFriendStore } from "@/stores/friendStore";
+import ModalSpinner from "@/components/shared/ModalSpinner.vue";
 
 const notificationStore = useNotificationStore();
 const friendStore = useFriendStore();
@@ -23,6 +24,7 @@ const copied = ref(false);
 const isLeftPanelCollapsed = ref(false);
 const leftPanelRef = ref(null);
 const currentProfile = ref(null);
+const loading = ref(false);
 
 socket.connect();
 
@@ -136,6 +138,7 @@ const initReactiveProperties = (chat) => {
 };
 
 const logout = async () => {
+	loading.value = true;
 	const { response, error } = await useFetch("/auth/logout").delete().json();
 	if (response.value.ok) {
 		socket.disconnect();
@@ -263,6 +266,7 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
+	<ModalSpinner v-if="loading" />
 	<div class="wrapper">
 		<div
 			ref="leftPanelRef"
