@@ -11,14 +11,16 @@ const showAuthModal = ref(true);
 const loading = ref(false);
 
 const submitForm = async () => {
-	const { response, error, isFetching } = await useFetch("/auth/login")
+	loading.value = true;
+	showAuthModal.value = true;
+	const { response, error } = await useFetch("/auth/login")
 		.post({
 			email: email.value,
 			password: password.value,
 			rememberUser: rememberUser.value,
 		})
 		.json();
-	loading.value = isFetching.value;
+	loading.value = false;
 	if (error) {
 		serverError.value = error.value;
 	}
@@ -29,10 +31,11 @@ const submitForm = async () => {
 };
 
 const loginAsGuest = async () => {
-	const { response, isFetching } = await useFetch("/auth/register").post({
+	loading.value = true;
+	const { response } = await useFetch("/auth/register").post({
 		is_anonymous: true,
 	});
-	loading.value = isFetching.value;
+	loading.value = false;
 	if (response.value.ok) router.push("/");
 };
 </script>
