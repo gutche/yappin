@@ -20,6 +20,7 @@ const submitForm = async () => {
 			rememberUser: rememberUser.value,
 		})
 		.json();
+	loading.value = false;
 	if (error) {
 		serverError.value = error.value;
 	}
