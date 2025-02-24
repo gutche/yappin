@@ -2,11 +2,12 @@
 import { ref } from "vue";
 import router from "@/router/index";
 import useFetch from "@/api/useFetch";
+import ModalSpinner from "@/components/shared/ModalSpinner.vue";
 
 const email = ref("");
 const password = ref("");
 const repeatedPassword = ref("");
-
+const loading = ref(false);
 const errorMessage = ref("");
 
 const sendForm = async () => {
@@ -19,10 +20,12 @@ const sendForm = async () => {
 		errorMessage.value = "Passwords don't match";
 		return;
 	}
+	loading.value = true;
 	const { response, error } = await useFetch("/auth/register").post({
 		email: email.value,
 		password: password.value,
 	});
+	loading.value = false;
 	if (error) console.error(error.value);
 	if (!response.value.ok) {
 		const { error } = await response.value.json();
@@ -39,64 +42,71 @@ const validateEmail = (email) => {
 </script>
 
 <template>
-	<div class="form-container">
-		<form @submit.prevent="sendForm">
-			<div class="container">
-				<h1>Register</h1>
-				<p>Please fill in this form to create an account.</p>
-				<hr />
+	<ModalSpinner v-if="loading" />
+	<template v-else>
+		<div class="form-container">
+			<form @submit.prevent="sendForm">
+				<div class="container">
+					<h1>Register</h1>
+					<p>Please fill in this form to create an account.</p>
+					<hr />
 
-				<label for="email"><b>Email</b></label>
-				<input
-					type="text"
-					placeholder="Enter Email"
-					name="email"
-					id="email"
-					v-model="email"
-					:class="errorMessage === 'Invalid email' ? 'error' : ''"
-					required />
-				<label for="psw"><b>Password</b></label>
-				<input
-					type="password"
-					placeholder="Enter Password"
-					name="psw"
-					id="psw"
-					v-model="password"
-					:class="
-						errorMessage === 'Passwords don\'t match' ? 'error' : ''
-					"
-					required />
+					<label for="email"><b>Email</b></label>
+					<input
+						type="text"
+						placeholder="Enter Email"
+						name="email"
+						id="email"
+						v-model="email"
+						:class="errorMessage === 'Invalid email' ? 'error' : ''"
+						required />
+					<label for="psw"><b>Password</b></label>
+					<input
+						type="password"
+						placeholder="Enter Password"
+						name="psw"
+						id="psw"
+						v-model="password"
+						:class="
+							errorMessage === 'Passwords don\'t match'
+								? 'error'
+								: ''
+						"
+						required />
 
-				<label for="psw-repeat"><b>Repeat Password</b></label>
-				<input
-					type="password"
-					placeholder="Repeat Password"
-					name="psw-repeat"
-					id="psw-repeat"
-					v-model="repeatedPassword"
-					:class="
-						errorMessage === 'Passwords don\'t match' ? 'error' : ''
-					"
-					required />
-				<hr />
-				<p v-if="errorMessage" style="color: red">
-					{{ errorMessage }}
-				</p>
-				<p>
-					By creating an account you agree to our
-					<a href="#">Terms & Privacy</a>.
-				</p>
-				<button type="submit" class="registerbtn">Register</button>
-			</div>
+					<label for="psw-repeat"><b>Repeat Password</b></label>
+					<input
+						type="password"
+						placeholder="Repeat Password"
+						name="psw-repeat"
+						id="psw-repeat"
+						v-model="repeatedPassword"
+						:class="
+							errorMessage === 'Passwords don\'t match'
+								? 'error'
+								: ''
+						"
+						required />
+					<hr />
+					<p v-if="errorMessage" style="color: red">
+						{{ errorMessage }}
+					</p>
+					<p>
+						By creating an account you agree to our
+						<a href="#">Terms & Privacy</a>.
+					</p>
+					<button type="submit" class="registerbtn">Register</button>
+				</div>
 
-			<div class="container signin">
-				<p>
-					Already have an account?
-					<RouterLink to="/login">Sign in</RouterLink>.
-				</p>
-			</div>
-		</form>
-	</div>
+				<div class="container signin">
+					<p>
+						Already have an account?
+						<RouterLink to="/login">Sign in</RouterLink>.
+					</p>
+				</div>
+			</form>
+		</div>
+	</template>
 </template>
 
 <style scoped>
