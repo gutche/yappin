@@ -3,10 +3,20 @@ import { nextTick, onMounted, ref } from "vue";
 import StatusIcon from "./shared/StatusIcon.vue";
 import { useInfiniteScroll } from "@vueuse/core";
 import useFetch from "@/api/useFetch";
+import { isNewDay, formatDate } from "@/utils/dateUtils";
+import data from "emoji-mart-vue-fast/data/all.json";
+import { Picker, EmojiIndex } from "emoji-mart-vue-fast/src";
+let emojiIndex = new EmojiIndex(data);
+import "emoji-mart-vue-fast/css/emoji-mart.css";
 
 const input = ref("");
 const el = ref(null);
 const isFetching = ref(false);
+const showPicker = ref(false);
+
+const addEmoji = (emoji) => {
+	input.value += emoji.native;
+};
 
 const { user } = defineProps({
 	user: Object,
@@ -15,15 +25,6 @@ const hasMoreMessages = ref(user.hasMoreMessages);
 
 const emit = defineEmits(["input"]);
 
-// Will be needed when group chats are implemented
-/* const displaySender = (message, index) => {
-	return (
-		(index === 0 ||
-			user.messages[index - 1].fromSelf !==
-				user.messages[index].fromSelf) &&
-		user.isGroup
-	);
-}; */
 const handleKeydown = async (event) => {
 	if (event.key === "Enter" && !event.shiftKey) {
 		event.preventDefault(); // Prevents adding a new line
@@ -79,26 +80,15 @@ const scrollToBottom = (behavior) => {
 	}
 };
 
-const isNewDate = (message, index) => {
-	if (index === 0) return true;
-	const prevDate = new Date(user.messages[index - 1].sent_at).toDateString();
-	const currDate = new Date(message.sent_at).toDateString();
-	return prevDate !== currDate;
-};
-
-const formatDate = (date) => {
-	return new Date(date).toLocaleDateString(undefined, {
-		weekday: "long",
-		year: "numeric",
-		month: "long",
-		day: "numeric",
-	});
-};
-
 onMounted(() => {
 	reset();
 	scrollToBottom("instant");
 });
+
+const togglePicker = () => {
+	console.log("toggled picker");
+	showPicker.value = !showPicker.value;
+};
 </script>
 
 <template>
@@ -119,7 +109,14 @@ onMounted(() => {
 				v-for="(message, index) in user.messages"
 				:key="index"
 				class="message-container">
-				<div v-if="isNewDate(message, index)" class="date-divider">
+				<div
+					v-if="
+						isNewDay(
+							user.messages[index - 1].sent_at,
+							message.sent_at
+						)
+					"
+					class="date-divider">
 					{{ formatDate(message.sent_at) }}
 				</div>
 				<div :class="['message', { self: message.fromSelf }]">
@@ -127,17 +124,37 @@ onMounted(() => {
 				</div>
 			</div>
 		</div>
-		<form class="form">
-			<textarea
+		<div class="input-wrapper">
+			<input
 				v-model="input"
-				placeholder="Your message..."
+				type="text"
+				class="input"
 				@keydown="handleKeydown"
-				class="input" />
-		</form>
+				placeholder="Type a message..." />
+			<button class="emoji" @click="togglePicker">😀</button>
+			<picker
+				v-if="showPicker"
+				class="picker"
+				:data="emojiIndex"
+				set="twitter"
+				@select="addEmoji"
+				showPreview="false" />
+		</div>
 	</main>
 </template>
 
 <style>
+.emoji {
+	position: absolute;
+	left: 65px;
+	bottom: 20px;
+}
+.picker {
+	position: absolute;
+	bottom: 0;
+	left: 65px;
+	margin-bottom: 50px;
+}
 .message-container {
 	display: flex;
 	flex-direction: column;
@@ -170,7 +187,7 @@ onMounted(() => {
 	background-color: #d1e7dd;
 }
 
-.form {
+.input-wrapper {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -218,6 +235,7 @@ onMounted(() => {
 	width: 90%;
 	resize: none;
 	padding: 10px;
+	padding-left: 35px;
 	border-radius: 5px;
 	border: 1px solid transparent;
 	outline: none;

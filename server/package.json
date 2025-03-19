@@ -5,7 +5,7 @@
 	"type": "module",
 	"main": "index.js",
 	"scripts": {
-		"start:dev": "nodemon -r dotenv/config index.js dotenv_config_path=./.env.development",
+		"start:dev": "nodemon index.js",
 		"start:prod": "node -r dotenv/config index.js dotenv_config_path=./.env.production"
 	},
 	"author": "Gledrian Gutierrez",
