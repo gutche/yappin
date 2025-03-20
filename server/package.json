@@ -5,8 +5,8 @@
 	"type": "module",
 	"main": "index.js",
 	"scripts": {
-		"start:dev": "nodemon index.js",
-		"start:prod": "node -r dotenv/config index.js dotenv_config_path=./.env.production"
+		"dev": "nodemon --env-file=.env index.js",
+		"prod": "node --env-file=.env.production index.js"
 	},
 	"author": "Gledrian Gutierrez",
 	"license": "ISC",
@@ -30,5 +30,10 @@
 	"devDependencies": {
 		"dbmate": "^2.25.0",
 		"nodemon": "^3.1.7"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"bcrypt"
+		]
 	}
 }

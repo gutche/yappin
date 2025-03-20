@@ -112,7 +112,7 @@ const togglePicker = () => {
 				<div
 					v-if="
 						isNewDay(
-							user.messages[index - 1].sent_at,
+							user.messages[index - 1]?.sent_at,
 							message.sent_at
 						)
 					"
@@ -131,28 +131,40 @@ const togglePicker = () => {
 				class="input"
 				@keydown="handleKeydown"
 				placeholder="Type a message..." />
-			<button class="emoji" @click="togglePicker">😀</button>
+			<button class="emoji" @click="togglePicker">
+				<i v-if="!showPicker" class="fi fi-rr-grin"></i>
+				<i v-else class="fi fi-rr-cross-circle"></i>
+			</button>
 			<picker
 				v-if="showPicker"
 				class="picker"
 				:data="emojiIndex"
 				set="twitter"
 				@select="addEmoji"
-				showPreview="false" />
+				:showPreview="false" />
 		</div>
 	</main>
 </template>
 
 <style>
+.emoji-mart-category .emoji-mart-emoji span {
+	cursor: pointer;
+}
+
 .emoji {
 	position: absolute;
 	left: 65px;
 	bottom: 20px;
+	border-radius: 50%;
+
+	&:hover {
+		background-color: rgba(211, 211, 211, 0.8);
+	}
 }
 .picker {
 	position: absolute;
 	bottom: 0;
-	left: 65px;
+	left: 55px;
 	margin-bottom: 50px;
 }
 .message-container {
