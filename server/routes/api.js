@@ -2,6 +2,7 @@ import express from "express";
 import profileRoutes from "./profile.routes.js";
 import friendsListRoutes from "./friendsList.routes.js";
 import authRoutes from "./auth.routes.js";
+import messagePanelRoutes from "./messagePanel.routes.js";
 import {
 	getUserById,
 	loadMoreMessages,
@@ -38,5 +39,6 @@ router.get("/messages", async (req, res) => {
 router.use("/profile", profileRoutes);
 router.use("/friendsList", friendsListRoutes);
 router.use("/auth", authRoutes);
+router.use("/messagePanel", messagePanelRoutes);
 
 export default router;

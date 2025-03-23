@@ -83,18 +83,23 @@ export const configureSockets = (io) => {
 		});
 
 		// forward the private message to the right recipient
-		socket.on("private message", async ({ content, to, sent_at }) => {
-			const message = {
-				content,
-				sender_id: userID,
-				recipient_id: to,
-				sent_at,
-			};
-			socket.to(to).to(userID).emit("private message", message);
-			const convID = await saveMessage(message);
-			message.conversation_id = convID;
-			messageStore.saveMessage(message);
-		});
+		socket.on(
+			"private message",
+			async ({ content, to, sent_at, media_url, media_type }) => {
+				const message = {
+					content,
+					sender_id: userID,
+					recipient_id: to,
+					sent_at,
+					media_type,
+					media_url,
+				};
+				socket.to(to).to(userID).emit("private message", message);
+				const convID = await saveMessage(message);
+				message.conversation_id = convID;
+				messageStore.saveMessage(message);
+			}
+		);
 
 		// notify users upon disconnection
 		socket.on("disconnect", async () => {

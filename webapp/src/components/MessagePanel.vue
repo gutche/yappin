@@ -6,13 +6,18 @@ import useFetch from "@/api/useFetch";
 import { isNewDay, formatDate } from "@/utils/dateUtils";
 import data from "emoji-mart-vue-fast/data/all.json";
 import { Picker, EmojiIndex } from "emoji-mart-vue-fast/src";
-let emojiIndex = new EmojiIndex(data);
 import "emoji-mart-vue-fast/css/emoji-mart.css";
 
 const input = ref("");
 const el = ref(null);
 const isFetching = ref(false);
 const showPicker = ref(false);
+const showUploader = ref(false);
+const recording = ref(false);
+const audioUrl = ref(null);
+const emojiIndex = new EmojiIndex(data);
+let mediaRecorder;
+let audioChunks = [];
 
 const addEmoji = (emoji) => {
 	input.value += emoji.native;
@@ -34,6 +39,43 @@ const handleKeydown = async (event) => {
 			await nextTick();
 			scrollToBottom("smooth");
 		}
+	}
+};
+
+const startRecording = async () => {
+	const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+	mediaRecorder = new MediaRecorder(stream);
+	audioChunks = [];
+
+	mediaRecorder.ondataavailable = (event) => {
+		audioChunks.push(event.data);
+	};
+
+	mediaRecorder.onstop = async () => {
+		const audioBlob = new Blob(audioChunks, { type: "audio/mpeg" });
+		audioUrl.value = URL.createObjectURL(audioBlob); // Listen before sending
+
+		const formData = new FormData();
+		formData.append("voice", audioBlob, "recording.mp3");
+		const { data } = await useFetch("/messagePanel/upload-voice")
+			.post(formData)
+			.json();
+		if (data.value.secure_url) {
+			emit("input", {
+				media_type: "audio",
+				media_url: data.value.secure_url,
+			});
+		}
+	};
+
+	mediaRecorder.start();
+	recording.value = true;
+};
+
+const stopRecording = () => {
+	if (mediaRecorder) {
+		mediaRecorder.stop();
+		recording.value = false;
 	}
 };
 
@@ -86,8 +128,11 @@ onMounted(() => {
 });
 
 const togglePicker = () => {
-	console.log("toggled picker");
 	showPicker.value = !showPicker.value;
+};
+
+const toggleUploader = () => {
+	showUploader.value = !showUploader.value;
 };
 </script>
 
@@ -120,21 +165,33 @@ const togglePicker = () => {
 					{{ formatDate(message.sent_at) }}
 				</div>
 				<div :class="['message', { self: message.fromSelf }]">
-					{{ message.content }}
+					<template v-if="message.content.media_type === 'audio'">
+						<audio controls>
+							<source
+								:src="message.content.media_url"
+								type="audio/mp3" />
+							Your browser does not support the audio element.
+						</audio>
+					</template>
+					<template v-else>
+						{{ message.content }}
+					</template>
 				</div>
 			</div>
 		</div>
 		<div class="input-wrapper">
-			<input
-				v-model="input"
-				type="text"
-				class="input"
-				@keydown="handleKeydown"
-				placeholder="Type a message..." />
+			<button class="emoji" @click="toggleUploader">
+				<i v-if="!showUploader" class="fi fi-rr-plus"></i>
+				<i v-else class="fi fi-rr-cross"></i>
+			</button>
 			<button class="emoji" @click="togglePicker">
 				<i v-if="!showPicker" class="fi fi-rr-grin"></i>
 				<i v-else class="fi fi-rr-cross-circle"></i>
 			</button>
+			<div v-if="showUploader" class="uploader">
+				<button>Documents</button>
+				<button>Photos and Videos</button>
+			</div>
 			<picker
 				v-if="showPicker"
 				class="picker"
@@ -142,35 +199,79 @@ const togglePicker = () => {
 				set="twitter"
 				@select="addEmoji"
 				:showPreview="false" />
+			<input
+				v-model="input"
+				type="text"
+				class="input"
+				@keydown="handleKeydown"
+				placeholder="Type a message..." />
+
+			<button
+				@mousedown="startRecording"
+				@mouseup="stopRecording"
+				class="record-button">
+				<i v-if="!recording" class="fi fi-rr-microphone"></i>
+				<i v-else class="fi fi-rr-square"></i>
+			</button>
 		</div>
 	</main>
 </template>
 
 <style>
+.uploader {
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	bottom: 50px;
+	left: 20px;
+	background-color: #fff;
+	border-radius: 5px;
+
+	button {
+		padding: 5px;
+
+		&:hover {
+			background-color: rgba(211, 211, 211, 0.8);
+		}
+	}
+}
+
+.record-button {
+	margin-left: 5px;
+	padding: 10px;
+	cursor: pointer;
+	border-radius: 50%;
+	&:hover {
+		background-color: rgba(211, 211, 211, 0.8);
+	}
+	.fi-rr-square {
+		color: red;
+	}
+}
+
 .emoji-mart-category .emoji-mart-emoji span {
 	cursor: pointer;
 }
 
 .emoji {
-	position: absolute;
-	left: 65px;
-	bottom: 20px;
+	margin-right: 10px;
 	border-radius: 50%;
-
 	&:hover {
 		background-color: rgba(211, 211, 211, 0.8);
 	}
 }
+
 .picker {
 	position: absolute;
-	bottom: 0;
-	left: 55px;
-	margin-bottom: 50px;
+	left: 60px;
+	bottom: 50px;
 }
+
 .message-container {
 	display: flex;
 	flex-direction: column;
 }
+
 .date-divider {
 	text-align: center;
 	margin: 10px 0;
@@ -211,6 +312,7 @@ const togglePicker = () => {
 	margin: 0;
 	display: flex;
 	padding: 0;
+	margin: 0 30px;
 	flex-direction: column;
 	overflow-y: auto;
 	scrollbar-width: none;
@@ -238,16 +340,15 @@ const togglePicker = () => {
 .body {
 	display: flex;
 	flex-direction: column;
-	margin: 0 30px;
 	height: calc(100vh - 60px);
 	position: relative;
 }
 
 .input {
 	width: 90%;
+	display: flex;
 	resize: none;
 	padding: 10px;
-	padding-left: 35px;
 	border-radius: 5px;
 	border: 1px solid transparent;
 	outline: none;

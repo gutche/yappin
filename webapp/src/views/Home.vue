@@ -35,18 +35,22 @@ const viewName = computed(() => {
 	);
 });
 
-const onMessageSent = (content) => {
+const onMessageSent = (content, media_type, media_url) => {
 	if (selectedChat) {
 		const sent_at = new Date().toISOString();
 		socket.emit("private message", {
 			content,
 			to: selectedChat.value.id,
 			sent_at,
+			media_type,
+			media_url,
 		});
 		selectedChat.value.messages.push({
 			content,
 			fromSelf: true,
 			sent_at,
+			media_type,
+			media_url,
 		});
 	}
 };
