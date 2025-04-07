@@ -56,8 +56,8 @@ const startRecording = async () => {
 		audioUrl.value = URL.createObjectURL(audioBlob); // Listen before sending
 
 		const formData = new FormData();
-		formData.append("voice", audioBlob, "recording.mp3");
-		const { data } = await useFetch("/messagePanel/upload-voice")
+		formData.append("file", audioBlob, "recording.mp3");
+		const { data } = await useFetch("/messagePanel/upload-media")
 			.post(formData)
 			.json();
 		if (data.value.secure_url) {
@@ -128,11 +128,38 @@ onMounted(() => {
 });
 
 const togglePicker = () => {
+	showUploader.value = false;
 	showPicker.value = !showPicker.value;
 };
 
 const toggleUploader = () => {
+	showPicker.value = false;
 	showUploader.value = !showUploader.value;
+};
+
+const uploadFile = async () => {
+	const input = document.createElement("input");
+	input.type = "file";
+	input.onchange = async (event) => {
+		const file = event.target.files[0];
+		if (!file) return;
+		const formData = new FormData();
+		formData.append("file", file);
+		const { data } = await useFetch("/messagePanel/upload-media")
+			.post(formData)
+			.json();
+		const mediaType = file.type.split("/")[0];
+
+		if (data.value.secure_url) {
+			emit("input", {
+				media_type:
+					mediaType === "application" ? "document" : mediaType,
+				media_url: data.value.secure_url,
+				file_name: file.name,
+			});
+		}
+	};
+	input.click();
 };
 </script>
 
@@ -167,12 +194,39 @@ const toggleUploader = () => {
 				<div :class="['message', { self: message.fromSelf }]">
 					<template v-if="message.content.media_type === 'audio'">
 						<audio controls>
-							<source
-								:src="message.content.media_url"
-								type="audio/mp3" />
+							<source :src="message.content.media_url" />
 							Your browser does not support the audio element.
 						</audio>
 					</template>
+					<!-- IMAGE MESSAGE -->
+					<template
+						v-else-if="message.content.media_type === 'image'">
+						<img
+							:src="message.content.media_url"
+							alt="Sent Image"
+							class="chat-image" />
+					</template>
+
+					<template
+						v-else-if="message.content.media_type === 'video'">
+						<video controls class="chat-video">
+							<source :src="message.content.media_url" />
+							Your browser does not support the video tag.
+						</video>
+					</template>
+
+					<template
+						v-else-if="message.content.media_type === 'document'">
+						📄
+						<a
+							:href="message.content.media_url"
+							:download="message.content.file_name"
+							target="_blank"
+							class="document-link">
+							{{ message.content.file_name }}
+						</a>
+					</template>
+
 					<template v-else>
 						{{ message.content }}
 					</template>
@@ -189,8 +243,8 @@ const toggleUploader = () => {
 				<i v-else class="fi fi-rr-cross-circle"></i>
 			</button>
 			<div v-if="showUploader" class="uploader">
-				<button>Documents</button>
-				<button>Photos and Videos</button>
+				<button @click="uploadFile">Documents</button>
+				<button @click="uploadFile">Photos and Videos</button>
 			</div>
 			<picker
 				v-if="showPicker"

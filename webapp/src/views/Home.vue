@@ -35,7 +35,7 @@ const viewName = computed(() => {
 	);
 });
 
-const onMessageSent = (content, media_type, media_url) => {
+const onMessageSent = (content, media_type, media_url, file_name) => {
 	if (selectedChat) {
 		const sent_at = new Date().toISOString();
 		socket.emit("private message", {
@@ -44,6 +44,7 @@ const onMessageSent = (content, media_type, media_url) => {
 			sent_at,
 			media_type,
 			media_url,
+			file_name,
 		});
 		selectedChat.value.messages.push({
 			content,
@@ -51,6 +52,7 @@ const onMessageSent = (content, media_type, media_url) => {
 			sent_at,
 			media_type,
 			media_url,
+			file_name,
 		});
 	}
 };
