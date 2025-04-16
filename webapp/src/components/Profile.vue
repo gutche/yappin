@@ -21,10 +21,8 @@
 			<button @click="removePhoto">Remove photo</button>
 		</div>
 		<div class="username" v-if="!isEditingUsername">
-			<span>{{ user.username }}</span
-			><i
-				class="fa-regular fa-pen-to-square"
-				@click="startEditingUsername"></i>
+			<span>{{ user.username }}</span>
+			<!-- <i class="fi-rr fi-rr-pencil" @click="startEditingUsername"></i> -->
 		</div>
 		<div class="username-edit" v-else>
 			<textarea
@@ -57,7 +55,6 @@ import useFetch from "@/api/useFetch";
 const { user } = defineProps({
 	user: Object,
 });
-
 const showDropdown = ref(false);
 const isEditingBio = ref(false);
 const bioDraft = ref("");

@@ -1,6 +1,5 @@
 <script setup>
 import { nextTick, onMounted, ref } from "vue";
-import StatusIcon from "./shared/StatusIcon.vue";
 import { useInfiniteScroll } from "@vueuse/core";
 import useFetch from "@/api/useFetch";
 import { isNewDay, formatDate } from "@/utils/dateUtils";
@@ -26,7 +25,7 @@ const addEmoji = (emoji) => {
 const { user } = defineProps({
 	user: Object,
 });
-const hasMoreMessages = ref(user.hasMoreMessages);
+const hasMoreMessages = ref(user?.hasMoreMessages);
 
 const emit = defineEmits(["input"]);
 
@@ -164,21 +163,28 @@ const uploadFile = async () => {
 </script>
 
 <template>
-	<div class="header">
+	<div class="flex items-center p-2 border-b-1 border-gray-300">
 		<img
-			class="profile-pic"
-			:src="user.avatar || '/no-profile.png'"
+			class="h-[40px] mr-2 rounded-4xl"
+			:src="user?.avatar || '/no-profile.png'"
 			alt="User profile" />
-		{{ user.username }}<StatusIcon :connected="user.connected" />
+		{{ user?.username }}xdd
+		<i
+			:class="[
+				{ connected: user?.connected },
+				'bg-[#e38968] h-[8px] w-[8px] ml-2 rounded-sm',
+			]"></i>
 	</div>
 	<main class="body">
 		<span v-if="isFetching" class="loader"></span>
 		<div ref="el" class="messages">
-			<div v-if="!hasMoreMessages" class="start">
+			<div
+				v-if="!hasMoreMessages"
+				class="self-center bg-amber-100 rounded-md w-fit p-1 mt-4">
 				Start of conversation
 			</div>
 			<div
-				v-for="(message, index) in user.messages"
+				v-for="(message, index) in user?.messages"
 				:key="index"
 				class="message-container">
 				<div
@@ -256,7 +262,7 @@ const uploadFile = async () => {
 			<input
 				v-model="input"
 				type="text"
-				class="input"
+				class="w-9/10 outline-none border border-gray-500 p-1 rounded-md"
 				@keydown="handleKeydown"
 				placeholder="Type a message..." />
 
@@ -334,13 +340,6 @@ const uploadFile = async () => {
 	color: #888;
 }
 
-.profile-pic {
-	height: 40px;
-	width: 40px;
-	border-radius: 50%;
-	margin-right: 10px;
-}
-
 .header {
 	line-height: 40px;
 	padding: 10px 20px;
@@ -398,20 +397,6 @@ const uploadFile = async () => {
 	position: relative;
 }
 
-.input {
-	width: 90%;
-	display: flex;
-	resize: none;
-	padding: 10px;
-	border-radius: 5px;
-	border: 1px solid transparent;
-	outline: none;
-
-	&:focus {
-		border: 1px solid rgba(0, 0, 0, 0.342);
-	}
-}
-
 .loader {
 	width: 24px;
 	height: 24px;
@@ -425,23 +410,5 @@ const uploadFile = async () => {
 	left: 50%;
 	transform: translateX(-50%);
 	margin-top: 10px;
-}
-
-.start {
-	margin: 20px 0px;
-	align-self: center;
-	background-color: rgb(219, 204, 156);
-	border-radius: 5px;
-	padding: 5px;
-	font-weight: bold;
-}
-
-@keyframes rotation {
-	0% {
-		transform: rotate(0deg);
-	}
-	100% {
-		transform: rotate(360deg);
-	}
 }
 </style>

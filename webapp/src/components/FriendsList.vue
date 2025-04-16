@@ -1,7 +1,6 @@
 <template>
-	<p v-if="isFetching" class="info">Loading friends...</p>
+	<p v-if="isFetching" class="text-center text-lg my-4">Loading friends...</p>
 	<template v-else>
-		<p v-if="friends.length === 0" class="info">You do not have friends</p>
 		<User
 			v-for="friend in friends"
 			:key="friend.id"
@@ -11,20 +10,26 @@
 			@message="onMessageUser(friend)"
 			@unfriend="removeUser(friend)"
 			@select="onSelectFriend(friend)" />
-		<div class="add-container">
+		<div class="border-b-1 border-gray-300 p-4 border-dashed">
 			<label for="friendCode"
 				>To add a new friend, simply enter their code:</label
 			>
-			<div class="input-wrapper">
+			<div class="flex items-center">
 				<input
 					id="friendCode"
 					v-model="friendCode"
 					placeholder="example: 123456"
+					class="border border-gray-400 rounded-sm mr-1 p-1 w-9/10"
 					type="text" />
-				<i class="fi fi-rr-square-plus" @click="addFriend"></i>
+				<i
+					class="fi fi-rr-square-plus text-xl cursor-pointer"
+					@click="addFriend"></i>
 			</div>
 			<p>{{ message }}</p>
 		</div>
+		<p v-if="friends.length === 0" class="text-center text-lg my-4">
+			You do not have friends
+		</p>
 	</template>
 </template>
 
@@ -92,45 +97,3 @@ onMounted(async () => {
 	friends.value = friendStore.friends;
 });
 </script>
-<style scoped>
-.info {
-	font-size: 18px;
-	margin: 15px;
-	display: block;
-	text-align: center;
-}
-
-.fi-rr-square-plus {
-	font-size: 20px;
-	cursor: pointer;
-}
-
-.request-container {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-.add-container {
-	margin-top: auto;
-	border-top: 1px solid rgba(0, 0, 0, 0.156);
-	align-items: center;
-	padding: 10px;
-	height: 90px;
-}
-
-.input-wrapper {
-	display: flex;
-	align-items: center;
-}
-
-input {
-	height: 30px;
-	flex: 1;
-	margin-right: 5px;
-}
-
-input,
-label {
-	display: block;
-}
-</style>

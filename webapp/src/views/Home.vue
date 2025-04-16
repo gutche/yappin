@@ -1,39 +1,25 @@
 <script setup>
 import MessagePanel from "@/components/MessagePanel.vue";
-import Profile from "@/components/Profile.vue";
-import FriendsList from "@/components/FriendsList.vue";
-import Notification from "@/components/Notification.vue";
-import ButtonIcon from "@/components/shared/ButtonIcon.vue";
+import LeftPanel from "@/components/LeftPanel.vue";
 import socket from "@/socket/socket";
 import { ref, onBeforeUnmount, computed, onMounted } from "vue";
 import useFetch from "@/api/useFetch";
-import router from "@/router/index";
-import Chat from "@/components/Chat.vue";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { useFriendStore } from "@/stores/friendStore";
 import ModalSpinner from "@/components/shared/ModalSpinner.vue";
+import { useLeftPanelStore } from "@/stores/leftPanelStore";
 
 const notificationStore = useNotificationStore();
 const friendStore = useFriendStore();
+const leftPanelStore = useLeftPanelStore();
 
 const selectedChat = ref(null);
 const currentUser = ref(null);
-const leftPanelView = ref("chats");
 const activeChats = ref([]);
-const copied = ref(false);
-const isLeftPanelCollapsed = ref(false);
-const leftPanelRef = ref(null);
 const currentProfile = ref(null);
 const loading = ref(false);
 
 socket.connect();
-
-const viewName = computed(() => {
-	return (
-		leftPanelView.value.charAt(0).toUpperCase() +
-		leftPanelView.value.slice(1)
-	);
-});
 
 const onMessageSent = (content, media_type, media_url, file_name) => {
 	if (selectedChat) {
@@ -57,105 +43,14 @@ const onMessageSent = (content, media_type, media_url, file_name) => {
 	}
 };
 
-const onUserMessage = (user) => {
-	const targetUser = activeChats.value.find((chat) => chat.id === user.id);
-	if (!targetUser) {
-		initReactiveProperties(user);
-		activeChats.value.push(user);
-	}
-	leftPanelView.value = "chats";
-	selectedChat.value = targetUser || user;
-};
-
-const onProfileVisit = (profile) => {
-	profile.isCurrentUser = false;
-	currentProfile.value = profile;
-	leftPanelView.value = "profile";
-};
-
-const onSelectUser = (chat) => {
-	if (selectedChat.value === chat) {
-		selectedChat.value = null;
-	} else {
-		selectedChat.value = chat;
-		chat.hasNewMessages = false;
-	}
-};
-
-const copyCode = () => {
-	navigator.clipboard.writeText(currentUser?.value.friend_code);
-	copied.value = true;
-	setTimeout(() => {
-		copied.value = false;
-	}, 3000); // Reset after 3 seconds
-};
-
-const isTabletWidth = computed(() => {
-	return window.matchMedia("(max-width: 768px)").matches;
-});
-
-const toggleLeftPanelView = (viewSelected) => {
-	// hide/show left panel if
-	// user clicks the current view icon
-	// or clicks a different icon and left panel is collapsed
-	if (
-		(isTabletWidth && leftPanelView.value === viewSelected) ||
-		(isTabletWidth &&
-			isLeftPanelCollapsed.value &&
-			leftPanelView.value !== viewSelected)
-	)
-		isLeftPanelCollapsed.value = !isLeftPanelCollapsed.value;
-
-	if (leftPanelView.value !== viewSelected) {
-		leftPanelView.value = viewSelected;
-		if (viewSelected === "chats") {
-			selectedChat.value = null;
-		} else if (viewSelected === "notifications") {
-			currentUser.value.hasNewNotifications = false;
-		}
-	}
-};
-
-const updatePanelState = () => {
-	isLeftPanelCollapsed.value = isTabletWidth ? false : true;
-};
-
-const handleClickOutside = (event) => {
-	if (
-		leftPanelRef.value &&
-		!leftPanelRef.value.contains(event.target) &&
-		isTabletWidth.value
-	) {
-		isLeftPanelCollapsed.value = true; // Collapse the panel
-	}
-};
-
-onMounted(() => {
-	// Check panel state on mount
-	updatePanelState();
-	// Add an event listener for screen size changes
-	window.addEventListener("resize", updatePanelState);
-	document.addEventListener("click", handleClickOutside);
-});
-
 const initReactiveProperties = (chat) => {
 	chat.hasNewMessages = false;
 	chat.messages = [];
 };
 
-const logout = async () => {
-	loading.value = true;
-	const { response, error } = await useFetch("/auth/logout").delete().json();
-	if (response.value.ok) {
-		socket.disconnect();
-		router.push("/login");
-	} else {
-		console.error("Failed to log out:", error.value);
-	}
-};
-
 socket.on("current user", (user) => {
 	user.isCurrentUser = true;
+	leftPanelStore.currentUser = user;
 	currentUser.value = user;
 	currentProfile.value = user;
 });
@@ -213,7 +108,7 @@ socket.on("user disconnected", (id) => {
 });
 
 socket.on("friend request", (user) => {
-	if (leftPanelView.value !== "notifications") {
+	if (leftPanelStore.tab.value !== "notifications") {
 		currentUser.value.hasNewNotifications = true;
 	} else {
 		user.status = "pending";
@@ -222,7 +117,7 @@ socket.on("friend request", (user) => {
 });
 
 socket.on("new friend", (user) => {
-	if (leftPanelView.value === "friends") {
+	if (leftPanelStore.tab.value === "friends") {
 		friendStore.add(user);
 	}
 });
@@ -268,93 +163,15 @@ onBeforeUnmount(() => {
 	socket.off("connect_error");
 	socket.off("new friend");
 	socket.off("friend request");
-	window.removeEventListener("resize", updatePanelState);
 });
 </script>
 <template>
 	<ModalSpinner v-if="loading" />
 	<div class="wrapper">
-		<div
-			ref="leftPanelRef"
-			class="left-panel"
-			:class="{
-				collapsed: isLeftPanelCollapsed,
-			}">
-			<div v-if="!isLeftPanelCollapsed" class="view-name">
-				<span>{{ viewName }}</span>
-				<div @click="copyCode" class="code">
-					id: <span>{{ currentUser?.friend_code }}</span>
-					<i v-if="copied" class="fi fi-rr-clipboard-check show"></i>
-					<i v-else class="fi fi-rr-clipboard"></i>
-				</div>
-			</div>
-			<div class="view-container" v-if="!isLeftPanelCollapsed">
-				<Chat
-					v-if="leftPanelView === 'chats'"
-					v-for="chat in activeChats"
-					:key="chat.id"
-					:user="chat"
-					:selected="selectedChat === chat"
-					@select="onSelectUser(chat)" />
-				<div
-					v-if="
-						leftPanelView === 'chats' && activeChats.length === 0
-					">
-					<p class="info">You do not have active chats.</p>
-					<p class="tip">
-						Head over to friends section to start chatting
-					</p>
-				</div>
-
-				<Profile
-					v-if="leftPanelView === 'profile'"
-					@back="currentProfile = currentUser"
-					:user="currentProfile" />
-				<FriendsList
-					v-if="leftPanelView === 'friends'"
-					@visit="onProfileVisit"
-					@message="onUserMessage" />
-				<Notification v-if="leftPanelView === 'notifications'" />
-			</div>
-			<div class="buttons-container">
-				<ButtonIcon
-					title="Chats"
-					:class="{ selected: leftPanelView === 'chats' }"
-					iconClass="fi fi-rr-comment-alt"
-					@click="toggleLeftPanelView('chats')" />
-				<ButtonIcon
-					:class="{ selected: leftPanelView === 'profile' }"
-					iconClass="fi fi-rr-user"
-					title="Profile"
-					@click="toggleLeftPanelView('profile')" />
-				<ButtonIcon
-					:class="{ selected: leftPanelView === 'friends' }"
-					iconClass="fi fi-rr-users"
-					title="Friends"
-					@click="toggleLeftPanelView('friends')" />
-				<ButtonIcon
-					title="Notifications"
-					:class="{ selected: leftPanelView === 'notifications' }"
-					iconClass="fi fi-rr-bell"
-					@click="toggleLeftPanelView('notifications')">
-					<div
-						v-if="currentUser?.hasNewNotifications"
-						class="new-messages">
-						!
-					</div>
-				</ButtonIcon>
-				<ButtonIcon
-					title="Logout"
-					iconClass="fi fi-rr-exit"
-					@click="logout" />
-			</div>
-		</div>
+		<LeftPanel />
 		<div class="middle-panel">
 			<MessagePanel
-				v-if="
-					(selectedChat && !isTabletWidth) ||
-					(selectedChat && isLeftPanelCollapsed && isTabletWidth)
-				"
+				v-if="selectedChat && leftPanelStore.tab === 'chats'"
 				:user="selectedChat"
 				@input="onMessageSent" />
 		</div>
@@ -370,17 +187,15 @@ onBeforeUnmount(() => {
 		flex-grow: 1;
 		display: flex;
 		flex-direction: column;
-		background-color: #dddddd;
 	}
 
 	.left-panel {
 		height: 100%;
-		width: 350px;
+		width: 356px;
 		overflow-x: hidden;
 		color: black;
 		display: flex;
 		flex-direction: column;
-		background-color: #ededed;
 		border-right: 1px solid rgba(0, 0, 0, 0.144);
 		transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
 
